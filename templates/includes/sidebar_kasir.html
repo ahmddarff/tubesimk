@@ -21,10 +21,16 @@
             <span class="font-semibold text-lg">Dashboard</span>
         </a>
 
-        <a href="#" class="flex items-center gap-4 py-3.5 px-5 rounded-xl text-blue-100 hover:bg-white/10 transition group">
-            <i data-lucide="file-text" class="w-6 h-6 opacity-80 group-hover:opacity-100"></i>
-            <span class="font-medium text-lg">Pesanan Aktif</span>
-        </a>
+   <a href="{{ url_for('pesanan_aktif') }}" 
+   class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+   {% if segment == 'pesanan_aktif' %} 
+       bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+   {% else %} 
+       text-blue-100 hover:bg-white/10 
+   {% endif %}">
+    <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+    <span class="font-semibold text-lg">Pesanan Aktif</span>
+</a>
 
         <a href="#" class="flex items-center gap-4 py-3.5 px-5 rounded-xl text-blue-100 hover:bg-white/10 transition group">
             <i data-lucide="calendar" class="w-6 h-6 opacity-80 group-hover:opacity-100"></i>
