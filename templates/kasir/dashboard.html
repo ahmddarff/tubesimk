@@ -1,9 +1,14 @@
-{% extends 'layouts/layout_kasir.html' %} 
+{% extends 'layouts/layout_kasir.html' %}
 
 {% block content %}
 <!-- Logic Utama Alpine.js -->
 <div x-data="{ 
     openModal: false, 
+    showPayment: false, 
+    showSuccess: false,
+    paymentMethod: 'CASH',
+    receivedAmount: '0',
+    activeCard: null,
     selectedItem: {}, 
     qty: 1,
     cart: [],
@@ -21,6 +26,7 @@
         }
         this.openModal = false;
         this.qty = 1;
+        this.activeCard = null;
     },
 
     get subtotal() {
@@ -29,8 +35,17 @@
 
     removeItem(index) {
         this.cart.splice(index, 1);
+    },
+
+    handlePhysicKey(key) {
+        if (!this.showPayment || this.paymentMethod !== 'CASH') return;
+        if (!isNaN(key)) {
+            this.receivedAmount === '0' ? this.receivedAmount = key : this.receivedAmount += key;
+        } else if (key === 'Backspace') {
+            this.receivedAmount = this.receivedAmount.length > 1 ? this.receivedAmount.slice(0, -1) : '0';
+        }
     }
-}" class="flex gap-6 font-['Inter']">
+}" @keydown.window="handlePhysicKey($event.key)" class="flex gap-6 font-['Inter']">
     
     <!-- BAGIAN KIRI: KATALOG MENU -->
     <div class="flex-1 max-w-[70%]">
@@ -45,6 +60,15 @@
             {% endfor %}
         </div>
 
+        <div class="relative w-96">
+    <span class="absolute inset-y-0 left-0 flex items-center mb-10 pl-3">
+        <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+    </span>
+    <input type="text" 
+           placeholder="Cari menu atau no. meja..." 
+           class="w-full pl-10 pr-4 py-2 mb-10 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-terralogBlue transition">
+</div>
+
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-terralogBlue">Katalog Menu</h2>
             <select class="border border-gray-200 rounded-lg px-3 py-1 text-xs focus:outline-none">
@@ -55,11 +79,19 @@
         <!-- Grid Katalog Menu -->
         <div class="grid grid-cols-4 gap-4">
             {% for item in menu %}
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden">
+            <div {% if item.status == 'tersedia' %}
+                @click="activeCard = '{{ item.nama }}'; 
+                    openModal = true; 
+                    selectedItem = { nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; 
+                    qty = 1"
+                class="cursor-pointer bg-white rounded-xl shadow-sm border-2 transition-all hover:shadow-md overflow-hidden flex flex-col relative"
+                :class="activeCard === '{{ item.nama }}' ? 'border-terralogBlue ring-2 ring-blue-100' : 'border-gray-100'"
+            {% else %}
+                class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden opacity-70"
+            {% endif %}>
                 
-                <!-- Badge Jumlah jika sudah ada di keranjang -->
                 <template x-if="cart.find(c => c.nama === '{{ item.nama }}')">
-                    <div class="absolute top-2 left-2 bg-white text-terralogBlue w-6 h-6 rounded-full flex items-center justify-center shadow-md z-20 font-bold text-xs" 
+                    <div class="absolute top-2 left-2 bg-terralogBlue text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md z-20 font-bold text-xs" 
                          x-text="cart.find(c => c.nama === '{{ item.nama }}').qty">
                     </div>
                 </template>
@@ -70,8 +102,7 @@
                 </div>
 
                 <div class="relative h-32 overflow-hidden bg-gray-100">
-                    <img src="{{ url_for('static', filename='images/' + item.img) }}" 
-                         class="w-full h-full object-cover">
+                    <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-full h-full object-cover">
                     {% if item.status == 'habis' %}
                     <div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                         <span class="text-white font-bold text-sm tracking-widest italic">HABIS</span>
@@ -81,20 +112,14 @@
 
                 <div class="p-3 flex-1 flex flex-col">
                     <h3 class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ item.nama }}</h3>
-                    <p class="text-terralogBlue font-extrabold text-sm mb-3">Rp {{ "{:,.0f}".format(item.harga) }}</p>
-                    
+                    <p class="text-terralogBlue font-extrabold text-sm mb-3 font-['Inter']">Rp {{ "{:,.0f}".format(item.harga) }}</p>
                     <div class="mt-auto">
                         {% if item.status == 'tersedia' %}
-                        <button 
-                            @click="openModal = true; selectedItem = { nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; qty = 1"
-                            class="w-full py-2 bg-[#E99817] text-white rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 hover:bg-[#CE7411] transition shadow-sm">
-                            <i data-lucide="plus" class="w-3 h-3"></i>
-                            TAMBAH
+                        <button class="w-full py-2 bg-[#E99817] text-white rounded-lg font-bold text-[9px] flex items-center justify-center gap-1">
+                            <i data-lucide="plus" class="w-3 h-3"></i> TAMBAH
                         </button>
                         {% else %}
-                        <button disabled class="w-full py-2 bg-gray-100 text-gray-400 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 cursor-not-allowed border border-gray-200">
-                            STOK HABIS
-                        </button>
+                        <button disabled class="w-full py-2 bg-gray-100 text-gray-400 rounded-lg font-bold text-[9px]">STOK HABIS</button>
                         {% endif %}
                     </div>
                 </div>
@@ -103,30 +128,26 @@
         </div>
     </div>
 
-    <!-- BAGIAN KANAN: DETAIL PESANAN (KERANJANG) -->
+    <!-- BAGIAN KANAN: KERANJANG -->
     <aside class="w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 flex flex-col sticky top-24 h-[calc(100vh-120px)]">
         <h2 class="text-lg font-bold mb-4 text-gray-800">Detail Pesanan</h2>
         
-        <!-- Toggle & Input -->
         <div class="flex p-1 bg-gray-100 rounded-xl mb-4">
-            <button class="flex-1 py-2 text-xs font-bold bg-terralogBlue text-white rounded-lg shadow-sm">DINE IN</button>
-            <button class="flex-1 py-2 text-xs font-bold text-gray-500 hover:text-gray-700">TAKE AWAY</button>
+            <button class="flex-1 py-2 text-xs font-bold bg-terralogBlue text-white rounded-lg">DINE IN</button>
+            <button class="flex-1 py-2 text-xs font-bold text-gray-500">TAKE AWAY</button>
         </div>
 
         <div class="grid grid-cols-3 gap-2 mb-4 text-[11px]">
             <div class="col-span-2">
                 <label class="text-gray-400 mb-1 block">Nama Pelanggan</label>
-                <input type="text" placeholder="Agnes" class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none">
+                <input type="text" placeholder="Agnes" class="w-full p-2 bg-gray-50 border rounded-lg focus:outline-none">
             </div>
             <div>
                 <label class="text-gray-400 mb-1 block">Meja</label>
-                <select class="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none">
-                    <option>07</option>
-                </select>
+                <select class="w-full p-2 bg-gray-50 border rounded-lg focus:outline-none"><option>07</option></select>
             </div>
         </div>
 
-        <!-- List Keranjang -->
         <div class="flex-1 overflow-y-auto pr-1">
             <template x-if="cart.length === 0">
                 <div class="flex flex-col items-center justify-center h-full text-center opacity-20">
@@ -134,7 +155,6 @@
                     <p class="text-xs font-medium">Keranjang kosong</p>
                 </div>
             </template>
-
             <div class="space-y-4">
                 <template x-for="(item, index) in cart" :key="index">
                     <div class="flex justify-between items-center text-sm group">
@@ -153,7 +173,6 @@
             </div>
         </div>
 
-        <!-- Footer Pembayaran -->
         <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
             <div class="flex justify-between text-sm text-gray-500 mb-1">
                 <span>Subtotal</span>
@@ -163,7 +182,9 @@
                 <span>Diskon</span>
                 <span>Rp 0</span>
             </div>
-            <button class="w-full py-4 bg-[#E99817] text-white rounded-xl font-bold flex justify-between px-6 items-center shadow-lg hover:bg-[#CE7411] transition transform active:scale-95">
+            <button @click="if(cart.length > 0) showPayment = true" 
+                    :disabled="cart.length === 0"
+                    class="w-full py-4 bg-[#E99817] text-white rounded-xl font-bold flex justify-between px-6 items-center shadow-lg disabled:bg-gray-300">
                 <span class="text-sm" x-text="cart.length + ' Item | Bayar'"></span>
                 <span class="text-lg" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
             </button>
@@ -171,39 +192,25 @@
     </aside>
 
     <!-- MODAL DETAIL PRODUK -->
-    <div x-show="openModal" class="fixed inset-0 z-[100] overflow-hidden flex justify-end" style="display: none;">
-        <div x-show="openModal" x-transition:opacity class="absolute inset-0 bg-black/30" @click="openModal = false"></div>
-
-        <div x-show="openModal" 
-             x-transition:enter="transition ease-out duration-300" 
-             x-transition:enter-start="translate-x-full" 
-             x-transition:enter-end="translate-x-0"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="translate-x-full"
-             class="relative w-96 bg-white h-screen shadow-2xl p-8 flex flex-col">
-            
+    <div x-show="openModal" class="fixed inset-0 z-[100] flex justify-end" style="display: none;">
+        <div x-transition:opacity class="absolute inset-0 bg-black/30" @click="openModal = false"></div>
+        <div x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-x-full" class="relative w-96 bg-white h-screen shadow-2xl p-8 flex flex-col">
             <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-terralogBlue font-['Inter']">Detail Produk</h2>
-                <button @click="openModal = false" class="p-2 hover:bg-gray-100 rounded-full">
-                    <i data-lucide="x" class="w-6 h-6 text-gray-400"></i>
-                </button>
+                <h2 class="text-2xl font-bold text-terralogBlue">Detail Produk</h2>
+                <button @click="openModal = false"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
             </div>
-
-            <div class="flex gap-5 mb-8 border-b border-gray-100 pb-6">
+            <div class="flex gap-5 mb-8 border-b pb-6">
                 <img :src="'/static/images/' + selectedItem.img" class="w-24 h-24 object-cover rounded-2xl shadow-sm">
                 <div class="flex flex-col justify-center">
                     <h3 class="text-xl font-bold text-gray-800 mb-1" x-text="selectedItem.nama"></h3>
-                    <p class="text-terralogBlue font-black text-lg" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
+                    <p class="text-terralogBlue font-black text-lg font-['Inter']" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
                 </div>
             </div>
-
             <div class="mb-8">
-                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 block">Catatan Tambahan</label>
-                <textarea placeholder="Contoh: Less sugar, es dipisah..." class="w-full border border-gray-200 rounded-2xl p-4 text-sm h-32 focus:outline-none focus:border-terralogBlue bg-gray-50"></textarea>
+                <label class="text-xs font-bold text-gray-400 uppercase mb-3 block">Catatan Tambahan</label>
+                <textarea placeholder="Contoh: Less sugar..." class="w-full border rounded-2xl p-4 text-sm h-32 focus:border-terralogBlue bg-gray-50"></textarea>
             </div>
-
-            <div class="mt-auto border-t border-gray-100 pt-6">
+            <div class="mt-auto border-t pt-6">
                 <div class="flex justify-between items-center mb-8">
                     <span class="font-bold text-gray-700 text-lg">Jumlah</span>
                     <div class="flex items-center gap-6">
@@ -212,15 +219,101 @@
                         <button @click="qty++" class="w-10 h-10 rounded-xl border-2 border-terralogBlue text-terralogBlue flex items-center justify-center font-bold text-xl">+</button>
                     </div>
                 </div>
-
                 <div class="flex justify-between items-center mb-6">
-                    <span class="text-gray-400 font-medium">Subtotal Produk</span>
+                    <span class="text-gray-400">Subtotal Produk</span>
                     <span class="font-black text-xl text-gray-800" x-text="'Rp ' + (selectedItem.harga * qty ? (selectedItem.harga * qty).toLocaleString('id-ID') : 0)"></span>
                 </div>
+                <button @click="addToCart()" class="w-full py-4 bg-[#E99817] text-white rounded-2xl font-bold text-lg shadow-lg">Tambah ke Pesanan</button>
+            </div>
+        </div>
+    </div>
 
-                <button @click="addToCart()" class="w-full py-4 bg-[#E99817] text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-[#CE7411] transition transform active:scale-95">
-                    Tambah ke Pesanan
-                </button>
+    <!-- MODAL PEMBAYARAN -->
+    <div x-show="showPayment" class="fixed inset-0 z-[110] flex items-center justify-center" style="display: none;">
+        <div x-transition:opacity class="absolute inset-0 bg-black/50" @click="showPayment = false"></div>
+        <div class="relative bg-white w-[750px] rounded-xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="bg-[#0522A4] p-4 flex items-center gap-4 text-white">
+                <button @click="showPayment = false"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
+                <h2 class="text-xl font-bold">Pembayaran</h2>
+            </div>
+            <div class="flex flex-1 min-h-[450px]">
+                <!-- Sisi Kiri: Metode -->
+                <div class="w-2/5 bg-[#E6F0FF] p-6 border-r">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">TOTAL TAGIHAN</p>
+                    <h3 class="text-3xl font-black text-gray-800 mb-8" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></h3>
+                    <div class="space-y-3">
+                        <button @click="paymentMethod = 'CASH'" class="w-full flex items-center justify-between p-4 rounded-xl border-2" :class="paymentMethod === 'CASH' ? 'bg-white border-[#0522A4]' : 'border-gray-300 opacity-60'">
+                            <span class="font-bold text-sm uppercase">CASH - TUNAI</span>
+                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="paymentMethod === 'CASH' ? 'border-[#0522A4]' : 'border-gray-400'">
+                                <div x-show="paymentMethod === 'CASH'" class="w-2.5 h-2.5 bg-[#0522A4] rounded-full"></div>
+                            </div>
+                        </button>
+                        <button @click="paymentMethod = 'QRIS'" class="w-full flex items-center justify-between p-4 rounded-xl border-2" :class="paymentMethod === 'QRIS' ? 'bg-white border-[#0522A4]' : 'border-gray-300 opacity-60'">
+                            <span class="font-bold text-sm uppercase">QRIS</span>
+                            <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="paymentMethod === 'QRIS' ? 'border-[#0522A4]' : 'border-gray-400'">
+                                <div x-show="paymentMethod === 'QRIS'" class="w-2.5 h-2.5 bg-[#0522A4] rounded-full"></div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <!-- Sisi Kanan: Konten -->
+                <div class="w-3/5 p-6 bg-white flex flex-col">
+                    <!-- Cash View -->
+                    <div x-show="paymentMethod === 'CASH'" class="flex-1 flex flex-col">
+                        <div class="grid grid-cols-3 gap-2 mb-4 text-[11px] font-bold">
+                            <button @click="receivedAmount = subtotal.toString()" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4]">Uang Pas</button>
+                            <button @click="receivedAmount = '50000'" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4]">Rp 50.000</button>
+                            <button @click="receivedAmount = '100000'" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4]">Rp 100.000</button>
+                        </div>
+                        <div class="border-2 border-[#0522A4] rounded-xl p-4 mb-4">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase mb-1 font-['Inter']">UANG DITERIMA</p>
+                            <div class="text-3xl font-black text-gray-800 font-['Inter']" x-text="'Rp ' + parseInt(receivedAmount).toLocaleString('id-ID')"></div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 mb-6">
+                            <template x-for="n in ['7','8','9','4','5','6','1','2','3','000','0']">
+                                <button @click="receivedAmount === '0' ? receivedAmount = n : receivedAmount += n" class="py-4 border rounded-lg text-xl font-bold text-gray-700 hover:bg-gray-50"><span x-text="n"></span></button>
+                            </template>
+                            <button @click="receivedAmount = receivedAmount.length > 1 ? receivedAmount.slice(0, -1) : '0'" class="py-4 border rounded-lg flex items-center justify-center hover:bg-red-50 text-[#0522A4]"><i data-lucide="delete" class="w-6 h-6"></i></button>
+                        </div>
+                        <button @click="showSuccess = true" class="w-full py-4 bg-[#0522A4] text-white rounded-lg font-black text-sm tracking-widest uppercase">BAYAR</button>
+                    </div>
+                    <!-- QRIS View -->
+                    <div x-show="paymentMethod === 'QRIS'" class="flex-1 flex flex-col items-center justify-center text-center">
+                        <button class="mb-6 px-6 py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4] font-black text-sm">Verifikasi Pembayaran QRIS</button>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TerralogPOS" class="w-32 h-32 mx-auto mb-4 border p-2 rounded-lg">
+                        <p class="text-gray-500 font-bold text-sm">Menunggu bukti pembayaran dari pelanggan.</p>
+                        <button @click="showSuccess = true" class="w-full py-4 bg-[#0522A4] text-white rounded-lg font-black text-sm uppercase tracking-widest mt-auto">KONFIRMASI PEMBAYARAN</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUKSES -->
+    <div x-show="showSuccess" class="fixed inset-0 z-[120] flex items-center justify-center" style="display: none;">
+        <div x-transition:opacity class="absolute inset-0 bg-black/60"></div>
+        <div x-transition:enter="transition ease-out duration-300 transform scale-90" x-transition:enter-end="scale-100" class="relative bg-white w-[400px] rounded-[2rem] p-8 shadow-2xl text-center">
+            <div class="mb-4 flex justify-center">
+                <div class="bg-[#00E676] rounded-full p-4 shadow-lg">
+                    <i data-lucide="check" class="w-12 h-12 text-white stroke-[4]"></i>
+                </div>
+            </div>
+            <h2 class="text-2xl font-black text-gray-700 mb-6 font-['Inter']">Sukses!</h2>
+            <div class="space-y-3 mb-8 text-left px-4 font-['Inter']">
+                <div class="flex justify-between text-xs font-bold text-gray-500">
+                    <span>Total Tagihan</span>
+                    <span class="text-gray-700" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+                </div>
+                <template x-if="paymentMethod === 'CASH'">
+                    <div class="border-t border-dotted border-blue-400 pt-3 flex justify-between items-center font-bold">
+                        <span class="text-[10px] text-gray-400 uppercase">Kembalian</span>
+                        <span class="text-lg text-gray-800 font-['Inter']" x-text="'Rp ' + (parseInt(receivedAmount) - subtotal).toLocaleString('id-ID')"></span>
+                    </div>
+                </template>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="py-3 border-2 border-[#0522A4] text-[#0522A4] rounded-xl font-black text-xs uppercase">Cetak Struk</button>
+                <button @click="location.reload()" class="py-3 bg-[#0522A4] text-white rounded-xl font-black text-xs uppercase shadow-lg hover:bg-blue-800">Selesai</button>
             </div>
         </div>
     </div>

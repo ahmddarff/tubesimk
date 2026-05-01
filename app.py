@@ -35,5 +35,12 @@ def pesanan_aktif():
     return render_template('kasir/pesanan_aktif.html', segment='pesanan_aktif', pesanan=pesanan_list)
     
     
+@app.route('/reservasi')
+def reservasi():
+    data_reservasi = [
+        {'id': '01', 'nama': 'Richard Lim', 'tanggal': '06/04/2024', 'tamu': 2, 'telepon': '0812345678', 'waktu': '19.00', 'status': 'Menunggu'},
+    ]
+    return render_template('kasir/reservasi.html', segment='reservasi', reservations=data_reservasi)
+
 if __name__ == '__main__':
     app.run(debug=True, port=50001)
