@@ -1,0 +1,57 @@
+<!-- Sidebar Customer -->
+<aside class="w-64 bg-gradient-to-b from-[#0522A4] to-[#031263] text-white flex flex-col h-screen sticky top-0 shadow-xl">
+    
+    <!-- Logo -->
+    <div class="p-6 border-b border-blue-400/30">
+        <a href="/customer" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-[#0522A4] group-hover:scale-110 transition-transform">
+                T
+            </div>
+            <span class="text-2xl font-black tracking-tighter">terralog</span>
+        </a>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="flex-1 py-8 px-4 space-y-2">
+        
+        <!-- Beranda (Home) -->
+        <a href="/customer" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'home' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="{% if segment == 'home' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 7v10a1 1 0 001 1h2m6-4v4m0 0h2a1 1 0 001-1v-4m0 0V7m0 0H9m0 0l7-4"></path>
+            </svg>
+            <span class="font-semibold text-sm">Beranda</span>
+        </a>
+
+        <!-- Daftar Menu (Menu) -->
+        <a href="/customer" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'menu' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.228 6.253 2 9.66 2 14s4.228 7.747 10 7.747m0-13c5.772 0 10 3.66 10 8.247m0-8.247C21.772 6.253 17.772 3 12 3"></path>
+            </svg>
+            <span class="font-semibold text-sm">Daftar Menu</span>
+        </a>
+
+        <!-- Pesanan Saya (My Orders) -->
+        <a href="/customer/pesanan-saya" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'pesanan_saya' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+            </svg>
+            <span class="font-semibold text-sm">Pesanan Saya</span>
+        </a>
+
+        <!-- Buat Reservasi (Make Reservation) -->
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group text-blue-100 hover:bg-white/10">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            <span class="font-semibold text-sm">Buat Reservasi</span>
+        </a>
+    </nav>
+
+    <!-- Footer - Decorative -->
+    <div class="p-6 border-t border-blue-400/30">
+        <div class="opacity-20 text-xs text-center">
+            <p>© 2026 Terralog</p>
+            <p class="mt-1">Coffee Shop Management</p>
+        </div>
+    </div>
+</aside>

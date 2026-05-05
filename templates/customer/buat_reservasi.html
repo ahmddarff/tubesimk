@@ -1,0 +1,121 @@
+{% extends "layouts/layout_kasir.html" %}
+
+{% block content %}
+<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+    <div class="max-w-5xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">Reservasi Saya</h1>
+                <p class="text-gray-600">Kelola dan pantau reservasi Anda</p>
+            </div>
+            <button class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+                Buat Reservasi Baru
+            </button>
+        </div>
+
+        <!-- Reservasi Aktif Section -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Reservasi Aktif</h2>
+            
+            <div class="space-y-4">
+                {% for reservation in active_reservations %}
+                <div class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+                    <div class="grid grid-cols-4 gap-6">
+                        <!-- Left: ID & Status -->
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-3">#{{ reservation.id }}</h3>
+                            <div class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold text-sm">
+                                {{ reservation.status }}
+                            </div>
+                        </div>
+
+                        <!-- Middle: Date & Time -->
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Tanggal</p>
+                            <p class="text-gray-800 font-semibold mb-3">{{ reservation.date }}</p>
+                            <p class="text-gray-600 text-sm">{{ reservation.time }}</p>
+                        </div>
+
+                        <!-- Middle-Right: Duration -->
+                        <div>
+                            <p class="text-gray-600 text-sm mb-1">Durasi</p>
+                            <p class="text-gray-800 font-semibold">{{ reservation.duration }}</p>
+                        </div>
+
+                        <!-- Right: Guests & Action -->
+                        <div class="flex flex-col items-end justify-between">
+                            <div class="text-right">
+                                <p class="text-gray-600 text-sm mb-1">Jumlah Tamu</p>
+                                <p class="text-2xl font-bold text-gray-800">{{ reservation.guests }}</p>
+                            </div>
+                            <button class="bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition">
+                                Lihat Detail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if active_reservations|length == 0 %}
+            <div class="bg-white rounded-2xl shadow-sm p-12 text-center">
+                <i data-lucide="calendar" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                <p class="text-gray-600">Anda tidak memiliki reservasi aktif</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Riwayat Section -->
+        <div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Riwayat</h2>
+                <button class="text-terralogBlue hover:text-terralogBlue/80 font-semibold transition">
+                    Lihat Semua Riwayat →
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                {% for reservation in history_reservations %}
+                <div class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+                    <div class="mb-4">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">#{{ reservation.id }}</h3>
+                        <div class="inline-block {% if reservation.status == 'Selesai' %}bg-green-100 text-green-800{% elif reservation.status == 'Dibatalkan' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-2 rounded-lg font-semibold text-sm">
+                            {{ reservation.status }}
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Tanggal</span>
+                            <span class="text-gray-800 font-semibold">{{ reservation.date }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Durasi</span>
+                            <span class="text-gray-800 font-semibold">{{ reservation.duration }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Jumlah Tamu</span>
+                            <span class="text-gray-800 font-semibold">{{ reservation.guests }}</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-2 rounded-lg transition">
+                        Lihat Detail
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if history_reservations|length == 0 %}
+            <div class="bg-white rounded-2xl shadow-sm p-12 text-center">
+                <i data-lucide="history" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+                <p class="text-gray-600">Tidak ada riwayat reservasi</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

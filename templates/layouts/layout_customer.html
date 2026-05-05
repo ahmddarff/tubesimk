@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %} - Terralog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>[x-cloak] { display: none !important; }</style>
+    
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+              },
+              colors: {
+                terralogBlue: '#0522A4',
+                terralogOrange: '#E99817',
+                terralogPeach: '#F7E190',
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans">
+
+   <div class="flex min-h-screen">
+    {% include 'includes/sidebar_customer.html' %}
+
+    <div class="flex-1 flex flex-col">
+        {% include 'includes/navbar_customer.html' %}
+
+        <main class="p-8 bg-gray-50 flex-1">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

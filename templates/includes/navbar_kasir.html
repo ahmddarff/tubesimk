@@ -12,11 +12,16 @@
         <!-- User Profile -->
         <div class="flex items-center gap-3">
             <div class="text-right">
-                <p class="text-sm font-bold text-gray-800">Rahma Sarita</p>
-                <p class="text-[10px] text-gray-500 uppercase tracking-wider">Kasir Senior</p>
+                {% if role == 'customer' %}
+                    <p class="text-sm font-bold text-gray-800">Matthew Shen</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</p>
+                {% else %}
+                    <p class="text-sm font-bold text-gray-800">Rahma Sarita</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Kasir Senior</p>
+                {% endif %}
             </div>
             <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach">
-                RS
+                {% if role == 'customer' %}MS{% else %}RS{% endif %}
             </div>
             <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
         </div>

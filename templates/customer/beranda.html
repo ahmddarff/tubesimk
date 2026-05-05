@@ -1,0 +1,43 @@
+{% extends "layouts/layout_kasir.html" %}
+
+{% block content %}
+<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="bg-white rounded-2xl shadow-sm p-8 mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Selamat Datang</h1>
+            <p class="text-gray-600 text-lg">Nikmati pengalaman berbelanja kopi premium Anda</p>
+        </div>
+
+        <!-- Feature Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Card 1: Daftar Menu -->
+            <a href="/customer/daftar-menu" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
+                <div class="w-16 h-16 bg-terralogGold/20 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="menu" class="w-8 h-8 text-terralogGold"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Daftar Menu</h3>
+                <p class="text-gray-600">Jelajahi koleksi kopi premium kami</p>
+            </a>
+
+            <!-- Card 2: Pesanan Saya -->
+            <a href="/customer/pesanan-saya" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
+                <div class="w-16 h-16 bg-terralogBlue/20 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="shopping-cart" class="w-8 h-8 text-terralogBlue"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Pesanan Saya</h3>
+                <p class="text-gray-600">Pantau status pesanan Anda</p>
+            </a>
+
+            <!-- Card 3: Buat Reservasi -->
+            <a href="/customer/buat-reservasi" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
+                <div class="w-16 h-16 bg-terralogPeach/20 rounded-xl flex items-center justify-center mb-4">
+                    <i data-lucide="calendar" class="w-8 h-8 text-terralogPeach"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Buat Reservasi</h3>
+                <p class="text-gray-600">Pesan tempat untuk kunjungan Anda</p>
+            </a>
+        </div>
+    </div>
+</main>
+{% endblock %}
