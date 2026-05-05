@@ -1,0 +1,222 @@
+{% extends 'layouts/layout_kasir.html' %}
+
+{% block title %}Customer Dashboard - Terralog{% endblock %}
+
+{% block content %}
+<!-- Customer Dashboard Content -->
+<div class="flex gap-6 font-['Inter']">
+    
+    <!-- BAGIAN KIRI: MENU KATALOG CUSTOMER -->
+    <div class="flex-1">
+
+        <!-- Menu Grid -->
+        <div x-data="{ 
+            activeCard: null,
+            selectedItem: {}, 
+            qty: 1,
+            cart: [],
+            openModal: false,
+            
+            addToCart() {
+                let existing = this.cart.find(c => c.nama === this.selectedItem.nama);
+                if (existing) {
+                    existing.qty += this.qty;
+                } else {
+                    this.cart.push({
+                        nama: this.selectedItem.nama,
+                        harga: this.selectedItem.harga,
+                        img: this.selectedItem.img,
+                        qty: this.qty
+                    });
+                }
+                this.openModal = false;
+                this.qty = 1;
+                this.activeCard = null;
+            },
+
+            get subtotal() {
+                return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            },
+
+            removeItem(index) {
+                this.cart.splice(index, 1);
+            }
+        }">
+            
+            <!-- Menu Cards Grid -->
+            <div class="grid grid-cols-4 gap-4 mb-8">
+                {% for item in menu %}
+                <div {% if item.status == 'tersedia' %}
+                    @click="activeCard = '{{ item.nama }}'; 
+                        openModal = true; 
+                        selectedItem = { nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; 
+                        qty = 1"
+                    class="cursor-pointer bg-white rounded-xl shadow-sm border-2 transition-all hover:shadow-md overflow-hidden flex flex-col relative group"
+                    :class="activeCard === '{{ item.nama }}' ? 'border-terralogBlue ring-2 ring-blue-100' : 'border-gray-100'"
+                {% else %}
+                    class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden opacity-70"
+                {% endif %}>
+                    
+                    <!-- Badge Keranjang -->
+                    <template x-if="cart.find(c => c.nama === '{{ item.nama }}')">
+                        <div class="absolute top-2 left-2 bg-terralogOrange text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md z-20 font-bold text-sm" 
+                             x-text="cart.find(c => c.nama === '{{ item.nama }}').qty">
+                        </div>
+                    </template>
+
+                    <!-- Rating Badge -->
+                    <div class="absolute top-2 right-2 bg-terralogBlue/90 backdrop-blur-sm text-white text-[9px] px-1.5 py-0.5 rounded-md flex items-center gap-1 z-10">
+                        <i data-lucide="star" class="w-2.5 h-2.5 fill-yellow-400 text-yellow-400"></i>
+                        {{ item.rating }}
+                    </div>
+
+                    <!-- Product Image -->
+                    <div class="relative h-32 overflow-hidden bg-gray-100">
+                        <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        {% if item.status == 'habis' %}
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                            <span class="text-white font-bold text-sm tracking-widest italic">HABIS</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="p-3 flex-1 flex flex-col">
+                        <h3 class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ item.nama }}</h3>
+                        <p class="text-gray-600 text-xs mb-2">Premium quality coffee</p>
+                        <p class="text-terralogOrange font-extrabold text-sm mb-3 font-['Inter']">Rp {{ "{:,.0f}".format(item.harga) }}</p>
+                        
+                        <div class="mt-auto">
+                            {% if item.status == 'tersedia' %}
+                            <button class="w-full py-2 bg-terralogOrange text-white rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 hover:bg-orange-500 transition">
+                                <i data-lucide="plus" class="w-3 h-3"></i> BELI
+                            </button>
+                            {% else %}
+                            <button disabled class="w-full py-2 bg-gray-100 text-gray-400 rounded-lg font-bold text-[10px]">STOK HABIS</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- MODAL: Detail Produk -->
+            <div x-show="openModal" class="fixed inset-0 z-[100] flex justify-end" style="display: none;">
+                <div x-transition:opacity class="absolute inset-0 bg-black/30" @click="openModal = false"></div>
+                <div x-transition:enter="transition ease-out duration-300 transform" x-transition:enter-start="translate-x-full" class="relative w-96 bg-white h-screen shadow-2xl p-8 flex flex-col">
+                    
+                    <!-- Header -->
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-bold text-terralogBlue">Detail Menu</h2>
+                        <button @click="openModal = false"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
+                    </div>
+
+                    <!-- Product Details -->
+                    <div class="flex gap-5 mb-8 border-b pb-6">
+                        <img :src="'/static/images/' + selectedItem.img" class="w-24 h-24 object-cover rounded-2xl shadow-sm">
+                        <div class="flex flex-col justify-center">
+                            <h3 class="text-xl font-bold text-gray-800 mb-1" x-text="selectedItem.nama"></h3>
+                            <p class="text-terralogOrange font-black text-lg font-['Inter']" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="mb-8">
+                        <label class="text-xs font-bold text-gray-400 uppercase mb-3 block">Catatan (Opsional)</label>
+                        <textarea placeholder="Contoh: Kurangi gula, extra shot..." class="w-full border rounded-2xl p-4 text-sm h-32 focus:border-terralogBlue bg-gray-50"></textarea>
+                    </div>
+
+                    <!-- Quantity & Add to Cart -->
+                    <div class="mt-auto border-t pt-6">
+                        <div class="flex justify-between items-center mb-8">
+                            <span class="font-bold text-gray-700 text-lg">Jumlah</span>
+                            <div class="flex items-center gap-6">
+                                <button @click="if(qty > 1) qty--" class="w-10 h-10 rounded-xl border-2 border-terralogBlue text-terralogBlue flex items-center justify-center font-bold text-xl hover:bg-blue-50">−</button>
+                                <span class="font-bold text-2xl w-6 text-center" x-text="qty"></span>
+                                <button @click="qty++" class="w-10 h-10 rounded-xl border-2 border-terralogBlue text-terralogBlue flex items-center justify-center font-bold text-xl hover:bg-blue-50">+</button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-6">
+                            <span class="text-gray-400">Subtotal</span>
+                            <span class="font-black text-xl text-gray-800" x-text="'Rp ' + (selectedItem.harga * qty ? (selectedItem.harga * qty).toLocaleString('id-ID') : 0)"></span>
+                        </div>
+
+                        <button @click="addToCart()" class="w-full py-4 bg-terralogBlue text-white rounded-2xl font-bold text-lg shadow-lg hover:bg-blue-900 transition">
+                            Tambah ke Keranjang
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- BAGIAN KANAN: KERANJANG BELANJA -->
+    <aside class="w-80 bg-white rounded-2xl shadow-xl border border-gray-200 p-5 flex flex-col sticky top-[120px] h-[calc(100vh-160px)]">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="shopping-cart" class="w-6 h-6 text-terralogBlue"></i>
+            <h2 class="text-lg font-bold text-gray-800">Keranjang Belanja</h2>
+        </div>
+
+        <!-- Cart Items -->
+        <div class="flex-1 overflow-y-auto pr-1">
+            <template x-if="cart.length === 0">
+                <div class="flex flex-col items-center justify-center h-full text-center opacity-40">
+                    <i data-lucide="shopping-cart" class="w-16 h-16 mb-2"></i>
+                    <p class="text-xs font-medium text-gray-500">Keranjang kosong</p>
+                </div>
+            </template>
+
+            <div class="space-y-4">
+                <template x-for="(item, index) in cart" :key="index">
+                    <div class="flex justify-between items-center text-sm group bg-gray-50 p-3 rounded-lg">
+                        <div class="flex gap-3 items-center flex-1">
+                            <span class="font-bold text-gray-400 w-6 text-center" x-text="item.qty + 'x'"></span>
+                            <div class="flex-1">
+                                <span class="font-medium text-gray-700 text-xs" x-text="item.nama"></span>
+                                <p class="text-gray-400 text-[10px]" x-text="'Rp ' + item.harga.toLocaleString('id-ID')"></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-gray-900 text-xs" x-text="'Rp ' + (item.harga * item.qty).toLocaleString('id-ID')"></span>
+                            <button @click="removeItem(index)" class="text-red-400 opacity-0 group-hover:opacity-100 transition">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="mt-6 pt-4 border-t border-dashed border-gray-200">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Subtotal</span>
+                <span class="font-bold" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600 mb-4">
+                <span>PPN (10%)</span>
+                <span class="font-bold" x-text="'Rp ' + Math.round(subtotal * 0.1).toLocaleString('id-ID')"></span>
+            </div>
+
+            <!-- Checkout Button -->
+            <button :disabled="cart.length === 0"
+                    class="w-full py-3 bg-terralogBlue text-white rounded-xl font-bold flex justify-between px-4 items-center shadow-lg disabled:bg-gray-300 transition">
+                <span class="text-sm" x-text="cart.length + ' Item'"></span>
+                <span class="text-lg" x-text="'Rp ' + Math.round(subtotal * 1.1).toLocaleString('id-ID')"></span>
+            </button>
+
+            <!-- Continue Shopping -->
+            <button class="w-full py-2 mt-2 border-2 border-terralogBlue text-terralogBlue rounded-lg font-bold text-sm hover:bg-blue-50 transition">
+                Lanjut Belanja
+            </button>
+        </div>
+    </aside>
+
+</div>
+
+<script>lucide.createIcons();</script>
+{% endblock %}

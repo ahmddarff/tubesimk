@@ -1,0 +1,165 @@
+{% extends "layouts/layout_kasir.html" %}
+
+{% block content %}
+<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+    <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
+        activeCategory: 'semua',
+        cart: [],
+        selectedProduct: null,
+        showModal: false,
+        addToCart(product) {
+            const existing = this.cart.find(item => item.nama === product.nama);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                this.cart.push({...product, qty: 1});
+            }
+        },
+        removeItem(index) {
+            this.cart.splice(index, 1);
+        },
+        get subtotal() {
+            return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+        },
+        get ppn() {
+            return this.subtotal * 0.1;
+        },
+        get total() {
+            return this.subtotal + this.ppn;
+        }
+    }">
+        
+        <!-- Product Grid -->
+        <div class="col-span-3">
+            <div class="space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Menu</h2>
+                    
+                    <!-- Category Filter -->
+                    <div class="flex gap-3 mb-8 overflow-x-auto pb-2">
+                        <button @click="activeCategory = 'semua'" 
+                                :class="activeCategory === 'semua' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
+                            Semua
+                        </button>
+                        <button @click="activeCategory = 'coffee'" 
+                                :class="activeCategory === 'coffee' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
+                            Coffee
+                        </button>
+                        <button @click="activeCategory = 'noncoffee'" 
+                                :class="activeCategory === 'noncoffee' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
+                            Non Coffee
+                        </button>
+                        <button @click="activeCategory = 'food'" 
+                                :class="activeCategory === 'food' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
+                            Food
+                        </button>
+                        <button @click="activeCategory = 'snack'" 
+                                :class="activeCategory === 'snack' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
+                            Snack
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Product Cards Grid -->
+                <div class="grid grid-cols-4 gap-6">
+                    {% for product in menu %}
+                    <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.kategori }}'" 
+                         class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer" 
+                         @click="selectedProduct = {nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'}; showModal = true">
+                        
+                        <!-- Rating Badge -->
+                        <div class="relative">
+                            <img src="https://via.placeholder.com/250x200/E8D5C4/8B7355?text={{ product.nama }}" 
+                                 alt="{{ product.nama }}" class="w-full h-40 object-cover">
+                            <div class="absolute top-3 left-3 bg-white/90 rounded-lg px-2 py-1 flex items-center gap-1">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%23FFD700'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E" 
+                                     class="w-4 h-4">
+                                <span class="text-sm font-semibold text-gray-800">{{ product.rating }}</span>
+                            </div>
+                            
+                            {% if product.status == 'habis' %}
+                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <span class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">HABIS</span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Product Info -->
+                        <div class="p-4">
+                            <h3 class="font-bold text-gray-800 text-sm mb-2">{{ product.nama }}</h3>
+                            <p class="text-gray-600 text-xs mb-3">Premium quality coffee</p>
+                            <p class="text-lg font-bold text-terralogBlue mb-3">Rp {{ "{:,}".format(product.harga).replace(',', '.') }}</p>
+                            
+                            {% if product.status == 'tersedia' %}
+                            <button class="w-full bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-2 rounded-lg transition">
+                                BELI
+                            </button>
+                            {% else %}
+                            <button disabled class="w-full bg-gray-300 text-gray-600 font-bold py-2 rounded-lg">
+                                STOK HABIS
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Shopping Cart Sidebar -->
+        <aside class="col-span-1">
+            <div class="bg-white rounded-2xl shadow-sm sticky top-24 p-6">
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+                    <div class="w-10 h-10 bg-terralogGold/20 rounded-lg flex items-center justify-center">
+                        <i data-lucide="shopping-cart" class="w-5 h-5 text-terralogGold"></i>
+                    </div>
+                    <h2 class="text-lg font-bold text-gray-800">Keranjang Belanja</h2>
+                </div>
+
+                <!-- Cart Items -->
+                <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                    <template x-for="(item, index) in cart" :key="index">
+                        <div class="flex justify-between items-start p-3 bg-gray-50 rounded-lg group hover:bg-red-50 transition">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold text-gray-800" x-text="item.nama"></p>
+                                <p class="text-xs text-gray-600">Rp <span x-text="item.harga.toLocaleString('id-ID')"></span> x <span x-text="item.qty"></span></p>
+                            </div>
+                            <button @click="removeItem(index)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Totals -->
+                <div class="space-y-2 border-t border-gray-200 pt-4 mb-4">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>Subtotal</span>
+                        <span>Rp <span x-text="subtotal.toLocaleString('id-ID')"></span></span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span>PPN (10%)</span>
+                        <span>Rp <span x-text="ppn.toLocaleString('id-ID')"></span></span>
+                    </div>
+                </div>
+
+                <!-- Checkout Buttons -->
+                <div class="space-y-2">
+                    <button :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition">
+                        <span x-text="cart.length + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
+                    </button>
+                    <button class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition">
+                        Lanjut Belanja
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+</main>
+{% endblock %}
