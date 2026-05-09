@@ -1,36 +1,27 @@
+import os
 from flask import Flask, render_template
 from extensions import db
-# pip install sqlalchemy-utils di terminal dulu sebelum pakai ini
-from sqlalchemy_utils import database_exists, create_database
-# pip install Flask-SQLAlchemy pymysql
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 app = Flask(__name__)
 
 # ==========================================
-# KONFIGURASI DATABASE MYSQL
+# KONFIGURASI DATABASE (HANYA APP URI)
 # ==========================================
-# Ganti 'root', password (kosong), dan 'terralog_db' sesuai XAMPP/MySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/terralog_db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_DATABASE")
+APP_USER = os.getenv("DB_APP_USERNAME")
+APP_PASS = os.getenv("DB_APP_PASSWORD")
 
-# Hubungkan db dengan app
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{APP_USER}:{APP_PASS}@{DB_HOST}/{DB_NAME}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+
 db.init_app(app)
 
-# Import semua class dari models.py agar dikenali saat pembuatan tabel
-# Pastikan file models.py yang kita bahas sebelumnya sudah ada sejajar dengan app.py
-from models import User, CafeSetting, Category, Menu, Table, Reservation, Order, OrderItem, Review
-
-# Setup database dan tabel secara otomatis saat aplikasi dijalankan
-with app.app_context():
-    # 1. Cek database 'terralog_db' sudah ada di server MySQL Laragon/XAMPP
-    if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
-        # 2. Jika belum ada, buat baru dengan nama 'terralog_db'
-        create_database(app.config['SQLALCHEMY_DATABASE_URI'])
-        print("Wadah Database 'terralog_db' berhasil diciptakan otomatis!")
-    
-    # 3. Setelah wadahnya pasti ada, baru kita buat tabel-tabelnya
-    db.create_all()
-    print("Mengecek/Membuat tabel Database MySQL selesai!")
+from models import *
 
 @app.route('/')
 def home():
