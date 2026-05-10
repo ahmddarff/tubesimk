@@ -224,6 +224,12 @@ staff_data = [
     {"id": 2, "nama": "Budi Santoso", "shift": "Sore", "status": "offline", "total_transaksi": 0},
 ]
 
+kasir_data = [
+    {"id": 1, "nama": "Dimas",   "total_transaksi": 7,  "total_penjualan": 350000, "status": "online"},
+    {"id": 2, "nama": "Bg Ari",  "total_transaksi": 3,  "total_penjualan": 100000, "status": "offline"},
+    {"id": 3, "nama": "Kak Aca", "total_transaksi": 15, "total_penjualan": 750000, "status": "online"},
+]
+
 menu_data = [
     {"id": 1,  "nama": "Ayam Geprek",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 13},
     {"id": 2,  "nama": "Indomie Kuah",   "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
@@ -235,6 +241,15 @@ menu_data = [
     {"id": 8,  "nama": "Dimsum",         "kategori": "Snack",      "harga": 15000, "status": False, "stok": 0},
     {"id": 9,  "nama": "Vanilla Latte",  "kategori": "Non Coffee", "harga": 18000, "status": True,  "stok": 17},
     {"id": 10, "nama": "Beef Teriyaki",  "kategori": "Food",       "harga": 30000, "status": True,  "stok": 7},
+]
+
+transaksi_data = [
+    {"id_transaksi": "#TRX001", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX002", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX003", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX004", "tanggal": "06 Apr, 13:45:10", "metode": "Cash",  "total": "Rp32.000"},
+    {"id_transaksi": "#TRX005", "tanggal": "06 Apr, 13:20:05", "metode": "QRIS",  "total": "Rp58.000"},
+    {"id_transaksi": "#TRX006", "tanggal": "06 Apr, 12:55:33", "metode": "Cash",  "total": "Rp27.000"},
 ]
 
 @app.route('/')
@@ -255,22 +270,31 @@ def manajemen_menu():
 
 @app.route('/manajemen-kasir')
 def manajemen_kasir():
-    return render_template('owner/manajemen-kasir.html', username="Oscar")
+    kasir_online = sum(1 for k in kasir_data if k['status'] == 'online')
+    return render_template('owner/manajemen-kasir.html',
+        username="Oscar",
+        kasir_list=kasir_data,
+        kasir_online=kasir_online,
+        total_kasir=len(kasir_data)
+    )
 
 @app.route('/laporan-penjualan')
 def laporan_penjualan():
-    return render_template('owner/laporan-penjualan.html', username="Oscar")
+    return render_template('owner/laporan-penjualan.html',
+        username="Oscar",
+        transaksi_list=transaksi_data
+    )
 
 @app.route('/pengaturan')
 def pengaturan():
     return render_template('owner/pengaturan.html', username="Oscar")
 
+# ── Menu APIs ──────────────────────────────────────────
 @app.route('/api/tambah-menu', methods=['POST'])
 def tambah_menu():
     data = request.json
-    new_id = len(menu_data) + 1
     menu_data.append({
-        "id":       new_id,
+        "id":       len(menu_data) + 1,
         "nama":     data.get("nama"),
         "kategori": data.get("kategori"),
         "harga":    int(data.get("harga") or 0),
@@ -288,17 +312,45 @@ def toggle_menu_status(menu_id):
             break
     return jsonify({"success": True, "message": "Status menu diperbarui!"})
 
+# ── Kasir APIs ─────────────────────────────────────────
 @app.route('/api/tambah-staff', methods=['POST'])
 def tambah_staff():
     data = request.json
+    new_id = len(kasir_data) + 1
+    kasir_data.append({
+        "id":               new_id,
+        "nama":             data.get("nama"),
+        "total_transaksi":  0,
+        "total_penjualan":  0,
+        "status":           "offline"
+    })
     staff_data.append({
-        "id": len(staff_data) + 1,
-        "nama": data.get("nama"),
-        "shift": "Pagi",
-        "status": "offline",
-        "total_transaksi": 0
+        "id":               new_id,
+        "nama":             data.get("nama"),
+        "shift":            "Pagi",
+        "status":           "offline",
+        "total_transaksi":  0
     })
     return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
+
+@app.route('/api/toggle-kasir-status/<int:kasir_id>', methods=['POST'])
+def toggle_kasir_status(kasir_id):
+    data = request.json
+    for k in kasir_data:
+        if k["id"] == kasir_id:
+            k["status"] = data.get("status", k["status"])
+            break
+    return jsonify({"success": True, "message": "Status kasir diperbarui!"})
+
+@app.route('/api/edit-kasir/<int:kasir_id>', methods=['POST'])
+def edit_kasir(kasir_id):
+    data = request.json
+    for k in kasir_data:
+        if k["id"] == kasir_id:
+            k["nama"]   = data.get("nama", k["nama"])
+            k["status"] = data.get("status", k["status"])
+            break
+    return jsonify({"success": True, "message": "Profil staf berhasil diedit!"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=50001)
