@@ -1,0 +1,87 @@
+{% extends "owner/base.html" %}
+
+{% block content %}
+<div class="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+  <h1 class="text-2xl font-extrabold">Manajemen Kasir</h1>
+  <button class="inline-flex min-h-14 items-center justify-center gap-3 rounded-lg bg-brand px-6 font-extrabold text-white shadow-soft" type="button" data-open-modal="cashier-modal">
+    <span class="grid h-5 w-5 place-items-center rounded-full border-2 border-current"><svg class="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></span>
+    Tambah Staff Baru
+  </button>
+</div>
+
+<section class="mb-8 grid gap-7 xl:grid-cols-3">
+  <article class="min-h-28 rounded-lg border-2 border-brand bg-brandLight p-6 shadow-soft">
+    <span class="mb-5 block text-2xl font-black">Kasir Aktif</span>
+    <strong class="text-3xl font-black">{{ active_cashiers }}</strong>
+  </article>
+  <article class="min-h-28 rounded-lg border-2 border-brand bg-brandLight p-6 shadow-soft">
+    <span class="mb-5 block text-2xl font-black">Kasir Nonaktif</span>
+    <strong class="text-3xl font-black">{{ inactive_cashiers }}</strong>
+  </article>
+  <article class="min-h-28 rounded-lg border-2 border-brand bg-brandLight p-6 shadow-soft">
+    <span class="mb-5 block text-2xl font-black">Shift Berikutnya</span>
+    <strong class="text-3xl font-black">Bg Ari - 16:00</strong>
+  </article>
+</section>
+
+<section class="overflow-x-auto rounded-lg border border-slate-900 bg-white shadow-soft">
+  <table class="w-full min-w-[820px] border-collapse">
+    <thead>
+      <tr>
+        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Nama Staff</th>
+        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Jabatan</th>
+        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Shift</th>
+        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Status</th>
+        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cashier in cashiers %}
+      <tr>
+        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">
+          {{ cashier.name }}
+          <small class="mt-1 block text-sm font-medium text-slate-500">{{ cashier.email }}</small>
+        </td>
+        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ cashier.role }}</td>
+        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ cashier.shift }}</td>
+        <td class="border border-slate-900 px-6 py-5 text-center">
+          <button class="relative inline-flex h-7 w-14 items-center rounded-full border-2 border-brand transition {% if cashier.status == 'Online' %}bg-brand{% else %}bg-white{% endif %}" type="button" data-switch aria-label="Ubah status {{ cashier.name }}" aria-pressed="{{ 'true' if cashier.status == 'Online' else 'false' }}">
+            <span class="h-4 w-4 rounded-full transition {% if cashier.status == 'Online' %}translate-x-7 bg-white{% else %}translate-x-1 bg-brand{% endif %}"></span>
+          </button>
+        </td>
+        <td class="border border-slate-900 px-6 py-5 text-center">
+          <button class="mx-2 my-1 block w-full bg-transparent px-0 py-1 text-lg font-bold hover:text-brand" type="button" data-open-modal="cashier-modal" data-staff-name="{{ cashier.name }}">Edit Profil</button>
+          <button class="mx-2 my-1 block w-full bg-transparent px-0 py-1 text-lg font-bold hover:text-brand" type="button" data-toast-message="Laporan {{ cashier.name }} siap dilihat.">Lihat Laporan</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<div class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/30 p-6" data-modal="cashier-modal" aria-hidden="true">
+  <form class="max-h-[92vh] w-full max-w-xl overflow-auto rounded-lg bg-white p-7 shadow-2xl" data-demo-form>
+    <div class="mb-5 flex items-center justify-between">
+      <strong class="text-4xl font-black text-brand">terralog</strong>
+      <button type="button" class="text-5xl leading-none text-red-500" data-close-modal aria-label="Tutup">×</button>
+    </div>
+    <h2 class="mb-5 text-2xl font-black" data-modal-title>Edit Profil Staff</h2>
+    <label class="mb-4 grid gap-2 text-xl font-extrabold">Nama Lengkap<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="text" placeholder="Nama staff" required></label>
+    <label class="mb-4 grid gap-2 text-xl font-extrabold">Jabatan<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="text" placeholder="Kasir" required></label>
+    <label class="mb-4 grid gap-2 text-xl font-extrabold">Nomor Handphone<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="tel" placeholder="+62 812-0000-0000" required></label>
+    <label class="mb-4 grid gap-2 text-xl font-extrabold">Email<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="email" placeholder="staff@terralog.com" required></label>
+    <label class="mb-5 grid gap-2 text-xl font-extrabold">Password<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="password" placeholder="••••••••"></label>
+    <div class="mb-5 flex items-center gap-4 text-2xl font-extrabold">
+      <span>Status</span>
+      <button class="relative inline-flex h-7 w-14 items-center rounded-full border-2 border-brand bg-brand transition" type="button" data-switch aria-label="Status staff online" aria-pressed="true">
+        <span class="h-4 w-4 translate-x-7 rounded-full bg-white transition"></span>
+      </button>
+      <strong>Online</strong>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <button class="inline-flex min-h-14 items-center justify-center rounded-lg bg-[#41e137] px-5 text-lg font-bold text-black" type="submit">Simpan Perubahan</button>
+      <button class="inline-flex min-h-14 items-center justify-center rounded-lg bg-red-500 px-5 text-lg font-bold text-black" type="button" data-close-modal>Batal</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
