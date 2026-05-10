@@ -1,6 +1,27 @@
+import os
 from flask import Flask, render_template, request, redirect
+from extensions import db
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
+
+# ==========================================
+# KONFIGURASI DATABASE (HANYA APP URI)
+# ==========================================
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_DATABASE")
+APP_USER = os.getenv("DB_APP_USERNAME")
+APP_PASS = os.getenv("DB_APP_PASSWORD")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{APP_USER}:{APP_PASS}@{DB_HOST}/{DB_NAME}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+
+db.init_app(app)
+
+from models import *
 
 @app.route('/')
 def home():
