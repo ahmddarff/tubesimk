@@ -1,10 +1,41 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Hello Terralog!"
+    return render_template('login.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # TODO: Tambahkan validasi username dan password dari database
+        # return redirect('/kasir') atau return redirect('/customer')
+        pass
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        fullname = request.form.get('fullname')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # TODO: Validasi
+        # - Cek password == confirm_password
+        # - Cek username belum terdaftar
+        # - Cek email belum terdaftar
+        # - Hash password
+        # - Simpan ke database
+        # return redirect('/login') dengan pesan sukses
+        pass
+    return render_template('register.html')
 
 @app.route('/kasir')
 def kasir_dashboard():
