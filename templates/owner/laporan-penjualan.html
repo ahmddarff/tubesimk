@@ -1,0 +1,82 @@
+{% extends "owner/base.html" %}
+
+{% block content %}
+<section class="mb-9 flex flex-col gap-5 md:flex-row md:flex-wrap md:items-end md:gap-x-11">
+  <label class="grid gap-2 font-bold text-slate-700">Periode
+    <select class="h-11 w-full rounded-lg border border-slate-300 bg-white px-4 md:w-40">
+      <option>April 2026</option>
+      <option>Maret 2026</option>
+      <option>Februari 2026</option>
+    </select>
+  </label>
+  <label class="grid gap-2 font-bold text-slate-700">Kategori
+    <select class="h-11 w-full rounded-lg border border-slate-300 bg-white px-4 md:w-40">
+      <option>Semua</option>
+      <option>Coffee</option>
+      <option>Non Coffee</option>
+      <option>Food</option>
+    </select>
+  </label>
+  <button class="inline-flex min-h-12 items-center justify-center gap-3 rounded-lg bg-brand px-7 font-extrabold text-white shadow-soft" type="button" data-toast-message="Laporan penjualan berhasil disiapkan.">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 21h14"/></svg>
+    Unduh Laporan
+  </button>
+</section>
+
+<section class="grid gap-7 xl:grid-cols-3">
+  {% for stat in stats %}
+    <article class="min-h-32 rounded-lg bg-white p-6 shadow-soft">
+      <div class="mb-4 font-extrabold text-slate-500">{{ stat.label }}</div>
+      <div class="flex items-center gap-3">
+        <span class="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-[#ffecae] text-[#f3b600]">
+          {% if stat.tone == "chart" %}
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l3-3 3 2 4-6"/></svg>
+          {% elif stat.tone == "order" %}
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 3h8v3h3v15H5V6h3V3Zm2 3h4V5h-4v1Zm-1 5h6V9H9v2Zm0 4h6v-2H9v2Z"/></svg>
+          {% else %}
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 19h14v2H5v-2Zm2-2h3V7H7v10Zm5 0h3V3h-3v14Zm5 0h3v-7h-3v7Z"/></svg>
+          {% endif %}
+        </span>
+        <strong class="break-words text-[clamp(1.25rem,1.65vw,1.625rem)] leading-tight text-navy">{{ stat.value }}</strong>
+      </div>
+      <p class="mt-3 text-slate-400 sm:ml-16"><span class="font-bold text-emerald-600">{{ stat.delta }}</span> {{ stat.note }}</p>
+    </article>
+  {% endfor %}
+</section>
+
+<article class="mt-9 min-h-[295px] rounded-lg bg-white p-6 shadow-soft">
+  <h2 class="mb-5 text-lg font-extrabold text-navy">Analitik Penjualan Mingguan</h2>
+</article>
+
+<article class="mt-12 max-w-3xl overflow-hidden rounded-lg bg-white shadow-soft">
+  <div class="flex min-h-12 items-center justify-between gap-4 px-5 py-3">
+    <h2 class="m-0 text-lg font-extrabold text-navy">Riwayat Transaksi Terakhir</h2>
+    <button class="inline-flex items-center gap-2 text-sm text-slate-600" type="button">
+      Hari ini
+      <svg class="h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+    </button>
+  </div>
+  <div class="overflow-x-auto bg-white">
+    <table class="w-full min-w-[560px] border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border border-slate-300 px-3 py-2 text-left font-extrabold">ID Transaksi</th>
+          <th class="border border-slate-300 px-3 py-2 text-left font-extrabold">Tanggal & Waktu</th>
+          <th class="border border-slate-300 px-3 py-2 text-left font-extrabold">Metode Bayar</th>
+          <th class="border border-slate-300 px-3 py-2 text-left font-extrabold">Total Bayar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transaction in transactions %}
+        <tr>
+          <td class="border border-slate-300 px-3 py-2">{{ transaction.id }}</td>
+          <td class="border border-slate-300 px-3 py-2">{{ transaction.time }}</td>
+          <td class="border border-slate-300 px-3 py-2"><span class="font-extrabold text-violet-600">{{ transaction.method }}</span></td>
+          <td class="border border-slate-300 px-3 py-2">{{ rupiah(transaction.total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</article>
+{% endblock %}

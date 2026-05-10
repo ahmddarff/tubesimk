@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, jsonify, request, redirect
 from extensions import db
 from dotenv import load_dotenv
 
@@ -218,6 +218,59 @@ def customer_pesanan_saya():
                          role='customer',
                          active_orders=active_orders,
                          history_orders=history_orders)
+
+staff_data = [
+    {"id": 1, "nama": "Andi Pratama", "shift": "Pagi", "status": "online", "total_transaksi": 42},
+    {"id": 2, "nama": "Budi Santoso", "shift": "Sore", "status": "offline", "total_transaksi": 0},
+]
+
+menu_data = []
+
+@app.route('/')
+@app.route('/dashboard')
+def dashboard():
+    return render_template('owner/dashboard.html',
+        username="Oscar",
+        total_penjualan="Rp2.500.000,00",
+        total_order=124,
+        menu_terlaris="Caramel Latte",
+        menu_terlaris_qty=45,
+        staff=staff_data
+    )
+
+@app.route('/manajemen-menu')
+def manajemen_menu():
+    return render_template('owner/manajemen-menu.html', username="Oscar")
+
+@app.route('/manajemen-kasir')
+def manajemen_kasir():
+    return render_template('owner/manajemen-kasir.html', username="Oscar")
+
+@app.route('/laporan-penjualan')
+def laporan_penjualan():
+    return render_template('owner/laporan-penjualan.html', username="Oscar")
+
+@app.route('/pengaturan')
+def pengaturan():
+    return render_template('owner/pengaturan.html', username="Oscar")
+
+@app.route('/api/tambah-menu', methods=['POST'])
+def tambah_menu():
+    data = request.json
+    menu_data.append(data)
+    return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+
+@app.route('/api/tambah-staff', methods=['POST'])
+def tambah_staff():
+    data = request.json
+    staff_data.append({
+        "id": len(staff_data) + 1,
+        "nama": data.get("nama"),
+        "shift": "Pagi",
+        "status": "offline",
+        "total_transaksi": 0
+    })
+    return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=50001)
