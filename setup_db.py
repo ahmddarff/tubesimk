@@ -2,8 +2,6 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy_utils import database_exists, create_database
-
-# Kita perlu mengimpor app dan db untuk mendapatkan context Flask dan tabel model
 from app import app, db 
 
 load_dotenv()
@@ -20,17 +18,18 @@ def init_database():
     APP_PASS = os.getenv("DB_APP_PASSWORD")
 
     with app.app_context():
-        # 1. Pengecekan & Pembuatan Wadah
+        # 1. Pengecekan & Pembuatan DB MYSQL
         if not database_exists(ROOT_URI):
             create_database(ROOT_URI)
-            print(f"Wadah Database '{DB_NAME}' berhasil diciptakan oleh Root!")
+            print(f"Database '{DB_NAME}' berhasil diciptakan oleh Root!")
         else:
-            print(f"Wadah Database '{DB_NAME}' sudah ada.")
+            print(f"Database '{DB_NAME}' sudah ada.")
         
         # 2. Pembuatan Akun MySQL Otomatis
         root_engine = create_engine(ROOT_URI)
         with root_engine.connect() as conn:
-            conn.execute(text(f"CREATE USER IF NOT EXISTS '{APP_USER}'@'localhost' IDENTIFIED BY '{APP_PASS}';"))
+            conn.execute(text(f"DROP USER IF EXISTS '{APP_USER}'@'localhost';"))
+            conn.execute(text(f"CREATE USER '{APP_USER}'@'localhost' IDENTIFIED BY '{APP_PASS}';"))
             conn.execute(text(f"GRANT ALL PRIVILEGES ON {DB_NAME}.* TO '{APP_USER}'@'localhost';"))
             conn.execute(text("FLUSH PRIVILEGES;"))
             print(f"Akun MySQL '{APP_USER}' berhasil disiapkan secara otomatis!")
