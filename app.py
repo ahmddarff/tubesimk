@@ -224,7 +224,18 @@ staff_data = [
     {"id": 2, "nama": "Budi Santoso", "shift": "Sore", "status": "offline", "total_transaksi": 0},
 ]
 
-menu_data = []
+menu_data = [
+    {"id": 1,  "nama": "Ayam Geprek",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 13},
+    {"id": 2,  "nama": "Indomie Kuah",   "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
+    {"id": 3,  "nama": "Indomie Goreng", "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
+    {"id": 4,  "nama": "Kentang Goreng", "kategori": "Snack",      "harga": 15000, "status": True,  "stok": 8},
+    {"id": 5,  "nama": "Nasi Goreng",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 12},
+    {"id": 6,  "nama": "Matcha",         "kategori": "Non Coffee", "harga": 17000, "status": True,  "stok": 18},
+    {"id": 7,  "nama": "Americano",      "kategori": "Coffee",     "harga": 15000, "status": True,  "stok": 25},
+    {"id": 8,  "nama": "Dimsum",         "kategori": "Snack",      "harga": 15000, "status": False, "stok": 0},
+    {"id": 9,  "nama": "Vanilla Latte",  "kategori": "Non Coffee", "harga": 18000, "status": True,  "stok": 17},
+    {"id": 10, "nama": "Beef Teriyaki",  "kategori": "Food",       "harga": 30000, "status": True,  "stok": 7},
+]
 
 @app.route('/')
 @app.route('/dashboard')
@@ -240,7 +251,7 @@ def dashboard():
 
 @app.route('/manajemen-menu')
 def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', username="Oscar")
+    return render_template('owner/manajemen-menu.html', username="Oscar", menu_list=menu_data)
 
 @app.route('/manajemen-kasir')
 def manajemen_kasir():
@@ -257,8 +268,25 @@ def pengaturan():
 @app.route('/api/tambah-menu', methods=['POST'])
 def tambah_menu():
     data = request.json
-    menu_data.append(data)
+    new_id = len(menu_data) + 1
+    menu_data.append({
+        "id":       new_id,
+        "nama":     data.get("nama"),
+        "kategori": data.get("kategori"),
+        "harga":    int(data.get("harga") or 0),
+        "status":   True,
+        "stok":     int(data.get("stok") or 0),
+    })
     return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+
+@app.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
+def toggle_menu_status(menu_id):
+    data = request.json
+    for m in menu_data:
+        if m["id"] == menu_id:
+            m["status"] = data.get("status", m["status"])
+            break
+    return jsonify({"success": True, "message": "Status menu diperbarui!"})
 
 @app.route('/api/tambah-staff', methods=['POST'])
 def tambah_staff():
