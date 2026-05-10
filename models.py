@@ -79,7 +79,7 @@ class Reservation(db.Model):
     id                  = db.Column(db.Integer, primary_key=True)
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name       = db.Column(db.String(100), nullable=True)
-    phone               = db.Column(db.String(20), nullable=True)
+    phone               = db.Column(db.String(20), nullable=False)
     table_id            = db.Column(db.Integer, db.ForeignKey('tables.id'), nullable=False)
     reservation_date    = db.Column(db.Date, nullable=False)
     reservation_time    = db.Column(db.Time, nullable=False)
