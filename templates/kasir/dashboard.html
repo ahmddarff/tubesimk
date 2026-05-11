@@ -12,7 +12,10 @@
     selectedItem: {}, 
     qty: 1,
     cart: [],
-    
+    orderType: 'dine-in', 
+    searchQuery: '',
+    selectedCategory: 'all',
+   
     addToCart() {
         let existing = this.cart.find(c => c.nama === this.selectedItem.nama);
         if (existing) {
@@ -37,6 +40,10 @@
         this.cart.splice(index, 1);
     },
 
+printReceipt() {
+       
+        window.print();
+    },
     handlePhysicKey(key) {
         if (!this.showPayment || this.paymentMethod !== 'CASH') return;
         if (!isNaN(key)) {
@@ -129,12 +136,20 @@
     </div>
 
     <!-- BAGIAN KANAN: KERANJANG -->
-    <aside class="w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 flex flex-col sticky top-24 h-[calc(100vh-120px)]">
+    <aside class="w-80 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 flex flex-col sticky top-[100px] h-[calc(100vh-130px)] z-10">
         <h2 class="text-lg font-bold mb-4 text-gray-800">Detail Pesanan</h2>
         
         <div class="flex p-1 bg-gray-100 rounded-xl mb-4">
-            <button class="flex-1 py-2 text-xs font-bold bg-terralogBlue text-white rounded-lg">DINE IN</button>
-            <button class="flex-1 py-2 text-xs font-bold text-gray-500">TAKE AWAY</button>
+            <button @click="orderType = 'dine-in'" 
+            :class="orderType === 'dine-in' ? 'bg-terralogBlue text-white' : 'text-gray-500'"
+            class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+        DINE IN
+    </button>
+    <button @click="orderType = 'takeaway'" 
+            :class="orderType === 'takeaway' ? 'bg-terralogBlue text-white' : 'text-gray-500'"
+            class="flex-1 py-2 text-xs font-bold rounded-lg transition-all">
+        TAKE AWAY
+    </button>
         </div>
 
         <div class="grid grid-cols-3 gap-2 mb-4 text-[11px]">
@@ -312,10 +327,99 @@
                 </template>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <button class="py-3 border-2 border-[#0522A4] text-[#0522A4] rounded-xl font-black text-xs uppercase">Cetak Struk</button>
+                <button @click="printReceipt()" 
+        class="py-3 border-2 border-[#0522A4] text-[#0522A4] rounded-xl font-black text-xs uppercase hover:bg-blue-50 transition">
+    Cetak Struk
+</button>
                 <button @click="location.reload()" class="py-3 bg-[#0522A4] text-white rounded-xl font-black text-xs uppercase shadow-lg hover:bg-blue-800">Selesai</button>
             </div>
         </div>
     </div>
+  
+<div id="receipt-print">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-weight: 900; font-size: 16pt; letter-spacing: 1px; margin-bottom: 2px;">TERRALOG</div>
+        <div style="font-size: 9pt; font-weight: 700; margin-bottom: 8px; color: #444;">COFFEE AND EATERY</div>
+        <div style="font-size: 8pt; line-height: 1.3; color: #666;">
+            Jalan Aman I No.2, Teladan Barat,<br>
+            Kecamatan Medan Kota, Kota Medan,<br>
+            Sumatera Utara
+        </div>
+        <div style="border-bottom: 1px dashed #ccc; margin: 15px 0;"></div>
+    </div>
+
+    <div style="font-size: 9pt; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-weight: bold;" 
+              x-text="orderType === 'dine-in' ? 'Dine In Order' : 'Takeaway Order'">
+        </span>
+            <span style="font-weight: bold;" x-text="'#' + Date.now().toString().slice(-6)"></span>
+        </div>
+        <div style="color: #555;">
+            <span x-text="'Kasir: ' + 'Rahma Sarita'"></span><br>
+            <span x-text="new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })"></span><br>
+            <span x-text="new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })"></span>
+        </div>
+    </div>
+
+    <div style="border-bottom: 1px dashed #ccc; margin: 10px 0;"></div>
+
+    <div style="margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 9pt; margin-bottom: 8px;">
+            <span>Order</span>
+            <span x-text="'Total Item: ' + cart.length"></span>
+        </div>
+        <template x-for="item in cart">
+            <div style="margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 10pt;">
+                    <span x-text="item.qty + ' x  ' + item.nama"></span>
+                    <span x-text="'Rp ' + (item.qty * item.harga).toLocaleString('id-ID')"></span>
+                </div>
+                <div style="font-size: 8pt; color: #777; margin-left: 24px;">Normal Sweet, Normal Ice</div>
+            </div>
+        </template>
+    </div>
+
+    <div style="border-bottom: 1px dashed #ccc; margin: 10px 0;"></div>
+
+    <div style="font-size: 10pt; line-height: 1.6;">
+        <div style="display: flex; justify-content: space-between;">
+            <span>Subtotal</span>
+            <span x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: 12pt; margin-top: 5px;">
+            <span>TOTAL</span>
+            <span x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+        </div>
+        
+        <div style="border-top: 1px solid #eee; margin-top: 10px; padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                <span x-text="paymentMethod"></span>
+                <span x-text="'Rp ' + (paymentMethod === 'CASH' ? parseInt(receivedAmount).toLocaleString('id-ID') : subtotal.toLocaleString('id-ID'))"></span>
+            </div>
+            <template x-if="paymentMethod === 'CASH'">
+                <div style="display: flex; justify-content: space-between; color: #555; font-size: 9pt;">
+                    <span>Kembali</span>
+                    <span x-text="'Rp ' + (parseInt(receivedAmount) - subtotal).toLocaleString('id-ID')"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div style="border-bottom: 1px dashed #ccc; margin: 20px 0;"></div>
+
+    <div style="text-align: center; font-size: 9pt; color: #444;">
+        <div style="font-weight: bold; margin-bottom: 5px;">Terima kasih</div>
+        <div style="line-height: 1.4;">
+            Nikmati promo kopi kami selanjutnya!<br>
+            Follow us on IG: <b>@terralog_</b>
+        </div>
+    </div>
 </div>
+
+
+</div>
+</div>
+
+
 {% endblock %}

@@ -58,42 +58,24 @@ def register():
         pass
     return render_template('register.html')
 
-@app.route('/kasir')
-def kasir_dashboard():
-    katalog_menu = [
-        {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "rating": 4.7, "terjual": 11, "status": "tersedia"},
-        {"nama": "Espresso", "harga": 10000, "img": "kopi.png", "rating": 4.8, "terjual": 5, "status": "tersedia"},
-        {"nama": "Sanger", "harga": 18000, "img": "kopi.png", "rating": 4.6, "terjual": 4, "status": "tersedia"},
-        {"nama": "Americano", "harga": 15000, "img": "kopi.png", "rating": 4.3, "terjual": 8, "status": "tersedia"},
-        {"nama": "Cappuccino", "harga": 18000, "img": "kopi.png", "rating": 4.5, "terjual": 5, "status": "tersedia"},
-        {"nama": "Kopi Latte", "harga": 16000, "img": "kopi.png", "rating": 4.3, "terjual": 4, "status": "habis"},
-    ]
-    return render_template('kasir/dashboard.html', menu=katalog_menu, segment='dashboard', role='kasir')
-    
+# ==========================================
+# REGISTRASI BLUEPRINT (ROUTES)
+# ==========================================
+# Import blueprint dari folder routes
+from routes.auth_routes import auth_bp
+from routes.kasir_routes import kasir_bp
+from routes.customer_routes import customer_bp
+from routes.owner_routes import owner_bp
+from routes.koki_routes import koki_bp
 
-@app.route('/pesanan-aktif')
-def pesanan_aktif():
-    # Data contoh untuk pesanan
-    pesanan_list = [
-        {"id": "P052", "nama": "Agnes", "meja": "07", "status": "PENDING", "total": 48000, "waktu": "12.12", "tipe": "DINE IN"},
-        {"id": "P051", "nama": "Joy", "meja": "-", "status": "PENDING", "total": 48000, "waktu": "11.56", "tipe": "TAKE AWAY"},
-        {"id": "P049", "nama": "Rahma", "meja": "06", "status": "READY", "total": 48000, "waktu": "11.27", "tipe": "DINE IN"},
-        {"id": "P045", "nama": "Sonya", "meja": "03", "status": "SERVED", "total": 48000, "waktu": "10.40", "tipe": "DINE IN"},
-        {"id": "P051", "nama": "Joy", "meja": "-", "status": "PENDING", "total": 48000, "waktu": "11.56", "tipe": "TAKE AWAY"},
-        {"id": "P049", "nama": "Rahma", "meja": "06", "status": "READY", "total": 48000, "waktu": "11.27", "tipe": "DINE IN"},
-        {"id": "P045", "nama": "Sonya", "meja": "03", "status": "SERVED", "total": 48000, "waktu": "10.40", "tipe": "DINE IN"},
-        
-    ]
-    return render_template('kasir/pesanan_aktif.html', segment='pesanan_aktif', role='kasir', pesanan=pesanan_list)
-    
-    
-@app.route('/reservasi')
-def reservasi():
-    data_reservasi = [
-        {'id': '01', 'nama': 'Richard Lim', 'tanggal': '06/04/2024', 'tamu': 2, 'telepon': '0812345678', 'waktu': '19.00', 'status': 'Menunggu'},
-    ]
-    return render_template('kasir/reservasi.html', segment='reservasi', role='kasir', reservations=data_reservasi)
+# Daftarkan blueprint ke aplikasi Flask
+app.register_blueprint(auth_bp)
+app.register_blueprint(kasir_bp, url_prefix='/kasir')
+app.register_blueprint(customer_bp, url_prefix='/customer')
+app.register_blueprint(owner_bp, url_prefix='/owner')
+app.register_blueprint(koki_bp, url_prefix='/koki')
 
+print(app.url_map)
 
 @app.route('/customer')
 def customer_beranda():
@@ -302,50 +284,9 @@ staff_data = [
 menu_data = []
 
 @app.route('/')
-@app.route('/dashboard')
-def dashboard():
-    return render_template('owner/dashboard.html',
-        username="Oscar",
-        total_penjualan="Rp2.500.000,00",
-        total_order=124,
-        menu_terlaris="Caramel Latte",
-        menu_terlaris_qty=45,
-        staff=staff_data
-    )
-
-@app.route('/manajemen-menu')
-def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', username="Oscar")
-
-@app.route('/manajemen-kasir')
-def manajemen_kasir():
-    return render_template('owner/manajemen-kasir.html', username="Oscar")
-
-@app.route('/laporan-penjualan')
-def laporan_penjualan():
-    return render_template('owner/laporan-penjualan.html', username="Oscar")
-
-@app.route('/pengaturan')
-def pengaturan():
-    return render_template('owner/pengaturan.html', username="Oscar")
-
-@app.route('/api/tambah-menu', methods=['POST'])
-def tambah_menu():
-    data = request.json
-    menu_data.append(data)
-    return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
-
-@app.route('/api/tambah-staff', methods=['POST'])
-def tambah_staff():
-    data = request.json
-    staff_data.append({
-        "id": len(staff_data) + 1,
-        "nama": data.get("nama"),
-        "shift": "Pagi",
-        "status": "offline",
-        "total_transaksi": 0
-    })
-    return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
+def home():
+    # Karena root web biasanya langsung ke login, kita redirect menggunakan nama fungsi di dalam blueprint
+    return redirect(url_for('auth.login'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=50001)

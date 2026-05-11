@@ -86,36 +86,44 @@
 
     <!-- Nav -->
     <nav class="flex-1 px-4 py-6 flex flex-col gap-1">
-        <a href="{{ url_for('dashboard') }}"
+        <a href="{{ url_for('owner.dashboard') }}"
            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium transition-all duration-200
-           {% if request.endpoint == 'dashboard' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
-            <i class="fa-solid fa-house w-5 text-center {% if request.endpoint == 'dashboard' %}text-yellow-400{% endif %}"></i>
+           {% if request.endpoint == 'owner.dashboard' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
+            <i class="fa-solid fa-house w-5 text-center {% if request.endpoint == 'owner.dashboard' %}text-yellow-400{% endif %}"></i>
             <span>Dashboard</span>
         </a>
-        <a href="{{ url_for('manajemen_menu') }}"
+        <a href="{{ url_for('owner.manajemen_menu') }}"
            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium transition-all duration-200
-           {% if request.endpoint == 'manajemen_menu' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
-            <i class="fa-solid fa-utensils w-5 text-center {% if request.endpoint == 'manajemen_menu' %}text-yellow-400{% endif %}"></i>
+           {% if request.endpoint == 'owner.manajemen_menu' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
+            <i class="fa-solid fa-utensils w-5 text-center {% if request.endpoint == 'owner.manajemen_menu' %}text-yellow-400{% endif %}"></i>
             <span>Manajemen Menu</span>
         </a>
-        <a href="{{ url_for('manajemen_kasir') }}"
+        <a href="{{ url_for('owner.manajemen_kasir') }}"
            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium transition-all duration-200
-           {% if request.endpoint == 'manajemen_kasir' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
-            <i class="fa-solid fa-users-rectangle w-5 text-center {% if request.endpoint == 'manajemen_kasir' %}text-yellow-400{% endif %}"></i>
+           {% if request.endpoint == 'owner.manajemen_kasir' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
+            <i class="fa-solid fa-users-rectangle w-5 text-center {% if request.endpoint == 'owner.manajemen_kasir' %}text-yellow-400{% endif %}"></i>
             <span>Manajemen Kasir</span>
         </a>
-        <a href="{{ url_for('laporan_penjualan') }}"
+        <a href="{{ url_for('owner.laporan_penjualan') }}"
            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium transition-all duration-200
-           {% if request.endpoint == 'laporan_penjualan' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
-            <i class="fa-solid fa-chart-line w-5 text-center {% if request.endpoint == 'laporan_penjualan' %}text-yellow-400{% endif %}"></i>
+           {% if request.endpoint == 'owner.laporan_penjualan' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
+            <i class="fa-solid fa-chart-line w-5 text-center {% if request.endpoint == 'owner.laporan_penjualan' %}text-yellow-400{% endif %}"></i>
             <span>Laporan Penjualan</span>
         </a>
-        <a href="{{ url_for('pengaturan') }}"
+        <a href="{{ url_for('owner.pengaturan') }}"
            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium transition-all duration-200
-           {% if request.endpoint == 'pengaturan' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
-            <i class="fa-solid fa-gear w-5 text-center {% if request.endpoint == 'pengaturan' %}text-yellow-400{% endif %}"></i>
+           {% if request.endpoint == 'owner.pengaturan' %}bg-white/15 text-white border border-yellow-400/60 font-semibold{% else %}text-white/65 hover:text-white hover:bg-white/10{% endif %}">
+            <i class="fa-solid fa-gear w-5 text-center {% if request.endpoint == 'owner.pengaturan' %}text-yellow-400{% endif %}"></i>
             <span>Pengaturan</span>
         </a>
+        <div class="mt-auto pt-4 border-t border-white/10">
+    <button onclick="konfirmasiLogout()"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[0.95rem] font-medium
+                   text-red-300 hover:text-white hover:bg-red-500/80 transition-all duration-200 group">
+        <i class="fa-solid fa-right-from-bracket w-5 text-center text-red-400 group-hover:text-white transition-colors"></i>
+        <span>Logout</span>
+    </button>
+</div>
     </nav>
 
     <!-- Illustration -->
@@ -433,6 +441,59 @@ function simpanStaff() {
     });
 }
 </script>
+<!-- ===== MODAL KONFIRMASI LOGOUT ===== -->
+<div id="modalLogout" class="modal-overlay hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] items-center justify-center">
+    <div class="modal-box bg-white rounded-2xl w-full max-w-sm mx-4 shadow-2xl">
+        <!-- Icon -->
+        <div class="flex flex-col items-center pt-8 pb-4 px-6">
+            <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4">
+                <i class="fa-solid fa-right-from-bracket text-2xl text-red-500"></i>
+            </div>
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Keluar dari Akun?</h2>
+            <p class="text-sm text-gray-400 text-center">Kamu akan keluar dari dashboard Terralog. Yakin ingin logout?</p>
+        </div>
+        <!-- Buttons -->
+        <div class="flex gap-3 px-6 pb-6 pt-2">
+            <button onclick="closeModal('modalLogout')"
+                    class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
+                Batal
+            </button>
+            <button onclick="prosesLogout()"
+                    class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 hover:shadow-lg transition-all">
+                Ya, Logout
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+      
+function konfirmasiLogout() {
+    openModal('modalLogout');
+}
+
+function prosesLogout() {
+    // Tampilkan toast dulu
+    const toast = document.getElementById('toast');
+    const msg   = document.getElementById('toast-message');
+    const icon  = toast.querySelector('i');
+
+    // Ganti style toast jadi merah untuk logout
+    toast.style.borderLeftColor = '#EF4444';
+    icon.className = 'fa-solid fa-right-from-bracket text-red-500 text-base';
+    msg.textContent = 'Berhasil logout. Sampai jumpa!';
+    toast.classList.remove('hide');
+    toast.classList.add('show');
+
+    closeModal('modalLogout');
+
+    // Redirect ke halaman login setelah 1.5 detik
+    setTimeout(() => {
+        window.location.href = '/login';
+    }, 1500);
+}
+</script>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

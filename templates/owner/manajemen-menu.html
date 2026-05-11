@@ -1,71 +1,165 @@
 {% extends "owner/base.html" %}
+{% block title %}Manajemen Menu{% endblock %}
+{% block breadcrumb %}Manajemen Menu{% endblock %}
 
 {% block content %}
-<div class="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-  <h1 class="text-2xl font-extrabold">Manajemen Menu & Stok</h1>
-  <button class="inline-flex min-h-14 items-center justify-center gap-3 rounded-lg bg-brand px-6 font-extrabold text-white shadow-soft" type="button" data-open-modal="menu-modal">
-    <span class="grid h-5 w-5 place-items-center rounded-full border-2 border-current"><svg class="h-3 w-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></span>
-    Tambah Menu Baru
-  </button>
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-gray-900">Manajemen Menu & Stok</h2>
+    <button onclick="openModal('modalTambahMenu')"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
+        <i class="fa-solid fa-circle-plus text-base"></i>
+        Tambah Menu Baru
+    </button>
 </div>
 
-<div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-5 lg:gap-6" role="list" aria-label="Filter kategori menu">
-  {% for category in categories %}
-    <a role="listitem" class="inline-flex min-h-11 items-center justify-center rounded-full border border-brand px-5 text-lg font-black text-brand transition lg:text-2xl {% if selected_category == category %}bg-brand text-white{% else %}bg-brandLight hover:bg-white{% endif %}" href="{{ url_for('menu', category=category) }}">{{ category }}</a>
-  {% endfor %}
+<!-- Filter Tabs -->
+<div class="flex gap-2 mb-4">
+    <button onclick="filterMenu('Semua', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white transition-all">
+        Semua
+    </button>
+    <button onclick="filterMenu('Coffee', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Coffee
+    </button>
+    <button onclick="filterMenu('Non Coffee', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Non Coffee
+    </button>
+    <button onclick="filterMenu('Food', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Food
+    </button>
+    <button onclick="filterMenu('Snack', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Snack
+    </button>
 </div>
 
-<section class="overflow-x-auto rounded-lg border border-slate-900 bg-white shadow-soft">
-  <table class="w-full min-w-[820px] border-collapse">
-    <thead>
-      <tr>
-        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Nama Menu</th>
-        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Kategori</th>
-        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Harga</th>
-        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Status</th>
-        <th class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">Stok</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in items %}
-      <tr>
-        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ item.name }}</td>
-        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ item.category }}</td>
-        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ "{:,.0f}".format(item.price).replace(",", ".") }}</td>
-        <td class="border border-slate-900 px-6 py-5 text-center">
-          <button class="relative inline-flex h-7 w-14 items-center rounded-full border-2 border-brand transition {% if item.active %}bg-brand{% else %}bg-white{% endif %}" type="button" data-switch aria-label="Ubah status {{ item.name }}" aria-pressed="{{ 'true' if item.active else 'false' }}">
-            <span class="h-4 w-4 rounded-full transition {% if item.active %}translate-x-7 bg-white{% else %}translate-x-1 bg-brand{% endif %}"></span>
-          </button>
-        </td>
-        <td class="border border-slate-900 px-6 py-5 text-center text-2xl font-black">{{ item.stock }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</section>
-
-<div class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/30 p-6" data-modal="menu-modal" aria-hidden="true">
-  <form class="max-h-[92vh] w-full max-w-xl overflow-auto rounded-lg bg-white p-7 shadow-2xl" data-demo-form>
-    <div class="mb-5 flex items-center justify-between">
-      <strong class="text-4xl font-black text-brand">terralog</strong>
-      <button type="button" class="text-5xl leading-none text-red-500" data-close-modal aria-label="Tutup">×</button>
-    </div>
-    <h2 class="mb-5 text-2xl font-black">Tambah Menu Baru</h2>
-    <label class="mb-4 grid gap-2 text-xl font-extrabold">Nama Menu<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="text" placeholder="Contoh: Hazelnut Latte" required></label>
-    <label class="mb-4 grid gap-2 text-xl font-extrabold">Kategori
-      <select class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" required>
-        <option>Coffee</option>
-        <option>Non Coffee</option>
-        <option>Food</option>
-        <option>Snack</option>
-      </select>
-    </label>
-    <label class="mb-4 grid gap-2 text-xl font-extrabold">Harga<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="number" min="0" placeholder="18000" required></label>
-    <label class="mb-5 grid gap-2 text-xl font-extrabold">Stok<input class="min-h-14 rounded-lg border-2 border-slate-300 px-4 text-base font-semibold" type="number" min="0" placeholder="20" required></label>
-    <div class="grid gap-3 sm:grid-cols-2">
-      <button class="inline-flex min-h-14 items-center justify-center rounded-lg bg-[#41e137] px-5 text-lg font-bold text-black" type="submit">Simpan</button>
-      <button class="inline-flex min-h-14 items-center justify-center rounded-lg bg-red-500 px-5 text-lg font-bold text-black" type="button" data-close-modal>Batal</button>
-    </div>
-  </form>
+<!-- Table -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm border-collapse">
+        <thead>
+            <tr class="border-b-2 border-gray-100">
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/4">Nama Menu</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Kategori</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Harga</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Status</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Stok</th>
+            </tr>
+        </thead>
+        <tbody id="menuTableBody">
+            {% for m in menu_list %}
+            <tr class="menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors"
+                data-kategori="{{ m.kategori }}">
+                <td class="px-6 py-4 text-center font-bold text-gray-800">{{ m.nama }}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.kategori }}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ "{:,.0f}".format(m.harga).replace(",", ".") }}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center">
+                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                            <input type="checkbox" {% if m.status %}checked{% endif %}
+                                   onchange="toggleStatus(this, '{{ m.id }}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.stok }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter by category
+function filterMenu(kategori, btn) {
+    // Update button styles
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-[#1B2FAA]', 'text-white');
+        b.classList.add('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+    });
+    btn.classList.add('bg-[#1B2FAA]', 'text-white');
+    btn.classList.remove('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+
+    // Filter rows
+    document.querySelectorAll('.menu-row').forEach(row => {
+        const rowKat = row.dataset.kategori;
+        if (kategori === 'Semua' || rowKat === kategori) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Toggle status (on/off)
+function toggleStatus(checkbox, menuId) {
+    const status = checkbox.checked;
+    fetch(`/api/toggle-menu-status/${menuId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+    }).then(r => r.json()).then(data => {
+        if (data.success) showToast(data.message);
+    });
+}
+
+// Override simpanMenu to also add row to THIS table
+const _origSimpanMenu = window.simpanMenu;
+window.simpanMenu = function() {
+    const nama     = document.getElementById('namaMenu')?.value.trim();
+    const kategori = document.getElementById('kategoriMenu')?.value;
+    const harga    = document.getElementById('hargaMenu')?.value;
+    const stok     = document.getElementById('stokMenu')?.value;
+    if (!nama) { alert('Nama menu wajib diisi!'); return; }
+
+    fetch('/api/tambah-menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama, kategori, harga, stok })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            closeModal('modalTambahMenu');
+            showToast(data.message);
+            ['namaMenu','hargaMenu','stokMenu','deskripsiMenu'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            // Format harga
+            const hargaNum = parseInt(harga) || 0;
+            const hargaFmt = hargaNum.toLocaleString('id-ID');
+            const stokNum  = parseInt(stok) || 0;
+            const newId    = Date.now();
+
+            // Add new row
+            const tbody = document.getElementById('menuTableBody');
+            const tr = document.createElement('tr');
+            tr.className = 'menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors';
+            tr.dataset.kategori = kategori;
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-center font-bold text-gray-800">${nama}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${kategori}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${hargaFmt}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center">
+                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                            <input type="checkbox" checked onchange="toggleStatus(this, '${newId}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${stokNum}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    });
+};
+</script>
 {% endblock %}
