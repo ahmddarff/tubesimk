@@ -9,6 +9,26 @@
     receivedAmount: '0',
     selectedOrder: {},
     showSuccess: false,
+
+    // FUNGSI UBAH STATUS (Pending/Ready/Served)
+    updateStatus(newStatus) {
+        // Update di tampilan detail
+        this.selectedOrder.status = newStatus;
+        
+        // Update di database simulasi (agar card di dashboard juga berubah warnanya)
+        const orderIndex = this.pesanan.findIndex(p => p.id === this.selectedOrder.id);
+        if (orderIndex !== -1) {
+            this.pesanan[orderIndex].status = newStatus;
+        }
+    },
+
+    // FUNGSI EDIT PESANAN
+    editOrder() {
+        // Mengarahkan kasir kembali ke halaman POS dengan membawa data pesanan ini
+        // Contoh: mengalihkan ke route /kasir dengan ID pesanan
+        window.location.href = '/kasir?edit=' + this.selectedOrder.id;
+    }, 
+    
     handlePhysicKey(key) {
         if (!this.showPayment || this.paymentMethod !== 'CASH') return;
         if (!isNaN(key)) {
@@ -176,17 +196,18 @@
 
             <!-- Tab Status (Switcher) -->
             <div class="flex gap-1.5 p-1 bg-gray-50 rounded-xl">
-                <template x-for="s in ['PENDING', 'READY', 'SERVED']">
-                    <button class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all"
-                            :class="selectedOrder.status === s ? 
-                            (s === 'PENDING' ? 'bg-yellow-400 text-black shadow-sm' : 
-                             s === 'READY' ? 'bg-blue-500 text-white shadow-sm' : 
-                             'bg-emerald-600 text-white shadow-sm') : 
-                            'text-gray-400 hover:bg-white'">
-                        <span x-text="s"></span>
-                    </button>
-                </template>
-            </div>
+    <template x-for="s in ['PENDING', 'READY', 'SERVED']">
+        <button @click="updateStatus(s)"
+                class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all"
+                :class="selectedOrder.status === s ? 
+                (s === 'PENDING' ? 'bg-yellow-400 text-black shadow-sm' : 
+                 s === 'READY' ? 'bg-blue-500 text-white shadow-sm' : 
+                 'bg-emerald-600 text-white shadow-sm') : 
+                'text-gray-400 hover:bg-white'">
+            <span x-text="s"></span>
+        </button>
+    </template>
+</div>
         </div>
 
         <!-- DAFTAR ITEM (Menu & Harga Fokus Utama) -->
@@ -247,12 +268,13 @@
         <!-- JIKA BELUM LUNAS: Tampilkan tombol Edit dan Bayar -->
         <template x-if="!selectedOrder.lunas">
             <div class="grid grid-cols-2 gap-3">
-                <button class="py-3.5 border-2 border-orange-400 text-orange-500 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-50 transition">
-                    Edit Pesanan
-                </button>
-                <button @click="showPayment = true; showDetail = false" class="py-3.5 bg-orange-500 text-white rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                    Bayar
-                </button>
+               <button @click="editOrder()"
+                    class="py-3.5 border-2 border-orange-400 text-orange-500 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-50 transition">
+                Edit Pesanan
+            </button>
+            <button @click="showPayment = true; showDetail = false" class="py-3.5 bg-orange-500 text-white rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-600 transition shadow-lg shadow-orange-100">
+                Bayar
+            </button>
             </div>
         </template>
 
