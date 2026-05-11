@@ -1,0 +1,340 @@
+{% extends 'layouts/layout_kasir.html' %}
+
+{% block content %}
+<div 
+    x-data="{ 
+        notifEnabled: true,
+        darkMode: false,
+
+        activeTab: 'akun',
+
+        showPasswordModal: false,
+
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+
+        savePassword() {
+            if(this.newPassword !== this.confirmPassword){
+                alert('Konfirmasi password tidak cocok!')
+                return
+            }
+
+            alert('Password berhasil diperbarui!')
+            this.showPasswordModal = false
+
+            this.currentPassword = ''
+            this.newPassword = ''
+            this.confirmPassword = ''
+        }
+    }"
+    x-init="$nextTick(() => lucide.createIcons())"
+    class="px-6 py-4 bg-[#F8FAFC] min-h-screen font-['Inter']"
+>
+
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">
+            Pengaturan
+        </h1>
+
+        <p class="text-sm text-gray-500 mt-1">
+            Kelola akun dan preferensi aplikasi kasir Anda
+        </p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 mb-5">
+
+        <button 
+            @click="activeTab = 'akun'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'akun'
+                ? 'bg-terralogBlue text-white shadow-md'
+                : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 border border-gray-100"
+        >
+            <i data-lucide="user" class="w-4 h-4"></i>
+            Profil Akun
+        </button>
+
+        <button 
+            @click="activeTab = 'keamanan'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'keamanan'
+                ? 'bg-terralogBlue text-white shadow-md'
+                : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 border border-gray-100"
+        >
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            Keamanan
+        </button>
+
+        <button 
+            @click="activeTab = 'aplikasi'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'aplikasi'
+                ? 'bg-terralogBlue text-white shadow-md'
+                : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 border border-gray-100"
+        >
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            Preferensi
+        </button>
+
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-[1.5rem] shadow-sm border border-gray-100 p-6 max-w-5xl">
+
+        <!-- ================= AKUN ================= -->
+        <div x-show="activeTab === 'akun'" x-transition>
+
+            <!-- Profile -->
+            <div class="flex flex-col md:flex-row md:items-center gap-5 pb-6 border-b border-gray-100">
+
+                <div class="relative">
+                    <div class="w-20 h-20 rounded-full bg-terralogBlue flex items-center justify-center text-white text-2xl font-black shadow-md">
+                        RS
+                    </div>
+
+                    <button 
+                        class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition"
+                        @click="alert('Fitur ubah foto profil akan segera tersedia!')"
+                    >
+                        <i data-lucide="camera" class="w-3.5 h-3.5 text-terralogBlue"></i>
+                    </button>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">
+                        Rahma Sarita
+                    </h2>
+
+                    <p class="text-sm text-gray-400 font-medium mt-1">
+                        Kasir Senior • ID EMP-2026-001
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Form -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        Nama Lengkap
+                    </label>
+
+                    <input 
+                        type="text"
+                        value="Rahma Sarita"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm"
+                    >
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        Email Kantor
+                    </label>
+
+                    <input 
+                        type="email"
+                        value="rahma.sarita@terralog.com"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm"
+                    >
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                        Bio Singkat
+                    </label>
+
+                    <textarea 
+                        rows="4"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition resize-none text-sm"
+                    >Kasir Senior di Terralog Coffee.</textarea>
+                </div>
+
+            </div>
+
+            <!-- Save -->
+            <div class="flex justify-end mt-6">
+                <button 
+                    @click="alert('Profil berhasil diperbarui!')"
+                    class="px-6 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-semibold text-sm transition shadow-md"
+                >
+                    Simpan Profil
+                </button>
+            </div>
+
+        </div>
+
+        <!-- ================= KEAMANAN ================= -->
+        <div 
+            x-show="activeTab === 'keamanan'"
+            x-transition
+            class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+
+            <div 
+                @click="showPasswordModal = true"
+                class="group bg-white border border-gray-100 rounded-2xl p-5 hover:border-red-200 hover:bg-red-50/40 transition cursor-pointer"
+            >
+
+                <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center text-red-500 mb-4 group-hover:bg-red-500 group-hover:text-white transition">
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                </div>
+
+                <h3 class="font-bold text-lg text-gray-800">
+                    Ganti Password
+                </h3>
+
+                <p class="text-sm text-gray-400 mt-1 leading-relaxed">
+                    Perbarui password akun untuk keamanan sistem.
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- ================= APLIKASI ================= -->
+        <div 
+            x-show="activeTab === 'aplikasi'"
+            x-transition
+            class="grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+
+            <!-- Notifikasi -->
+            <div class="border border-gray-100 rounded-2xl p-5">
+
+                <div class="flex items-start justify-between">
+
+                    <div>
+
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-terralogBlue mb-4">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                        </div>
+
+                        <h3 class="font-bold text-lg text-gray-800">
+                            Notifikasi Suara
+                        </h3>
+
+                        <p class="text-sm text-gray-400 mt-1">
+                            Bunyi alert saat pesanan baru masuk
+                        </p>
+
+                    </div>
+
+                    <!-- Toggle -->
+                    <button 
+                        @click="notifEnabled = !notifEnabled"
+                        :class="notifEnabled ? 'bg-emerald-500' : 'bg-gray-300'"
+                        class="w-12 h-7 rounded-full relative transition"
+                    >
+                        <div 
+                            :class="notifEnabled ? 'translate-x-5' : 'translate-x-1'"
+                            class="absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                        ></div>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================= MODAL PASSWORD ================= -->
+    <div 
+        x-show="showPasswordModal"
+        x-transition
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+    >
+
+        <div 
+            @click.away="showPasswordModal = false"
+            class="bg-white w-full max-w-md rounded-[1.5rem] p-6 shadow-2xl"
+        >
+
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-black text-gray-800">
+                    Ganti Password
+                </h2>
+
+                <button 
+                    @click="showPasswordModal = false"
+                    class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <div class="space-y-4">
+
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">
+                        Password Lama
+                    </label>
+
+                    <input 
+                        type="password"
+                        x-model="currentPassword"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition"
+                    >
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">
+                        Password Baru
+                    </label>
+
+                    <input 
+                        type="password"
+                        x-model="newPassword"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition"
+                    >
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">
+                        Konfirmasi Password
+                    </label>
+
+                    <input 
+                        type="password"
+                        x-model="confirmPassword"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition"
+                    >
+                </div>
+
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+
+                <button 
+                    @click="showPasswordModal = false"
+                    class="px-5 py-2.5 rounded-xl border border-gray-200 font-semibold hover:bg-gray-50 transition text-sm"
+                >
+                    Batal
+                </button>
+
+                <button 
+                    @click="savePassword()"
+                    class="px-5 py-2.5 bg-terralogBlue text-white rounded-xl font-semibold hover:bg-blue-900 transition text-sm"
+                >
+                    Simpan
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        lucide.createIcons();
+    });
+</script>
+{% endblock %}
