@@ -1,57 +1,71 @@
 <!-- Sidebar Customer -->
-<aside class="w-64 bg-gradient-to-b from-[#0522A4] to-[#031263] text-white flex flex-col h-screen fixed left-0 top-0 shadow-xl z-50 overflow-y-auto">
+<aside class="w-72 bg-terralogBlue text-white flex flex-col min-h-screen p-6 overflow-hidden flex-none relative">
     
     <!-- Logo -->
-    <div class="p-6 border-b border-blue-400/30">
-        <a href="/customer" class="flex items-center gap-3 group">
-            <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center font-bold text-[#0522A4] group-hover:scale-110 transition-transform">
-                T
-            </div>
-            <span class="text-2xl font-black tracking-tighter">terralog</span>
+    <div class="mb-8 px-2 flex justify-center">
+        <a href="/customer">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                 alt="Logo Terralog" 
+                 class="h-20 w-auto object-contain">
         </a>
     </div>
 
     <!-- Navigation Menu -->
-    <nav class="flex-1 py-8 px-4 space-y-2">
+    <nav class="space-y-2 relative z-10">
         
-        <!-- Beranda (Home) -->
-        <a href="/customer" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'home' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
-            <svg class="w-5 h-5 flex-shrink-0" fill="{% if segment == 'home' %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 7v10a1 1 0 001 1h2m6-4v4m0 0h2a1 1 0 001-1v-4m0 0V7m0 0H9m0 0l7-4"></path>
-            </svg>
-            <span class="font-semibold text-sm">Beranda</span>
+        <!-- Beranda -->
+        <a href="/customer" 
+           class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+           {% if segment == 'customer' or segment == 'home' %} 
+                bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+           {% else %} 
+                text-blue-100 hover:bg-white/10 
+           {% endif %}">
+            <i data-lucide="home" class="w-6 h-6"></i>
+            <span class="font-semibold text-lg">Beranda</span>
         </a>
 
-        <!-- Daftar Menu (Menu) -->
-        <a href="/customer" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'menu' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.228 6.253 2 9.66 2 14s4.228 7.747 10 7.747m0-13c5.772 0 10 3.66 10 8.247m0-8.247C21.772 6.253 17.772 3 12 3"></path>
-            </svg>
-            <span class="font-semibold text-sm">Daftar Menu</span>
+        <!-- Daftar Menu -->
+        <a href="/customer/daftar-menu" 
+            class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+            {% if segment == 'daftar_menu' %} 
+                bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+            {% else %} 
+                text-blue-100 hover:bg-white/10 
+            {% endif %}">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+            <span class="font-semibold text-lg">Daftar Menu</span>
         </a>
 
-        <!-- Pesanan Saya (My Orders) -->
-        <a href="/customer/pesanan-saya" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group {% if segment == 'pesanan_saya' %}bg-terralogOrange text-white{% else %}text-blue-100 hover:bg-white/10{% endif %}">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-            </svg>
-            <span class="font-semibold text-sm">Pesanan Saya</span>
+        <!-- Pesanan Saya -->
+        <a href="/customer/pesanan-saya" 
+            class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+            {% if segment == 'pesanan_saya' %} 
+                bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+            {% else %} 
+                text-blue-100 hover:bg-white/10 
+            {% endif %} group">
+            <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+            <span class="font-semibold text-lg">Pesanan Saya</span>
         </a>
 
-        <!-- Buat Reservasi (Make Reservation) -->
-        <a href="/customer/buat-reservasi" class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all group text-blue-100 hover:bg-white/10">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-            </svg>
-            <span class="font-semibold text-sm">Buat Reservasi</span>
+        <!-- Buat Reservasi -->
+        <a href="/customer/buat-reservasi" class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+             {% if segment == 'buat_reservasi' %} 
+                bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+            {% else %} 
+                text-blue-100 hover:bg-white/10 
+            {% endif %}">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+            <span class="font-semibold text-lg">Buat Reservasi</span>
         </a>
     </nav>
 
-    <!-- Footer - Decorative -->
-    <div class="p-6 border-t border-blue-400/30">
-        <div class="opacity-20 text-xs text-center">
-            <p>© 2026 Terralog</p>
-            <p class="mt-1">Coffee Shop Management</p>
-        </div>
+    <!-- Background Image -->
+    <div class="absolute bottom-0 left-0 w-full pointer-events-none z-0">
+        <img src="{{ url_for('static', filename='images/gambar.png') }}" 
+             alt="" 
+             class="w-full h-auto object-contain opacity-90">
     </div>
+
 </aside>
