@@ -31,12 +31,16 @@ from routes.auth_routes import auth_bp
 from routes.kasir_routes import kasir_bp
 from routes.customer_routes import customer_bp
 from routes.owner_routes import owner_bp
+from routes.koki_routes import koki_bp
 
 # Daftarkan blueprint ke aplikasi Flask
 app.register_blueprint(auth_bp)
 app.register_blueprint(kasir_bp, url_prefix='/kasir')
 app.register_blueprint(customer_bp, url_prefix='/customer')
 app.register_blueprint(owner_bp, url_prefix='/owner')
+app.register_blueprint(koki_bp, url_prefix='/koki')
+
+print(app.url_map)
 
 # ==========================================
 # ROUTING UTAMA & MOCK DATA
