@@ -39,8 +39,36 @@ def daftar_menu():
 
 @customer_bp.route('/buat-reservasi')
 def buat_reservasi():
-    active_reservations = [{"id": "AB123", "status": "Menunggu", "date": "06 April 2026", "time": "15:15 WIB", "duration": "2 Jam", "guests": "2"}]
-    history_reservations = [{"id": "AC780", "status": "Dibatalkan", "date": "05 April 2026", "time": "16:00 WIB", "duration": "2+ Jam", "guests": "134"}]
+    active_reservations = [
+        {
+            "id": "AB123",
+            "status": "Menunggu",
+            "date": "06 April 2026",
+            "time": "15:15 WIB",
+            "duration": "2 Jam",
+            "guests": "21"
+        }
+    ]
+    
+    history_reservations = [
+        {
+            "id": "AB650",
+            "status": "Selesai",
+            "date": "05 April 2026",
+            "time": "16:00 WIB",
+            "duration": "1 Jam",
+            "guests": "2"
+        },
+        {
+            "id": "AC780",
+            "status": "Dibatalkan",
+            "date": "06 Desember 2025",
+            "time": "08:00 WIB",
+            "duration": "2+ Jam",
+            "guests": "134"
+        }
+    ]
+    
     return render_template('customer/buat_reservasi.html', segment='buat_reservasi', role='customer', active_reservations=active_reservations, history_reservations=history_reservations)
 
 @customer_bp.route('/pesanan-saya')
@@ -69,3 +97,53 @@ def pesanan_saya():
         }
     ]
     return render_template('customer/pesanan_saya.html', segment='pesanan_saya', role='customer', active_orders=active_orders, history_orders=history_orders)
+
+@customer_bp.route('/checkout')
+def checkout():
+    return render_template('customer/checkout.html', segment='checkout', role='customer')
+
+@customer_bp.route('/profil')
+def profil():
+    return render_template('customer/profil.html', segment='profil', role='customer')
+
+@customer_bp.route('/pesanan/<order_id>')
+def pesanan_detail(order_id):
+    return render_template('customer/pesanan_aktif_detail.html', segment='pesanan_saya', role='customer', order_id=order_id)
+
+@customer_bp.route('/reservasi/new')
+def reservasi_new():
+    return render_template('customer/buat_reservasi_new.html', segment='buat_reservasi', role='customer')
+
+@customer_bp.route('/reservasi/<reservation_id>')
+def reservasi_detail(reservation_id):
+    return render_template('customer/reservasi_detail.html', segment='buat_reservasi', role='customer', reservation_id=reservation_id)
+
+@customer_bp.route('/reservasi/history')
+def reservasi_history():
+    history_reservations = [
+        {
+            "id": "AB650",
+            "status": "Selesai",
+            "date": "05 April 2026",
+            "time": "16:00 WIB",
+            "duration": "1 Jam",
+            "guests": "2"
+        },
+        {
+            "id": "AC780",
+            "status": "Dibatalkan",
+            "date": "06 Desember 2025",
+            "time": "08:00 WIB",
+            "duration": "2+ Jam",
+            "guests": "134"
+        },
+        {
+            "id": "AB456",
+            "status": "Selesai",
+            "date": "15 Maret 2026",
+            "time": "19:30 WIB",
+            "duration": "3 Jam",
+            "guests": "5"
+        }
+    ]
+    return render_template('customer/reservasi_history.html', segment='buat_reservasi', role='customer', history_reservations=history_reservations)
