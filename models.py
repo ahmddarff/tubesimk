@@ -13,7 +13,9 @@ class User(db.Model):
     email       = db.Column(db.String(120), unique=True, nullable=True) # Tetap ada tapi nullable (opsional)
     password    = db.Column(db.String(255), nullable=False) # Simpan hasil hash, bukan plain text
     phone       = db.Column(db.String(20), nullable=True)
+    photo       = db.Column(db.String(255), nullable=True)
     role        = db.Column(db.Enum('owner', 'kasir', 'koki', 'customer', name='user_roles'), nullable=False)
+    is_active   = db.Column(db.Boolean, default=True)
 
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
