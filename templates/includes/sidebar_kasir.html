@@ -63,7 +63,7 @@
         <!-- KASIR MENU -->
         {% else %}
             <!-- Dashboard -->
-            <a href="/kasir" 
+            <a href="{{ url_for('kasir.dashboard') }}" 
                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
                {% if segment == 'dashboard' %} 
                     bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
@@ -75,7 +75,7 @@
             </a>
 
             <!-- Pesanan Aktif -->
-            <a href="{{ url_for('pesanan_aktif') }}" 
+            <a href="{{ url_for('kasir.pesanan_aktif') }}" 
                 class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
                 {% if segment == 'pesanan_aktif' %} 
                     bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
@@ -87,7 +87,7 @@
             </a>
 
             <!-- Reservasi -->
-            <a href="{{ url_for('reservasi') }}" 
+            <a href="{{ url_for('kasir.reservasi') }}" 
                 class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
             {% if segment == 'reservasi' %} 
                 bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
