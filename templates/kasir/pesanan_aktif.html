@@ -1,8 +1,11 @@
- {% extends 'layouts/layout_kasir.html' %}
+{% extends 'layouts/layout_kasir.html' %}
 
 {% block content %}
 <div x-data="{ 
-   filterStatus: 'SEMUA', 
+   filterStatus: 'SEMUA',
+   filterTipe: 'SEMUA',
+   filterPembayaran: 'SEMUA',
+
     showDetail: false, 
     showPayment: false, 
     paymentMethod: 'CASH', 
@@ -10,436 +13,271 @@
     selectedOrder: {},
     showSuccess: false,
 
-    // FUNGSI UBAH STATUS (Pending/Ready/Served)
     updateStatus(newStatus) {
-        // Update di tampilan detail
         this.selectedOrder.status = newStatus;
         
-        // Update di database simulasi (agar card di dashboard juga berubah warnanya)
         const orderIndex = this.pesanan.findIndex(p => p.id === this.selectedOrder.id);
+
         if (orderIndex !== -1) {
             this.pesanan[orderIndex].status = newStatus;
         }
     },
 
-    // FUNGSI EDIT PESANAN
     editOrder() {
-        // Mengarahkan kasir kembali ke halaman POS dengan membawa data pesanan ini
-        // Contoh: mengalihkan ke route /kasir dengan ID pesanan
         window.location.href = '/kasir?edit=' + this.selectedOrder.id;
     }, 
     
     handlePhysicKey(key) {
         if (!this.showPayment || this.paymentMethod !== 'CASH') return;
+
         if (!isNaN(key)) {
-            this.receivedAmount === '0' ? this.receivedAmount = key : this.receivedAmount += key;
+            this.receivedAmount === '0'
+                ? this.receivedAmount = key
+                : this.receivedAmount += key;
+
         } else if (key === 'Backspace') {
-            this.receivedAmount = this.receivedAmount.length > 1 ? this.receivedAmount.slice(0, -1) : '0';
+
+            this.receivedAmount = this.receivedAmount.length > 1
+                ? this.receivedAmount.slice(0, -1)
+                : '0';
+
         } else if (key === 'Enter') {
-            // Logika Bayar
+            this.showSuccess = true;
         }
     }
-}" @keydown.window="handlePhysicKey($event.key)" class="font-['Inter']">
-    
-    <!-- Status Box Atas -->
+}" 
+@keydown.window="handlePhysicKey($event.key)"
+class="font-['Inter']">
+
+    <!-- STATUS -->
     <div class="grid grid-cols-4 gap-3 mb-6">
         {% set stats = [('Meja Kosong','13/20'), ('Pesanan Aktif','10'), ('Belum Lunas','7'), ('Selesai','42')] %}
+
         {% for title, val in stats %}
         <div class="bg-[#F7E190] p-3 rounded-lg shadow-sm border border-black/5">
-            <p class="text-[10px] uppercase tracking-wider font-semibold text-gray-700">{{ title }}</p>
-            <p class="text-lg font-bold">{{ val }}</p>
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-gray-700">
+                {{ title }}
+            </p>
+
+            <p class="text-lg font-bold">
+                {{ val }}
+            </p>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Header & Filter -->
+    <!-- CONTAINER -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+
+        <!-- HEADER -->
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-terralogBlue">Pesanan Aktif</h2>
-            <p class="font-bold text-terralogBlue text-lg">07/04/2026</p>
+            <h2 class="text-2xl font-bold text-terralogBlue">
+                Pesanan Aktif
+            </h2>
+
+            <p class="font-bold text-terralogBlue text-lg">
+                07/04/2026
+            </p>
         </div>
 
-        <!-- Filter Status Tabs -->
-        <div class="flex gap-4 mb-6">
-            <button @click="filterStatus = 'SEMUA'" 
-                :class="filterStatus === 'SEMUA' ? 'bg-terralogBlue text-white' : 'border border-terralogBlue text-terralogBlue'"
-                class="px-8 py-2 rounded-full font-bold text-sm transition">SEMUA (10)</button>
-            
-            <button @click="filterStatus = 'PENDING'" 
-                :class="filterStatus === 'PENDING' ? 'bg-terralogBlue text-white' : 'border border-terralogBlue text-terralogBlue'"
-                class="px-8 py-2 rounded-full font-bold text-sm transition">PENDING (3)</button>
-            
-            <button @click="filterStatus = 'READY'" 
-                :class="filterStatus === 'READY' ? 'bg-terralogBlue text-white' : 'border border-terralogBlue text-terralogBlue'"
-                class="px-8 py-2 rounded-full font-bold text-sm transition">READY (2)</button>
-            
-            <button @click="filterStatus = 'SERVED'" 
-                :class="filterStatus === 'SERVED' ? 'bg-terralogBlue text-white' : 'border border-terralogBlue text-terralogBlue'"
-                class="px-8 py-2 rounded-full font-bold text-sm transition">SERVED (5)</button>
+        <!-- FILTER STATUS -->
+        <div class="flex gap-4 mb-6 flex-wrap">
+
+            <button 
+                @click="filterStatus = 'SEMUA'" 
+                :class="filterStatus === 'SEMUA'
+                    ? 'bg-terralogBlue text-white'
+                    : 'border border-terralogBlue text-terralogBlue'"
+                class="px-8 py-2 rounded-full font-bold text-sm transition"
+            >
+                SEMUA (10)
+            </button>
+
+            <button 
+                @click="filterStatus = 'PENDING'" 
+                :class="filterStatus === 'PENDING'
+                    ? 'bg-terralogBlue text-white'
+                    : 'border border-terralogBlue text-terralogBlue'"
+                class="px-8 py-2 rounded-full font-bold text-sm transition"
+            >
+                PENDING (3)
+            </button>
+
+            <button 
+                @click="filterStatus = 'READY'" 
+                :class="filterStatus === 'READY'
+                    ? 'bg-terralogBlue text-white'
+                    : 'border border-terralogBlue text-terralogBlue'"
+                class="px-8 py-2 rounded-full font-bold text-sm transition"
+            >
+                READY (2)
+            </button>
+
+            <button 
+                @click="filterStatus = 'SERVED'" 
+                :class="filterStatus === 'SERVED'
+                    ? 'bg-terralogBlue text-white'
+                    : 'border border-terralogBlue text-terralogBlue'"
+                class="px-8 py-2 rounded-full font-bold text-sm transition"
+            >
+                SERVED (5)
+            </button>
+
         </div>
 
-        <!-- Search & Dropdown Filter -->
-        <div class="flex gap-4 mb-8">
-            <div class="relative flex-1">
+        <!-- SEARCH + FILTER -->
+        <div class="flex gap-4 mb-8 flex-wrap">
+
+            <!-- SEARCH -->
+            <div class="relative flex-1 min-w-[250px]">
                 <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
-                <input type="text" placeholder="Cari No. Pesanan atau Pelanggan..." 
-                    class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-terralogBlue">
+
+                <input 
+                    type="text"
+                    placeholder="Cari No. Pesanan atau Pelanggan..." 
+                    class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-terralogBlue"
+                >
             </div>
-            <select class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white">
-                <option>Tipe Pesanan</option>
+
+            <!-- TIPE -->
+            <select 
+                x-model="filterTipe"
+                class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white"
+            >
+                <option value="SEMUA">Semua Tipe</option>
+                <option value="DINE IN">Dine In</option>
+                <option value="TAKE AWAY">Take Away</option>
             </select>
-            <select class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white">
-                <option>Status Pembayaran</option>
+
+            <!-- PEMBAYARAN -->
+            <select 
+                x-model="filterPembayaran"
+                class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white"
+            >
+                <option value="SEMUA">Semua Pembayaran</option>
+                <option value="LUNAS">Lunas</option>
+                <option value="BELUM LUNAS">Belum Lunas</option>
             </select>
+
         </div>
 
-        <!-- Grid Pesanan -->
-        <div class="grid grid-cols-4 gap-3"> 
+        <!-- GRID -->
+        <div class="grid grid-cols-4 gap-3">
+
             {% for p in pesanan %}
-            <div x-show="filterStatus === 'SEMUA' || filterStatus === '{{ p.status }}'"
-                 @click="showDetail = true; selectedOrder = { 
-                    id: '{{ p.id }}', 
-                    nama: '{{ p.nama }}', 
-                    waktu: '{{ p.waktu }}', 
-                    tipe: '{{ p.tipe }}', 
-                    meja: '{{ p.meja }}', 
-                    status: '{{ p.status }}', 
-                    total: {{ p.total }},
-                    lunas: {{ 'true' if p.lunas else 'false' }},
-                    items: [
-                        { qty: 1, nama: 'Terralog Kopi', harga: 18000 },
-                        { qty: 2, nama: 'Americano', harga: 30000, catatan: 'Less sugar' }
-                    ]
-                 }"
-                 class="cursor-pointer relative rounded-xl px-3 py-2.5 shadow-sm border transition-all hover:shadow-md overflow-hidden flex flex-col justify-between
-                 {% if p.status == 'PENDING' %} border-yellow-400 bg-yellow-50 
-                 {% elif p.status == 'READY' %} border-blue-500 bg-blue-50
-                 {% else %} border-emerald-600 bg-emerald-50 {% endif %}">
-                
+            <div 
+                x-show="
+                    (filterStatus === 'SEMUA' || filterStatus === '{{ p.status }}') &&
+                    (filterTipe === 'SEMUA' || filterTipe === '{{ p.tipe }}') &&
+                    (
+                        filterPembayaran === 'SEMUA' ||
+                        (filterPembayaran === 'LUNAS' && {{ 'true' if p.lunas else 'false' }}) ||
+                        (filterPembayaran === 'BELUM LUNAS' && !{{ 'true' if p.lunas else 'false' }})
+                    )
+                "
+
+                @click="
+                    showDetail = true;
+
+                    selectedOrder = {
+                        id: '{{ p.id }}',
+                        nama: '{{ p.nama }}',
+                        waktu: '{{ p.waktu }}',
+                        tipe: '{{ p.tipe }}',
+                        meja: '{{ p.meja }}',
+                        status: '{{ p.status }}',
+                        total: {{ p.total }},
+                        lunas: {{ 'true' if p.lunas else 'false' }},
+                        items: [
+                            { qty: 1, nama: 'Terralog Kopi', harga: 18000 },
+                            { qty: 2, nama: 'Americano', harga: 30000, catatan: 'Less sugar' }
+                        ]
+                    }
+                "
+
+                class="cursor-pointer relative rounded-xl px-3 py-2.5 shadow-sm border transition-all hover:shadow-md overflow-hidden flex flex-col justify-between
+
+                {% if p.status == 'PENDING' %}
+                    border-yellow-400 bg-yellow-50 
+                {% elif p.status == 'READY' %}
+                    border-blue-500 bg-blue-50
+                {% else %}
+                    border-emerald-600 bg-emerald-50
+                {% endif %}
+                "
+            >
+
                 <div class="relative z-10">
+
                     <div class="flex justify-between items-center mb-1.5">
-                        <h3 class="font-black text-base text-gray-800 leading-none">{{ p.id }}</h3>
-                        <span class="text-[9px] font-bold text-gray-400">{{ p.waktu }}</span>
+                        <h3 class="font-black text-base text-gray-800 leading-none">
+                            {{ p.id }}
+                        </h3>
+
+                        <span class="text-[9px] font-bold text-gray-400">
+                            {{ p.waktu }}
+                        </span>
                     </div>
 
                     <div class="mb-2">
                         <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider
-                            {% if p.status == 'PENDING' %} bg-yellow-400 text-black 
-                            {% elif p.status == 'READY' %} bg-blue-500 text-white
-                            {% else %} bg-emerald-600 text-white {% endif %}">
+
+                            {% if p.status == 'PENDING' %}
+                                bg-yellow-400 text-black
+                            {% elif p.status == 'READY' %}
+                                bg-blue-500 text-white
+                            {% else %}
+                                bg-emerald-600 text-white
+                            {% endif %}
+                        ">
                             {{ p.status }}
                         </span>
                     </div>
 
                     <div class="flex justify-between items-center mb-2.5">
-                        <p class="text-[11px] font-bold text-gray-700 truncate max-w-[90px]">{{ p.nama }}</p>
+
+                        <p class="text-[11px] font-bold text-gray-700 truncate max-w-[90px]">
+                            {{ p.nama }}
+                        </p>
+
                         <div class="flex items-center gap-1 text-blue-900 font-bold text-[10px]">
-                            <i data-lucide="{% if p.tipe == 'DINE IN' %}lamp{% else %}shopping-bag{% endif %}" class="w-3 h-3"></i>
-                            <span>{% if p.tipe == 'DINE IN' %}{{ p.meja }}{% else %}TA{% endif %}</span>
+
+                            <i 
+                                data-lucide="{% if p.tipe == 'DINE IN' %}lamp{% else %}shopping-bag{% endif %}" 
+                                class="w-3 h-3"
+                            ></i>
+
+                            <span>
+                                {% if p.tipe == 'DINE IN' %}
+                                    {{ p.meja }}
+                                {% else %}
+                                    TA
+                                {% endif %}
+                            </span>
+
                         </div>
+
                     </div>
 
                     <div class="flex items-center justify-between border-t border-gray-200/50 pt-2">
-                        <p class="text-sm font-black text-terralogBlue">Rp{{ "{:,.0f}".format(p.total) }}</p>
+
+                        <p class="text-sm font-black text-terralogBlue">
+                            Rp{{ "{:,.0f}".format(p.total) }}
+                        </p>
+
                         <button class="px-3 py-1 bg-[#E99817] text-white rounded-lg font-black text-[9px] uppercase hover:bg-[#CE7411] transition shadow-sm">
-                            DETAIL
+                            Detail
                         </button>
+
                     </div>
+
                 </div>
+
             </div>
             {% endfor %}
+
         </div>
+
     </div>
-
-   <!-- OVERLAY DETAIL PESANAN -->
-<div x-show="showDetail" class="fixed inset-0 z-[100] flex justify-end" style="display: none;">
-    <!-- Backdrop Gelap -->
-    <div x-show="showDetail" x-transition:opacity class="absolute inset-0 bg-black/30" @click="showDetail = false"></div>
-
-    <!-- Panel Sidebar (Ringkas & Tegas) -->
-    <div x-show="showDetail" 
-         x-transition:enter="transition ease-out duration-300 transform"
-         x-transition:enter-start="translate-x-full"
-         x-transition:enter-end="translate-x-0"
-         x-transition:leave="transition ease-in duration-200 transform"
-         x-transition:leave-start="translate-x-0"
-         x-transition:leave-end="translate-x-full"
-         class="relative w-[360px] bg-white h-screen shadow-2xl flex flex-col font-['Inter']">
-        
-        <!-- Header Section -->
-        <div class="p-5 border-b-2 border-gray-100">
-            <div class="flex justify-between items-start mb-3">
-                <h2 class="text-xl font-black text-terralogBlue leading-tight">
-                    Detail Pesanan<br>
-                    <span class="text-gray-800 text-sm font-bold" x-text="selectedOrder.id + ' - ' + selectedOrder.nama"></span>
-                </h2>
-                <button @click="showDetail = false" class="text-gray-400 hover:text-gray-600 p-1.5 bg-gray-50 rounded-full">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <!-- Meta Data (Waktu, Tipe, Meja) -->
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] font-bold text-gray-500 mb-4">
-                <div class="flex justify-between border-b border-gray-50 pb-0.5">
-                    <span>Waktu</span>
-                    <span class="text-terralogBlue" x-text="selectedOrder.waktu"></span>
-                </div>
-                <div class="flex justify-between border-b border-gray-50 pb-0.5">
-                    <span>Tipe</span>
-                    <span class="text-terralogBlue" x-text="selectedOrder.tipe"></span>
-                </div>
-                <div class="flex justify-between border-b border-gray-50 pb-0.5">
-                    <span>Meja</span>
-                    <span class="text-terralogBlue" x-text="selectedOrder.meja || '-'"></span>
-                </div>
-            </div>
-
-            <!-- Tab Status (Switcher) -->
-            <div class="flex gap-1.5 p-1 bg-gray-50 rounded-xl">
-    <template x-for="s in ['PENDING', 'READY', 'SERVED']">
-        <button @click="updateStatus(s)"
-                class="flex-1 py-1.5 text-[9px] font-black rounded-lg transition-all"
-                :class="selectedOrder.status === s ? 
-                (s === 'PENDING' ? 'bg-yellow-400 text-black shadow-sm' : 
-                 s === 'READY' ? 'bg-blue-500 text-white shadow-sm' : 
-                 'bg-emerald-600 text-white shadow-sm') : 
-                'text-gray-400 hover:bg-white'">
-            <span x-text="s"></span>
-        </button>
-    </template>
-</div>
-        </div>
-
-        <!-- DAFTAR ITEM (Menu & Harga Fokus Utama) -->
-        <div class="flex-1 overflow-y-auto p-5 space-y-4">
-            <template x-for="item in (selectedOrder.items || [])">
-                <div class="border-b-2 border-gray-50 pb-3">
-                    <div class="flex justify-between items-start">
-                        <div class="flex gap-3">
-                            <span class="font-black text-lg text-terralogBlue" x-text="item.qty + 'x'"></span>
-                            <div>
-                                <span class="text-base font-black text-gray-900 block leading-tight" x-text="item.nama"></span>
-                                <p x-show="item.catatan" class="text-[10px] text-gray-500 italic mt-1 bg-gray-50 px-2 py-0.5 rounded" x-text="item.catatan"></p>
-                            </div>
-                        </div>
-                        <span class="text-base font-black text-gray-900" x-text="'Rp' + (item.harga ? item.harga.toLocaleString('id-ID') : 0)"></span>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-        <!-- FOOTER (Area Fokus Pembayaran) -->
-<!-- FOOTER (Dinamis: Bayar atau Selesaikan) -->
-<div class="p-5 bg-white border-t-2 shadow-[0_-8px_15px_rgba(0,0,0,0.03)]">
-    <!-- Ringkasan Biaya -->
-    <div class="flex justify-between font-bold text-gray-400 text-[11px] mb-3 px-1">
-        <span>Subtotal: <span class="text-gray-700" x-text="'Rp' + (selectedOrder.total ? selectedOrder.total.toLocaleString('id-ID') : 0)"></span></span>
-        <span>Diskon: <span class="text-red-500">Rp0</span></span>
-    </div>
-
-    <!-- TOTAL BAYAR -->
-    <div class="flex justify-between items-end mb-5 px-1">
-        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
-        <span class="text-2xl font-black text-terralogBlue" x-text="'Rp' + (selectedOrder.total ? selectedOrder.total.toLocaleString('id-ID') : 0)"></span>
-    </div>
-
-    <!-- AKSI IKON (Utility) -->
-    <div class="grid grid-cols-4 gap-2 mb-6">
-        <button class="flex flex-col items-center py-2 bg-gray-50 rounded-xl hover:bg-red-50 transition border border-transparent hover:border-red-100">
-            <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
-            <span class="text-[8px] font-black text-red-500 mt-1 uppercase">Hapus</span>
-        </button>
-        <button class="flex flex-col items-center py-2 bg-gray-50 rounded-xl hover:bg-emerald-50 transition border border-transparent hover:border-emerald-100">
-            <i data-lucide="save" class="w-4 h-4 text-emerald-500"></i>
-            <span class="text-[8px] font-black text-emerald-500 mt-1 uppercase">Simpan</span>
-        </button>
-        <button class="flex flex-col items-center py-2 bg-gray-50 rounded-xl hover:bg-yellow-50 transition border border-transparent hover:border-yellow-100">
-            <i data-lucide="percent" class="w-4 h-4 text-yellow-600"></i>
-            <span class="text-[8px] font-black text-yellow-600 mt-1 uppercase">Diskon</span>
-        </button>
-        <button class="flex flex-col items-center py-2 bg-gray-50 rounded-xl hover:bg-blue-50 transition border border-transparent hover:border-blue-100">
-            <i data-lucide="printer" class="w-4 h-4 text-blue-600"></i>
-            <span class="text-[8px] font-black text-blue-600 mt-1 uppercase">Cetak</span>
-        </button>
-    </div>
-
-    <!-- TOMBOL DINAMIS -->
-    <div>
-        <!-- JIKA BELUM LUNAS: Tampilkan tombol Edit dan Bayar -->
-        <template x-if="!selectedOrder.lunas">
-            <div class="grid grid-cols-2 gap-3">
-               <button @click="editOrder()"
-                    class="py-3.5 border-2 border-orange-400 text-orange-500 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-50 transition">
-                Edit Pesanan
-            </button>
-            <button @click="showPayment = true; showDetail = false" class="py-3.5 bg-orange-500 text-white rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                Bayar
-            </button>
-            </div>
-        </template>
-
-        <!-- JIKA SUDAH LUNAS: Tampilkan tombol Selesaikan Pesanan -->
-        <template x-if="selectedOrder.lunas">
-            <button 
-                :disabled="selectedOrder.status === 'PENDING'"
-                :class="selectedOrder.status === 'PENDING' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#0522A4] text-white hover:bg-blue-800 shadow-lg'"
-                class="w-full py-4 rounded-xl font-black text-[12px] uppercase tracking-widest transition-all">
-                Selesaikan Pesanan
-            </button>
-        </template>
-    </div>
-</div>
-
-<!-- MODAL PEMBAYARAN -->
-<div x-show="showPayment" class="fixed inset-0 z-[110] flex items-center justify-center" style="display: none;">
-    <div x-show="showPayment" x-transition:opacity class="absolute inset-0 bg-black/50" @click="showPayment = false"></div>
-
-    <div x-show="showPayment" class="relative bg-white w-[750px] rounded-xl shadow-2xl overflow-hidden flex flex-col font-['Inter']">
-        
-        <!-- Header -->
-        <div class="bg-[#0522A4] p-4 flex items-center gap-4 text-white">
-            <button @click="showPayment = false; showDetail = true"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
-            <h2 class="text-xl font-bold">Pembayaran</h2>
-        </div>
-
-        <div class="flex flex-1 min-h-[450px]">
-            
-            <div class="w-2/5 bg-[#E6F0FF] p-6 border-r border-gray-200">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">TOTAL TAGIHAN</p>
-                <h3 class="text-3xl font-black text-gray-800 mb-8" x-text="'Rp ' + (selectedOrder.total ? selectedOrder.total.toLocaleString('id-ID') : '0')"></h3>
-
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">METODE PEMBAYARAN</p>
-                <div class="space-y-3">
-                    <!-- CASH -->
-                    <button @click="paymentMethod = 'CASH'" 
-                        class="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all"
-                        :class="paymentMethod === 'CASH' ? 'bg-white border-[#0522A4] shadow-sm' : 'bg-transparent border-gray-300 text-gray-500'">
-                        <span class="font-bold text-sm uppercase">CASH - TUNAI</span>
-                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="paymentMethod === 'CASH' ? 'border-[#0522A4]' : 'border-gray-400'">
-                            <div x-show="paymentMethod === 'CASH'" class="w-2.5 h-2.5 bg-[#0522A4] rounded-full"></div>
-                        </div>
-                    </button>
-                    <!-- QRIS -->
-                    <button @click="paymentMethod = 'QRIS'" 
-                        class="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all"
-                        :class="paymentMethod === 'QRIS' ? 'bg-white border-[#0522A4] shadow-sm' : 'bg-transparent border-gray-300 text-gray-500'">
-                        <span class="font-bold text-sm uppercase">QRIS</span>
-                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center" :class="paymentMethod === 'QRIS' ? 'border-[#0522A4]' : 'border-gray-400'">
-                            <div x-show="paymentMethod === 'QRIS'" class="w-2.5 h-2.5 bg-[#0522A4] rounded-full"></div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <div class="w-3/5 p-6 bg-white flex flex-col">
-                
-                <!-- TAMPILAN JIKA CASH -->
-                <div x-show="paymentMethod === 'CASH'" class="flex-1 flex flex-col">
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        <button @click="receivedAmount = selectedOrder.total.toString()" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4] font-black text-xs hover:bg-blue-50">Uang Pas</button>
-                        <button @click="receivedAmount = '50000'" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4] font-black text-xs hover:bg-blue-50">Rp 50.000</button>
-                        <button @click="receivedAmount = '100000'" class="py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4] font-black text-xs hover:bg-blue-50">Rp 100.000</button>
-                    </div>
-                    <div class="border-2 border-[#0522A4] rounded-xl p-4 mb-4">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase mb-1">UANG DITERIMA</p>
-                        <div class="text-3xl font-black text-gray-800" x-text="'Rp ' + parseInt(receivedAmount).toLocaleString('id-ID')"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 mb-4">
-                        <template x-for="n in ['7','8','9','4','5','6','1','2','3','000','0']">
-                            <button @click="receivedAmount === '0' ? receivedAmount = n : receivedAmount += n" 
-                                    class="py-4 border border-gray-200 rounded-lg text-xl font-bold text-gray-700 hover:bg-gray-50 active:scale-95 transition-all">
-                                <span x-text="n"></span>
-                            </button>
-                        </template>
-                        <button @click="receivedAmount = receivedAmount.length > 1 ? receivedAmount.slice(0, -1) : '0'" 
-                                class="py-4 border border-gray-200 rounded-lg flex items-center justify-center hover:bg-red-50 text-[#0522A4]">
-                            <i data-lucide="delete" class="w-6 h-6"></i>
-                        </button>
-                    </div>
-                    <button @click="showSuccess = true" class="w-full py-4 bg-[#0522A4] text-white rounded-lg font-black text-sm uppercase tracking-widest">BAYAR</button>
-                </div>
-
-                <!--  QRIS  -->
-                <div x-show="paymentMethod === 'QRIS'" class="flex-1 flex flex-col items-center justify-center text-center">
-                    <button class="mb-6 px-6 py-2 border-2 border-[#0522A4] rounded-lg text-[#0522A4] font-black text-sm">
-                        Verifikasi Pembayaran QRIS
-                    </button>
-                    
-                    <!-- Ilustrasi QRIS -->
-                    <div class="mb-6">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TerralogPOS" alt="QRIS" class="w-32 h-32 mx-auto mb-4 border p-2 rounded-lg">
-                        <p class="text-gray-500 font-bold text-sm">Menunggu bukti pembayaran dari pelanggan.</p>
-                        <p class="text-gray-400 text-[10px] mt-2 px-10">Pastikan Anda telah melihat layar bukti transfer yang berhasil sebelum mengonfirmasi pesanan ini.</p>
-                    </div>
-
-                    <button @click="showSuccess = true" class="w-full py-4 bg-[#0522A4] text-white rounded-lg font-black text-sm uppercase tracking-widest mt-auto">
-                        KONFIRMASI PEMBAYARAN
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL NOTIFIKASI SUKSES -->
-<div x-show="showSuccess" class="fixed inset-0 z-[120] flex items-center justify-center" style="display: none;">
-    <!-- Backdrop Gelap -->
-    <div x-show="showSuccess" x-transition:opacity class="absolute inset-0 bg-black/60"></div>
-
-    <div x-show="showSuccess" 
-         x-transition:enter="transition ease-out duration-300 transform"
-         x-transition:enter-start="scale-90 opacity-0"
-         x-transition:enter-end="scale-100 opacity-100"
-         class="relative bg-white w-[400px] rounded-[2rem] p-8 shadow-2xl text-center font-['Inter']">
-        
-        <div class="mb-4 flex justify-center">
-            <div class="bg-[#00E676] rounded-full p-4 shadow-lg shadow-emerald-100">
-                <i data-lucide="check" class="w-12 h-12 text-white stroke-[4]"></i>
-            </div>
-        </div>
-
-        <h2 class="text-2xl font-black text-gray-700 mb-6">Sukses!</h2>
-
-        <!-- DETAIL TRANSAKSI -->
-        <div class="space-y-3 mb-8 text-left px-4">
-            <div class="flex justify-between text-xs font-bold">
-                <span class="text-gray-400">Total Tagihan</span>
-                <span class="text-gray-700" x-text="'Rp ' + (selectedOrder.total ? selectedOrder.total.toLocaleString('id-ID') : '0')"></span>
-            </div>
-
-            <!-- Tampilan khusus QRIS -->
-            <template x-if="paymentMethod === 'QRIS'">
-                <div class="flex justify-between text-xs font-bold">
-                    <span class="text-gray-400">Metode Pembayaran</span>
-                    <span class="text-gray-700">QRIS</span>
-                </div>
-            </template>
-
-            <!-- Tampilan khusus CASH (Ada Kembalian) -->
-            <template x-if="paymentMethod === 'CASH'">
-                <div class="space-y-3">
-                    <div class="flex justify-between text-xs font-bold">
-                        <span class="text-gray-400">Uang Tunai</span>
-                        <span class="text-gray-700" x-text="'Rp ' + parseInt(receivedAmount).toLocaleString('id-ID')"></span>
-                    </div>
-                    <div class="border-t border-dotted border-blue-400 pt-3 flex justify-between items-center">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Kembalian</span>
-                        <span class="text-lg font-black text-gray-800" x-text="'Rp ' + (parseInt(receivedAmount) - selectedOrder.total).toLocaleString('id-ID')"></span>
-                    </div>
-                </div>
-            </template>
-        </div>
-
-        <!-- TOMBOL AKSI -->
-        <div class="grid grid-cols-2 gap-4">
-            <button class="py-3 border-2 border-[#0522A4] text-[#0522A4] rounded-xl font-black text-xs uppercase tracking-wider hover:bg-blue-50 transition">
-                Cetak Struk
-            </button>
-            <button @click="showSuccess = false; showPayment = false" class="py-3 bg-[#0522A4] text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-lg hover:bg-blue-800 transition">
-                Selesai
-            </button>
-        </div>
-    </div>
-</div>
 </div>
 {% endblock %}
