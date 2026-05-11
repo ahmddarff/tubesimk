@@ -13,7 +13,48 @@
     <style>[x-cloak] { display: none !important; }</style>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+/* Tampilan di Dashboard */
+#receipt-print { display: none; }
+
+@media print {
+    /* Sembunyikan elemen dashboard UI */
+    body * { visibility: hidden; }
     
+    /* Tampilkan area struk */
+    #receipt-print, #receipt-print * {
+        visibility: visible;
+    }
+
+    #receipt-print {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm; 
+        padding: 4mm;
+        background: white;
+        color: black !important;
+        font-family: 'Inter', sans-serif; 
+        font-size: 10pt;
+        line-height: 1.4;
+    }
+
+   
+    @page {
+        size: 80mm auto; 
+        margin: 0;
+    }
+
+   
+    html, body {
+        margin: 0;
+        padding: 0;
+    }
+}
+</style>
+
     <script>
         tailwind.config = {
           theme: {
@@ -38,17 +79,19 @@
 </head>
 <body class="bg-gray-100 font-sans">
 
-   <div class="flex min-h-screen">
-    {% include 'includes/sidebar_kasir.html' %}
+    <div class="flex min-h-screen">
+        {% include 'includes/sidebar_kasir.html' %}
 
-    <div class="flex-1 flex flex-col">
-        {% include 'includes/navbar_kasir.html' %}
+        <div class="flex-1 flex flex-col pl-72">
+            
+            {% include 'includes/navbar_kasir.html' %}
 
-        <main class="p-8 bg-[#F5F7FF] flex-1">
-            {% block content %}{% endblock %}
-        </main>
+            <main class="p-8 bg-[#F5F7FF] flex-1">
+                {% block content %}{% endblock %}
+            </main>
+            
+        </div>
     </div>
-</div>
 
     <script>lucide.createIcons();</script>
 </body>

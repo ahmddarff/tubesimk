@@ -1,0 +1,221 @@
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+    * { font-family: 'Inter', sans-serif; }
+    [x-cloak] { display: none !important; }
+    
+    .pie-chart-container {
+        width: 70px; height: 70px; border-radius: 50%;
+        background: conic-gradient(#0522A4 0% 60%, #10b981 60% 100%);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .pie-chart-inner { width: 45px; height: 45px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+    /* Gaya Paging ala Ant Design */
+    .btn-page-disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+</style>
+
+{% extends 'layouts/layout_kasir.html' %}
+
+{% block content %}
+<div x-data="{ 
+    searchQuery: '', filterMethod: '', filterDate: '', 
+    showModal: false, showExportModal: false, selectedTrx: {},
+    currentPage: 1, itemsPerPage: 5,
+
+    refreshIcons() { this.$nextTick(() => { lucide.createIcons(); }); },
+    
+    openDetail(trx) { 
+        this.selectedTrx = trx; 
+        this.showModal = true; 
+        this.refreshIcons(); 
+    },
+
+    exportData(format) {
+        alert('File ' + format + ' sedang dibuat. Silahkan cek folder download Anda.');
+        this.showExportModal = false;
+    },
+
+    transactions: [
+        { id: 'TRX-00015', tanggal: '2024-04-06', waktu: '19.00', kasir: 'Rahma', pelanggan: 'Richard Lim', metode: 'TUNAI', total: 50000, items: [{nama: 'Chicken Katsu', harga: 50000, jumlah: 1, subtotal: 50000}] },
+        { id: 'TRX-00016', tanggal: '2024-04-06', waktu: '19.15', kasir: 'Rahma', pelanggan: 'Arialdi Manday', metode: 'QRIS', total: 75000, items: [{nama: 'Terralog Coffee', harga: 25000, jumlah: 2, subtotal: 50000}, {nama: 'French Fries', harga: 25000, jumlah: 1, subtotal: 25000}] },
+        { id: 'TRX-00017', tanggal: '2024-04-06', waktu: '19.45', kasir: 'Rahma', pelanggan: 'Chaterine Jelek', metode: 'TUNAI', total: 35000, items: [{nama: 'Matcha Latte', harga: 35000, jumlah: 1, subtotal: 35000}] },
+        { id: 'TRX-00018', tanggal: '2024-04-07', waktu: '10.00', kasir: 'Dimas', pelanggan: 'Aldrik Running', metode: 'QRIS', total: 120000, items: [{nama: 'Beef Burger', harga: 45000, jumlah: 2, subtotal: 90000}, {nama: 'Lemon Tea', harga: 15000, jumlah: 2, subtotal: 30000}] },
+        { id: 'TRX-00019', tanggal: '2024-04-07', waktu: '11.30', kasir: 'Dimas', pelanggan: 'Rahmaini Erna', metode: 'TUNAI', total: 25000, items: [{nama: 'Americano', harga: 25000, jumlah: 1, subtotal: 25000}] },
+        { id: 'TRX-00020', tanggal: '2024-04-07', waktu: '13.10', kasir: 'Dimas', pelanggan: 'Earlin Pinky', metode: 'QRIS', total: 85000, items: [{nama: 'Nasi Goreng Terralog', harga: 40000, jumlah: 1, subtotal: 40000}] },
+        { id: 'TRX-00021', tanggal: '2024-04-08', waktu: '15.20', kasir: 'Rahma', pelanggan: 'Budi Santoso', metode: 'TUNAI', total: 60000, items: [{nama: 'Spaghetti Carbonara', harga: 60000, jumlah: 1, subtotal: 60000}] },
+        { id: 'TRX-00022', tanggal: '2024-04-08', waktu: '16.00', kasir: 'Rahma', pelanggan: 'Siti Aminah', metode: 'QRIS', total: 40000, items: [{nama: 'Croissant Almond', harga: 40000, jumlah: 1, subtotal: 40000}] },
+        { id: 'TRX-00023', tanggal: '2024-04-08', waktu: '18.45', kasir: 'Rahma', pelanggan: 'Andi Wijaya', metode: 'TUNAI', total: 110000, items: [{nama: 'Double Espresso', harga: 30000, jumlah: 2, subtotal: 60000}] },
+        { id: 'TRX-00024', tanggal: '2024-04-09', waktu: '09.15', kasir: 'Dimas', pelanggan: 'Dewi Lestari', metode: 'QRIS', total: 55000, items: [{nama: 'Caffé Latte', harga: 35000, jumlah: 1, subtotal: 35000}] }
+    ],
+
+    get filteredTransactions() {
+        return this.transactions.filter(t => {
+            const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
+            const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
+            const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
+            return matchName && matchMethod && matchDate;
+        });
+    },
+
+    get pagedTransactions() {
+        const start = (this.currentPage - 1) * this.itemsPerPage;
+        this.refreshIcons();
+        return this.filteredTransactions.slice(start, start + parseInt(this.itemsPerPage));
+    },
+
+    get totalPages() {
+        return Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
+    }
+}" x-init="refreshIcons()">
+
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Riwayat Transaksi</h1>
+            <p class="text-gray-400 text-sm font-medium">Monitoring penjualan harian Terralog Coffee</p>
+        </div>
+        <button @click="showExportModal = true; refreshIcons()" class="px-7 py-3 bg-terralogBlue text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-blue-800 transition-all shadow-[0_10px_20px_rgba(5,34,164,0.2)] flex items-center gap-2">
+            <i data-lucide="download" class="w-4 h-4"></i> Ekspor Laporan
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <template x-for="card in [{label:'Total Pesanan', val:filteredTransactions.length, icon:'receipt'}, {label:'Total Omzet', val:'Rp '+filteredTransactions.reduce((a,b)=>a+b.total,0).toLocaleString('id-ID'), icon:'banknote'}]">
+            <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 flex items-center gap-5 shadow-sm">
+                <div class="bg-blue-50 p-4 rounded-2xl text-terralogBlue"><i :data-lucide="card.icon" class="w-7 h-7"></i></div>
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1" x-text="card.label"></p><h3 class="text-2xl font-bold text-gray-800" x-text="card.val"></h3></div>
+            </div>
+        </template>
+        <div class="bg-white p-6 rounded-[1.5rem] border border-gray-100 flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-50 p-4 rounded-2xl text-terralogBlue"><i data-lucide="pie-chart" class="w-7 h-7"></i></div>
+                <div><p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Metode</p><p class="text-[11px] font-bold text-gray-700">QRIS <span class="text-terralogBlue">60%</span></p><p class="text-[11px] font-bold text-gray-700">TUNAI <span class="text-emerald-500">40%</span></p></div>
+            </div>
+            <div class="pie-chart-container"><div class="pie-chart-inner"><i data-lucide="credit-card" class="w-4 h-4 text-blue-100"></i></div></div>
+        </div>
+    </div>
+
+    <div class="flex gap-4 mb-8">
+        <div class="w-48 relative"><i data-lucide="calendar" class="absolute left-4 top-3.5 w-4 h-4 text-terralogBlue"></i><input type="date" x-model="filterDate" class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-semibold focus:border-emerald-500 outline-none shadow-sm transition-all"></div>
+        <div class="w-56"><select x-model="filterMethod" class="w-full px-5 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-semibold text-gray-500 focus:border-emerald-500 outline-none cursor-pointer shadow-sm"><option value="">Semua Metode</option><option value="TUNAI">TUNAI</option><option value="QRIS">QRIS</option></select></div>
+        <div class="relative flex-grow"><i data-lucide="search" class="absolute left-4  top-3.5 w-4 h-4 text-gray-400"></i><input type="text" x-model="searchQuery" @input="currentPage = 1" placeholder="Cari pelanggan atau ID transaksi..." class="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-2xl text-sm font-semibold focus:border-emerald-500 outline-none shadow-sm transition-all"></div>
+        <button @click="searchQuery = ''; filterMethod = ''; filterDate = ''; currentPage = 1; refreshIcons();" class="px-8 py-3 bg-red-500 text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-red-600 transition shadow-md whitespace-nowrap">Reset</button>
+    </div>
+
+    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-gray-50/50 border-b text-[11px] font-bold text-gray-400 uppercase">
+                <tr><th class="px-8 py-5">ID TRX</th><th class="px-6 py-5">Tanggal</th><th class="px-6 py-5">Pelanggan</th><th class="px-6 py-5 text-center">Metode</th><th class="px-6 py-5">Total</th><th class="px-8 py-5 text-center">Aksi</th></tr>
+            </thead>
+            <tbody class="text-sm font-medium text-gray-700">
+                <template x-for="trx in pagedTransactions" :key="trx.id">
+                    <tr class="border-b border-gray-50 hover:bg-blue-50/40 transition">
+                        <td class="px-8 py-5 text-terralogBlue font-bold" x-text="trx.id"></td>
+                        <td class="px-6 py-5 text-gray-400 font-normal" x-text="trx.tanggal"></td>
+                        <td class="px-6 py-5 font-bold" x-text="trx.pelanggan"></td>
+                        <td class="px-6 py-5 text-center"><span class="px-4 py-1.5 rounded-xl text-[9px] font-bold uppercase inline-block w-20 shadow-sm" :class="trx.metode === 'QRIS' ? 'bg-[#0522A4] text-white' : 'bg-emerald-500 text-white'" x-text="trx.metode"></span></td>
+                        <td class="px-6 py-5 font-bold text-gray-800" x-text="'Rp ' + trx.total.toLocaleString('id-ID')"></td>
+                        <td class="px-8 py-5 text-center"><button @click="openDetail(trx)" class="w-10 h-10 bg-white border border-gray-200 text-terralogBlue rounded-full flex items-center justify-center hover:bg-terralogBlue hover:text-white transition shadow-sm mx-auto"><i data-lucide="eye" class="w-5 h-5"></i></button></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+
+        <div class="px-8 py-6 bg-white flex justify-end items-center gap-2 border-t">
+            <div class="flex items-center gap-1 mr-4">
+                <span class="text-sm text-gray-500">Total</span>
+                <div class="bg-gray-100 px-3 py-1 rounded border text-sm font-bold mx-1" x-text="filteredTransactions.length"></div>
+                <span class="text-sm text-gray-500">items</span>
+            </div>
+
+            <button @click="currentPage > 1 && currentPage--" :class="currentPage === 1 ? 'btn-page-disabled' : 'hover:border-emerald-500 hover:text-emerald-500'" class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+
+            <template x-for="p in totalPages" :key="p">
+                <button @click="currentPage = p" 
+                        class="w-8 h-8 flex items-center justify-center border rounded text-sm transition-all"
+                        :class="currentPage === p ? 'border-emerald-500 text-emerald-600 font-bold' : 'border-gray-200 text-gray-400 hover:border-emerald-500'"
+                        x-text="p"></button>
+            </template>
+            
+            <button @click="currentPage < totalPages && currentPage++" :class="currentPage === totalPages ? 'btn-page-disabled' : 'hover:border-emerald-500 hover:text-emerald-500'" class="w-8 h-8 flex items-center justify-center border border-gray-200 rounded">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+
+            <div class="ml-4 flex items-center">
+                <select x-model="itemsPerPage" @change="currentPage = 1" class="border border-gray-200 rounded px-2 py-1 text-sm outline-none focus:border-emerald-500">
+                    <option value="5">5 / page</option>
+                    <option value="10">10 / page</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
+        <div class="relative bg-[#F8FAFF] w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden" x-transition>
+            <div class="px-6 py-5 flex justify-between items-center bg-white border-b">
+                <h3 class="text-xl font-black text-gray-800 tracking-tight">Detail Transaksi</h3>
+                <button @click="showModal = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="bg-white rounded-2xl p-5 border shadow-sm">
+                    <div class="text-[12px] font-black text-terralogBlue bg-blue-50 px-4 py-1.5 rounded-full inline-block mb-4" x-text="selectedTrx.id"></div>
+                    <div class="grid grid-cols-2 gap-5 text-sm font-medium"> 
+                        <div><p class="text-gray-400 font-bold mb-1">Tanggal & Waktu</p><p class="text-gray-800 font-bold" x-text="selectedTrx.tanggal + ' ' + (selectedTrx.waktu || '')"></p></div>
+                        <div><p class="text-gray-400 font-bold mb-1">Kasir</p><p class="text-gray-800 font-bold" x-text="selectedTrx.kasir"></p></div>
+                        <div class="col-span-2"><p class="text-gray-400 font-bold mb-1">Pelanggan</p><p class="text-gray-800 font-bold text-lg" x-text="selectedTrx.pelanggan"></p></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden border shadow-sm">
+                    <table class="w-full text-[13px]">
+                        <thead class="bg-gray-50 text-gray-400 font-bold border-b">
+                            <tr><th class="px-4 py-3 text-left">Item</th><th class="px-4 py-3 text-center">Harga</th><th class="px-4 py-3 text-center">Jumlah</th><th class="px-4 py-3 text-right">Subtotal</th></tr>
+                        </thead>
+                        <tbody class="text-gray-800 font-bold">
+                            <template x-for="item in (selectedTrx.items || [])">
+                                <tr class="border-b border-gray-50">
+                                    <td class="px-4 py-4" x-text="item.nama"></td>
+                                    <td class="px-4 py-4 text-center" x-text="'Rp ' + (item.harga || 0).toLocaleString('id-ID')"></td>
+                                    <td class="px-4 py-4 text-center" x-text="item.jumlah"></td>
+                                    <td class="px-4 py-4 text-right" x-text="'Rp ' + (item.subtotal || 0).toLocaleString('id-ID')"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                        <tfoot class="bg-gray-50/50 font-black">
+                            <tr><td colspan="3" class="px-4 py-4 text-right uppercase text-gray-400 text-[11px]">Total Pembayaran</td><td class="px-4 py-4 text-right text-terralogBlue text-lg" x-text="'Rp ' + (selectedTrx.total ? selectedTrx.total.toLocaleString('id-ID') : 0)"></td></tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <button @click="showModal = false" class="w-full py-4 bg-[#0522A4] text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showExportModal" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showExportModal = false"></div>
+        <div class="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8 text-center" x-transition>
+            <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6"><i data-lucide="file-text" class="w-10 h-10 text-terralogBlue"></i></div>
+            <h3 class="text-xl font-black text-gray-800 mb-2">Ekspor Laporan</h3>
+            <p class="text-gray-400 text-sm mb-8 font-medium">Pilih format dokumen riwayat transaksi.</p>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <button @click="exportData('PDF')" class="group p-6 border-2 border-gray-100 rounded-3xl hover:border-red-400 hover:bg-red-50 transition-all flex flex-col items-center gap-3">
+                    <div class="bg-red-100 p-3 rounded-2xl text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors"><i data-lucide="file-type-2" class="w-8 h-8"></i></div>
+                    <span class="font-black text-[10px] text-gray-500 uppercase tracking-widest group-hover:text-red-600">Dokumen PDF</span>
+                </button>
+                <button @click="exportData('Excel')" class="group p-6 border-2 border-gray-100 rounded-3xl hover:border-emerald-400 hover:bg-emerald-50 transition-all flex flex-col items-center gap-3">
+                    <div class="bg-emerald-100 p-3 rounded-2xl text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors"><i data-lucide="sheet" class="w-8 h-8"></i></div>
+                    <span class="font-black text-[10px] text-gray-500 uppercase tracking-widest group-hover:text-emerald-600">Microsoft Excel</span>
+                </button>
+            </div>
+            <button @click="showExportModal = false" class="w-full py-4 text-gray-400 font-bold text-xs uppercase tracking-widest hover:text-gray-600 transition">Batal</button>
+        </div>
+    </div>
+
+</div> {% endblock %}
