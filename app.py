@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify, request, redirect
 from extensions import db
 from dotenv import load_dotenv
 
@@ -25,7 +25,38 @@ from models import *
 
 @app.route('/')
 def home():
-    return "Hello Terralog!"
+    return render_template('login.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        # TODO: Tambahkan validasi username dan password dari database
+        # return redirect('/kasir') atau return redirect('/customer')
+        pass
+    return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        fullname = request.form.get('fullname')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # TODO: Validasi
+        # - Cek password == confirm_password
+        # - Cek username belum terdaftar
+        # - Cek email belum terdaftar
+        # - Hash password
+        # - Simpan ke database
+        # return redirect('/login') dengan pesan sukses
+        pass
+    return render_template('register.html')
 
 @app.route('/kasir')
 def kasir_dashboard():
@@ -187,6 +218,139 @@ def customer_pesanan_saya():
                          role='customer',
                          active_orders=active_orders,
                          history_orders=history_orders)
+
+staff_data = [
+    {"id": 1, "nama": "Andi Pratama", "shift": "Pagi", "status": "online", "total_transaksi": 42},
+    {"id": 2, "nama": "Budi Santoso", "shift": "Sore", "status": "offline", "total_transaksi": 0},
+]
+
+kasir_data = [
+    {"id": 1, "nama": "Dimas",   "total_transaksi": 7,  "total_penjualan": 350000, "status": "online"},
+    {"id": 2, "nama": "Bg Ari",  "total_transaksi": 3,  "total_penjualan": 100000, "status": "offline"},
+    {"id": 3, "nama": "Kak Aca", "total_transaksi": 15, "total_penjualan": 750000, "status": "online"},
+]
+
+menu_data = [
+    {"id": 1,  "nama": "Ayam Geprek",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 13},
+    {"id": 2,  "nama": "Indomie Kuah",   "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
+    {"id": 3,  "nama": "Indomie Goreng", "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
+    {"id": 4,  "nama": "Kentang Goreng", "kategori": "Snack",      "harga": 15000, "status": True,  "stok": 8},
+    {"id": 5,  "nama": "Nasi Goreng",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 12},
+    {"id": 6,  "nama": "Matcha",         "kategori": "Non Coffee", "harga": 17000, "status": True,  "stok": 18},
+    {"id": 7,  "nama": "Americano",      "kategori": "Coffee",     "harga": 15000, "status": True,  "stok": 25},
+    {"id": 8,  "nama": "Dimsum",         "kategori": "Snack",      "harga": 15000, "status": False, "stok": 0},
+    {"id": 9,  "nama": "Vanilla Latte",  "kategori": "Non Coffee", "harga": 18000, "status": True,  "stok": 17},
+    {"id": 10, "nama": "Beef Teriyaki",  "kategori": "Food",       "harga": 30000, "status": True,  "stok": 7},
+]
+
+transaksi_data = [
+    {"id_transaksi": "#TRX001", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX002", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX003", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
+    {"id_transaksi": "#TRX004", "tanggal": "06 Apr, 13:45:10", "metode": "Cash",  "total": "Rp32.000"},
+    {"id_transaksi": "#TRX005", "tanggal": "06 Apr, 13:20:05", "metode": "QRIS",  "total": "Rp58.000"},
+    {"id_transaksi": "#TRX006", "tanggal": "06 Apr, 12:55:33", "metode": "Cash",  "total": "Rp27.000"},
+]
+
+@app.route('/')
+@app.route('/dashboard')
+def dashboard():
+    return render_template('owner/dashboard.html',
+        username="Oscar",
+        total_penjualan="Rp2.500.000,00",
+        total_order=124,
+        menu_terlaris="Caramel Latte",
+        menu_terlaris_qty=45,
+        staff=staff_data
+    )
+
+@app.route('/manajemen-menu')
+def manajemen_menu():
+    return render_template('owner/manajemen-menu.html', username="Oscar", menu_list=menu_data)
+
+@app.route('/manajemen-kasir')
+def manajemen_kasir():
+    kasir_online = sum(1 for k in kasir_data if k['status'] == 'online')
+    return render_template('owner/manajemen-kasir.html',
+        username="Oscar",
+        kasir_list=kasir_data,
+        kasir_online=kasir_online,
+        total_kasir=len(kasir_data)
+    )
+
+@app.route('/laporan-penjualan')
+def laporan_penjualan():
+    return render_template('owner/laporan-penjualan.html',
+        username="Oscar",
+        transaksi_list=transaksi_data
+    )
+
+@app.route('/pengaturan')
+def pengaturan():
+    return render_template('owner/pengaturan.html', username="Oscar")
+
+# ── Menu APIs ──────────────────────────────────────────
+@app.route('/api/tambah-menu', methods=['POST'])
+def tambah_menu():
+    data = request.json
+    menu_data.append({
+        "id":       len(menu_data) + 1,
+        "nama":     data.get("nama"),
+        "kategori": data.get("kategori"),
+        "harga":    int(data.get("harga") or 0),
+        "status":   True,
+        "stok":     int(data.get("stok") or 0),
+    })
+    return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+
+@app.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
+def toggle_menu_status(menu_id):
+    data = request.json
+    for m in menu_data:
+        if m["id"] == menu_id:
+            m["status"] = data.get("status", m["status"])
+            break
+    return jsonify({"success": True, "message": "Status menu diperbarui!"})
+
+# ── Kasir APIs ─────────────────────────────────────────
+@app.route('/api/tambah-staff', methods=['POST'])
+def tambah_staff():
+    data = request.json
+    new_id = len(kasir_data) + 1
+    kasir_data.append({
+        "id":               new_id,
+        "nama":             data.get("nama"),
+        "total_transaksi":  0,
+        "total_penjualan":  0,
+        "status":           "offline"
+    })
+    staff_data.append({
+        "id":               new_id,
+        "nama":             data.get("nama"),
+        "shift":            "Pagi",
+        "status":           "offline",
+        "total_transaksi":  0
+    })
+    return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
+
+@app.route('/api/toggle-kasir-status/<int:kasir_id>', methods=['POST'])
+def toggle_kasir_status(kasir_id):
+    data = request.json
+    for k in kasir_data:
+        if k["id"] == kasir_id:
+            k["status"] = data.get("status", k["status"])
+            break
+    return jsonify({"success": True, "message": "Status kasir diperbarui!"})
+
+@app.route('/api/edit-kasir/<int:kasir_id>', methods=['POST'])
+def edit_kasir(kasir_id):
+    data = request.json
+    for k in kasir_data:
+        if k["id"] == kasir_id:
+            k["nama"]   = data.get("nama", k["nama"])
+            k["status"] = data.get("status", k["status"])
+            break
+    return jsonify({"success": True, "message": "Profil staf berhasil diedit!"})
 
 if __name__ == '__main__':
     app.run(debug=True, port=50001)

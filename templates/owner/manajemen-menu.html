@@ -1,0 +1,165 @@
+{% extends "owner/base.html" %}
+{% block title %}Manajemen Menu{% endblock %}
+{% block breadcrumb %}Manajemen Menu{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-gray-900">Manajemen Menu & Stok</h2>
+    <button onclick="openModal('modalTambahMenu')"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
+        <i class="fa-solid fa-circle-plus text-base"></i>
+        Tambah Menu Baru
+    </button>
+</div>
+
+<!-- Filter Tabs -->
+<div class="flex gap-2 mb-4">
+    <button onclick="filterMenu('Semua', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white transition-all">
+        Semua
+    </button>
+    <button onclick="filterMenu('Coffee', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Coffee
+    </button>
+    <button onclick="filterMenu('Non Coffee', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Non Coffee
+    </button>
+    <button onclick="filterMenu('Food', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Food
+    </button>
+    <button onclick="filterMenu('Snack', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
+        Snack
+    </button>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm border-collapse">
+        <thead>
+            <tr class="border-b-2 border-gray-100">
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/4">Nama Menu</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Kategori</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Harga</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Status</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Stok</th>
+            </tr>
+        </thead>
+        <tbody id="menuTableBody">
+            {% for m in menu_list %}
+            <tr class="menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors"
+                data-kategori="{{ m.kategori }}">
+                <td class="px-6 py-4 text-center font-bold text-gray-800">{{ m.nama }}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.kategori }}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ "{:,.0f}".format(m.harga).replace(",", ".") }}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center">
+                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                            <input type="checkbox" {% if m.status %}checked{% endif %}
+                                   onchange="toggleStatus(this, '{{ m.id }}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.stok }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter by category
+function filterMenu(kategori, btn) {
+    // Update button styles
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('bg-[#1B2FAA]', 'text-white');
+        b.classList.add('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+    });
+    btn.classList.add('bg-[#1B2FAA]', 'text-white');
+    btn.classList.remove('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+
+    // Filter rows
+    document.querySelectorAll('.menu-row').forEach(row => {
+        const rowKat = row.dataset.kategori;
+        if (kategori === 'Semua' || rowKat === kategori) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Toggle status (on/off)
+function toggleStatus(checkbox, menuId) {
+    const status = checkbox.checked;
+    fetch(`/api/toggle-menu-status/${menuId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+    }).then(r => r.json()).then(data => {
+        if (data.success) showToast(data.message);
+    });
+}
+
+// Override simpanMenu to also add row to THIS table
+const _origSimpanMenu = window.simpanMenu;
+window.simpanMenu = function() {
+    const nama     = document.getElementById('namaMenu')?.value.trim();
+    const kategori = document.getElementById('kategoriMenu')?.value;
+    const harga    = document.getElementById('hargaMenu')?.value;
+    const stok     = document.getElementById('stokMenu')?.value;
+    if (!nama) { alert('Nama menu wajib diisi!'); return; }
+
+    fetch('/api/tambah-menu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nama, kategori, harga, stok })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            closeModal('modalTambahMenu');
+            showToast(data.message);
+            ['namaMenu','hargaMenu','stokMenu','deskripsiMenu'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            // Format harga
+            const hargaNum = parseInt(harga) || 0;
+            const hargaFmt = hargaNum.toLocaleString('id-ID');
+            const stokNum  = parseInt(stok) || 0;
+            const newId    = Date.now();
+
+            // Add new row
+            const tbody = document.getElementById('menuTableBody');
+            const tr = document.createElement('tr');
+            tr.className = 'menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors';
+            tr.dataset.kategori = kategori;
+            tr.innerHTML = `
+                <td class="px-6 py-4 text-center font-bold text-gray-800">${nama}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${kategori}</td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${hargaFmt}</td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex justify-center">
+                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                            <input type="checkbox" checked onchange="toggleStatus(this, '${newId}')">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center font-bold text-gray-700">${stokNum}</td>
+            `;
+            tbody.appendChild(tr);
+        }
+    });
+};
+</script>
+{% endblock %}

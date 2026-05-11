@@ -1,0 +1,229 @@
+{% extends "owner/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-3 gap-5 mb-5">
+
+    <!-- Total Penjualan -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-sm font-semibold text-gray-500">Total Penjualan</span>
+            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
+                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </span>
+        </div>
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-lg flex-shrink-0">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <span class="text-2xl font-extrabold text-gray-900 leading-tight">{{ total_penjualan }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
+            </span>
+            <span class="text-xs text-gray-400">vs kemarin</span>
+        </div>
+    </div>
+
+    <!-- Total Order -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-sm font-semibold text-gray-500">Total Order</span>
+            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
+                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </span>
+        </div>
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 text-lg flex-shrink-0">
+                <i class="fa-solid fa-receipt"></i>
+            </div>
+            <span class="text-2xl font-extrabold text-gray-900 leading-tight">{{ total_order }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
+            </span>
+            <span class="text-xs text-gray-400">vs kemarin</span>
+        </div>
+    </div>
+
+    <!-- Menu Terlaris -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+        <div class="flex justify-between items-center mb-3">
+            <span class="text-sm font-semibold text-gray-500">Menu Terlaris</span>
+            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
+                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </span>
+        </div>
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-lg flex-shrink-0">
+                <i class="fa-solid fa-utensils"></i>
+            </div>
+            <span class="text-xl font-extrabold text-gray-900 leading-tight">{{ menu_terlaris }}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                <i class="fa-solid fa-arrow-up text-[10px]"></i>
+            </span>
+            <span class="text-xs text-gray-400">Terjual <strong class="text-gray-700">{{ menu_terlaris_qty }} cup</strong></span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid gap-5 mb-5" style="grid-template-columns: 1fr 280px;">
+
+    <!-- Line Chart -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm">
+        <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Analitik Penjualan Mingguan</h3>
+        <div class="h-52 relative">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Donut Chart -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm flex flex-col">
+        <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Kategori Terlaris</h3>
+        <div class="flex-1 h-44 relative">
+            <canvas id="categoryChart"></canvas>
+        </div>
+        <div class="flex justify-center gap-4 mt-3">
+            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                <span class="w-2 h-2 rounded-full bg-[#6C63FF] inline-block"></span> Coffee
+            </span>
+            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                <span class="w-2 h-2 rounded-full bg-[#FF6B8A] inline-block"></span> Non-Coffee
+            </span>
+            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                <span class="w-2 h-2 rounded-full bg-[#4DD9C0] inline-block"></span> Food
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row -->
+<div class="grid gap-5 items-start" style="grid-template-columns: 1fr 280px;">
+
+    <!-- Staff Table -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-sm font-bold text-[#1B2FAA]">Staff Overview</h3>
+            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
+                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </span>
+        </div>
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Nama Kasir</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Shift</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Status</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Total Transaksi</th>
+                </tr>
+            </thead>
+            <tbody id="staffTableBody">
+                {% for s in staff %}
+                <tr class="hover:bg-blue-50/30 transition-colors {% if not loop.last %}border-b border-gray-100{% endif %}">
+                    <td class="px-3 py-3 text-gray-800">{{ s.nama }}</td>
+                    <td class="px-3 py-3 text-gray-600">{{ s.shift }}</td>
+                    <td class="px-3 py-3">
+                        {% if s.status == 'online' %}
+                            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-500">
+                                <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Online
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400">
+                                <span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span> Offline
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-3 py-3 text-gray-600">{{ s.total_transaksi }} Pesanan</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-col gap-3">
+        <button onclick="openModal('modalTambahMenu')"
+                class="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
+            <i class="fa-solid fa-circle-plus text-base"></i>
+            Tambah Menu Baru
+        </button>
+        <button onclick="openModal('modalTambahStaff')"
+                class="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
+            <i class="fa-solid fa-circle-plus text-base"></i>
+            Tambah Staff Baru
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Line Chart
+new Chart(document.getElementById('salesChart').getContext('2d'), {
+    type: 'line',
+    data: {
+        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+        datasets: [{
+            data: [1600000, 1900000, 1700000, 800000, 1400000, 2000000, 1100000],
+            borderColor: '#F5A623',
+            backgroundColor: 'rgba(245,166,35,0.08)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#F5A623',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true, max: 2400000,
+                ticks: {
+                    stepSize: 600000, color: '#9CA3AF',
+                    font: { family: 'Plus Jakarta Sans', size: 11 },
+                    callback: v => v === 0 ? '0' : (v/1000000).toFixed(1) + 'jt'
+                },
+                grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+                ticks: { color: '#9CA3AF', font: { family: 'Plus Jakarta Sans', size: 11 } },
+                grid: { display: false }
+            }
+        }
+    }
+});
+
+// Donut Chart
+new Chart(document.getElementById('categoryChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Coffee', 'Non-Coffee', 'Food'],
+        datasets: [{
+            data: [65, 25, 15],
+            backgroundColor: ['#6C63FF', '#FF6B8A', '#4DD9C0'],
+            borderWidth: 0,
+            hoverOffset: 6
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+        }
+    }
+});
+</script>
+{% endblock %}
