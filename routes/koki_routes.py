@@ -68,7 +68,8 @@ orders_data = [
 def koki_dashboard():
     return render_template('koki/koki_dashboard.html',
         username="Budi",
-        orders=orders_data
+        orders=[],
+        menu_list=[]
     )
 
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
