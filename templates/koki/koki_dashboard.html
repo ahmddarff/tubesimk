@@ -19,7 +19,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus Jakarta Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         /* Toggle Switch */
@@ -64,23 +64,19 @@
 </head>
 <body class="bg-gray-100 font-sans flex min-h-screen">
 
-<!-- Toast -->
 <div id="toast" class="toast fixed top-5 left-5 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 border-green-500 z-[2000] opacity-0 pointer-events-none">
     <i id="toast-icon" class="fa-solid fa-circle-check text-green-500 text-base"></i>
     <span id="toast-message">Berhasil!</span>
 </div>
 
-<!-- Sidebar -->
 <aside class="w-[260px] fixed top-0 left-0 h-screen flex flex-col z-50 shadow-[4px_0_24px_rgba(27,47,170,0.3)]"
        style="background: linear-gradient(170deg, #1B2FAA 0%, #162591 60%, #0F1D7A 100%)">
 
-    <!-- Brand -->
     <div class="px-6 pt-7 pb-5 border-b border-white/10">
         <span class="block text-[0.62rem] font-semibold tracking-[0.15em] text-white/50 uppercase mb-1">COFFEE N EATERY</span>
         <div class="font-syne text-[2.2rem] font-extrabold text-white leading-none tracking-tight">terralog</div>
     </div>
 
-    <!-- Koki Info -->
     <div class="px-6 py-4 border-b border-white/10">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-yellow-400/20 border-2 border-yellow-400/40 flex items-center justify-center">
@@ -93,23 +89,19 @@
         </div>
     </div>
 
-    <!-- Nav -->
     <nav class="flex-1 px-4 py-5 flex flex-col gap-1">
-        <button onclick="switchSection('antrian')"
-                id="nav-antrian"
+        <button onclick="switchSection('antrian')" id="nav-antrian"
                 class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[0.9rem] font-medium transition-all duration-200 bg-white/15 text-white border border-yellow-400/60 font-semibold">
             <i class="fa-solid fa-list-ol w-5 text-center text-yellow-400"></i>
             <span>Antrean Order</span>
             <span id="badge-antrian" class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
         </button>
-        <button onclick="switchSection('stok')"
-                id="nav-stok"
+        <button onclick="switchSection('stok')" id="nav-stok"
                 class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[0.9rem] font-medium transition-all duration-200 text-white/65 hover:text-white hover:bg-white/10">
             <i class="fa-solid fa-boxes-stacking w-5 text-center"></i>
             <span>Update Stok Menu</span>
         </button>
 
-        <!-- Logout -->
         <div class="mt-auto pt-4 border-t border-white/10">
             <button onclick="konfirmasiLogout()"
                     class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[0.9rem] font-medium text-red-300 hover:text-white hover:bg-red-500/80 transition-all duration-200 group">
@@ -118,53 +110,15 @@
             </button>
         </div>
     </nav>
-
-    <!-- Illustration -->
-    <div class="px-4 pb-5 opacity-80">
-        <svg viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
-            <!-- Kitchen counter -->
-            <rect x="10" y="100" width="240" height="50" rx="8" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-            <!-- Stove -->
-            <rect x="30" y="70" width="80" height="35" rx="6" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-            <circle cx="50" cy="83" r="8" fill="rgba(255,255,255,0.0)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-            <circle cx="90" cy="83" r="8" fill="rgba(255,255,255,0.0)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-            <circle cx="70" cy="96" r="6" fill="rgba(255,255,255,0.0)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-            <!-- Pan -->
-            <ellipse cx="50" cy="83" rx="10" ry="5" fill="#F5C842" opacity="0.5"/>
-            <rect x="58" y="81" width="20" height="3" rx="1.5" fill="rgba(255,255,255,0.3)"/>
-            <!-- Steam -->
-            <path d="M45 65 Q47 58 45 52" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <path d="M50 65 Q52 57 50 50" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <path d="M55 65 Q57 58 55 52" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <!-- Chef figure -->
-            <circle cx="180" cy="60" r="14" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-            <!-- Chef hat -->
-            <rect x="170" y="40" width="20" height="22" rx="4" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-            <rect x="166" y="56" width="28" height="6" rx="3" fill="rgba(255,255,255,0.3)"/>
-            <!-- Body -->
-            <path d="M162 120 Q165 85 180 80 Q195 75 198 85 Q202 95 198 120" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
-            <!-- Smile -->
-            <path d="M175 65 Q180 69 185 65" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
-            <!-- Order ticket -->
-            <rect x="120" y="72" width="32" height="40" rx="4" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.25)" stroke-width="1"/>
-            <line x1="126" y1="82" x2="146" y2="82" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-            <line x1="126" y1="89" x2="146" y2="89" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-            <line x1="126" y1="96" x2="138" y2="96" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
-        </svg>
-    </div>
 </aside>
 
-<!-- Main Wrapper -->
 <div class="ml-[260px] flex-1 flex flex-col min-h-screen">
-
-    <!-- Header -->
     <header class="bg-white px-8 py-4 flex items-center justify-between border-b border-gray-200 sticky top-0 z-40">
         <div class="flex items-center gap-2">
             <i class="fa-solid fa-chevron-right text-[#1B2FAA] text-xs"></i>
             <span id="header-section-title" class="text-sm font-bold text-gray-800">Antrean Order</span>
         </div>
         <div class="flex items-center gap-4">
-            <!-- Live clock -->
             <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
                 <i class="fa-regular fa-clock text-[#1B2FAA] text-sm"></i>
                 <span id="liveClock" class="text-sm font-bold text-gray-700 tabular-nums"></span>
@@ -176,15 +130,8 @@
         </div>
     </header>
 
-    <!-- Page Content -->
     <main class="flex-1 px-8 py-6">
-
-        <!-- ========================
-             SECTION: ANTREAN ORDER
-             ======================== -->
         <div id="section-antrian">
-
-            <!-- Summary Bar -->
             <div class="grid grid-cols-4 gap-4 mb-6">
                 <div class="bg-white rounded-2xl p-4 shadow-sm border-l-4 border-red-400">
                     <p class="text-xs font-semibold text-gray-400 mb-1">Menunggu</p>
@@ -204,145 +151,73 @@
                 </div>
             </div>
 
-            <!-- Filter Tabs -->
             <div class="flex gap-2 mb-5">
-                <button onclick="filterOrders('semua', this)"
-                        class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white transition-all">
-                    Semua
-                </button>
-                <button onclick="filterOrders('pending', this)"
-                        class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-red-400 text-red-500 hover:bg-red-500 hover:text-white transition-all">
-                    <i class="fa-solid fa-hourglass-start mr-1"></i> Pending
-                </button>
-                <button onclick="filterOrders('preparing', this)"
-                        class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-yellow-400 text-yellow-500 hover:bg-yellow-400 hover:text-white transition-all">
-                    <i class="fa-solid fa-fire-burner mr-1"></i> Preparing
-                </button>
-                <button onclick="filterOrders('ready', this)"
-                        class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-green-400 text-green-500 hover:bg-green-400 hover:text-white transition-all">
-                    <i class="fa-solid fa-check-circle mr-1"></i> Ready
-                </button>
+                <button onclick="filterOrders('semua', this)" class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white">Semua</button>
+                <button onclick="filterOrders('pending', this)" class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-red-400 text-red-500">Pending</button>
+                <button onclick="filterOrders('preparing', this)" class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-yellow-400 text-yellow-500">Preparing</button>
+                <button onclick="filterOrders('ready', this)" class="order-filter-btn px-5 py-2 rounded-lg text-sm font-bold border-2 border-green-400 text-green-500">Ready</button>
             </div>
 
-            <!-- Order Cards Grid -->
-            <div id="orderGrid" class="grid grid-cols-3 gap-4">
-                <!-- filled by JS -->
-            </div>
-
-            <!-- Empty state -->
+            <div id="orderGrid" class="grid grid-cols-3 gap-4"></div>
             <div id="emptyOrders" class="hidden flex flex-col items-center justify-center py-20 text-center">
                 <i class="fa-solid fa-bowl-food text-5xl text-gray-200 mb-4"></i>
                 <p class="text-gray-400 font-semibold">Tidak ada order di kategori ini</p>
             </div>
         </div>
 
-        <!-- ========================
-             SECTION: UPDATE STOK
-             ======================== -->
         <div id="section-stok" class="hidden">
-
-            <!-- Search + Filter -->
             <div class="flex items-center gap-3 mb-5">
                 <div class="relative flex-1 max-w-sm">
                     <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm"></i>
-                    <input type="text" id="searchMenu" placeholder="Cari nama menu..."
-                           oninput="filterStok()"
-                           class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="filterStokKategori('Semua', this)"
-                            class="stok-filter-btn px-4 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white transition-all">
-                        Semua
-                    </button>
-                    <button onclick="filterStokKategori('Coffee', this)"
-                            class="stok-filter-btn px-4 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-                        Coffee
-                    </button>
-                    <button onclick="filterStokKategori('Non Coffee', this)"
-                            class="stok-filter-btn px-4 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-                        Non Coffee
-                    </button>
-                    <button onclick="filterStokKategori('Food', this)"
-                            class="stok-filter-btn px-4 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-                        Food
-                    </button>
-                    <button onclick="filterStokKategori('Snack', this)"
-                            class="stok-filter-btn px-4 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-                        Snack
-                    </button>
+                    <input type="text" id="searchMenu" placeholder="Cari nama menu..." oninput="filterStok()" class="w-full pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:border-[#1B2FAA]">
                 </div>
             </div>
-
-            <!-- Stok Table -->
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
                 <table class="w-full text-sm border-collapse">
                     <thead>
                         <tr class="border-b-2 border-gray-100 bg-gray-50/60">
                             <th class="px-6 py-4 text-left font-bold text-gray-700">Nama Menu</th>
                             <th class="px-6 py-4 text-center font-bold text-gray-700">Kategori</th>
-                            <th class="px-6 py-4 text-center font-bold text-gray-700">Stok Saat Ini</th>
+                            <th class="px-6 py-4 text-center font-bold text-gray-700">Stok</th>
                             <th class="px-6 py-4 text-center font-bold text-gray-700">Update Stok</th>
                             <th class="px-6 py-4 text-center font-bold text-gray-700">Status</th>
                         </tr>
                     </thead>
-                    <tbody id="stokTableBody">
-                        <!-- filled by JS -->
-                    </tbody>
+                    <tbody id="stokTableBody"></tbody>
                 </table>
             </div>
         </div>
     </main>
 </div>
 
-<!-- ===== MODAL DETAIL ORDER ===== -->
 <div id="modalDetailOrder" class="modal-overlay hidden fixed inset-0 bg-black/45 backdrop-blur-sm z-[1000] items-center justify-center">
     <div class="modal-box bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl">
         <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
             <div>
-                <h2 class="text-lg font-bold text-gray-900" id="modalOrderId">Order #001</h2>
-                <p class="text-xs text-gray-400 mt-0.5" id="modalOrderTime">14:00:21 • Meja 3</p>
+                <h2 class="text-lg font-bold text-gray-900" id="modalOrderId">Order #000</h2>
+                <p class="text-xs text-gray-400 mt-0.5" id="modalOrderTime"></p>
             </div>
-            <button onclick="closeModalDetail()"
-                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-colors">
+            <button onclick="closeModalDetail()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500">
                 <i class="fa-solid fa-xmark text-sm"></i>
             </button>
         </div>
         <div class="px-6 py-4">
-            <!-- Items list -->
             <div id="modalOrderItems" class="flex flex-col gap-2 mb-5 max-h-52 overflow-y-auto"></div>
-
-            <!-- Status Update -->
             <div class="bg-gray-50 rounded-xl p-4">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Update Status</p>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 text-center">Update Status</p>
                 <div class="flex gap-2">
-                    <button onclick="updateStatusFromModal('pending')"
-                            id="btn-modal-pending"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-red-300 text-red-500 hover:bg-red-50 transition-all">
-                        <i class="fa-solid fa-hourglass-start mr-1"></i> Pending
-                    </button>
-                    <button onclick="updateStatusFromModal('preparing')"
-                            id="btn-modal-preparing"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-yellow-300 text-yellow-600 hover:bg-yellow-50 transition-all">
-                        <i class="fa-solid fa-fire-burner mr-1"></i> Preparing
-                    </button>
-                    <button onclick="updateStatusFromModal('ready')"
-                            id="btn-modal-ready"
-                            class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-green-300 text-green-600 hover:bg-green-50 transition-all">
-                        <i class="fa-solid fa-check-circle mr-1"></i> Ready
-                    </button>
+                    <button onclick="updateStatusFromModal('pending')" id="btn-modal-pending" class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-red-300 text-red-500">Pending</button>
+                    <button onclick="updateStatusFromModal('preparing')" id="btn-modal-preparing" class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-yellow-300 text-yellow-600">Preparing</button>
+                    <button onclick="updateStatusFromModal('ready')" id="btn-modal-ready" class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 border-green-300 text-green-600">Ready</button>
                 </div>
             </div>
         </div>
         <div class="px-6 pb-6">
-            <button onclick="closeModalDetail()"
-                    class="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                Tutup
-            </button>
+            <button onclick="closeModalDetail()" class="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50">Tutup</button>
         </div>
     </div>
 </div>
 
-<!-- ===== MODAL LOGOUT ===== -->
 <div id="modalLogout" class="modal-overlay hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[1000] items-center justify-center">
     <div class="modal-box bg-white rounded-2xl w-full max-w-sm mx-4 shadow-2xl">
         <div class="flex flex-col items-center pt-8 pb-4 px-6">
@@ -353,104 +228,75 @@
             <p class="text-sm text-gray-400 text-center">Kamu akan keluar dari dapur Terralog. Yakin ingin logout?</p>
         </div>
         <div class="flex gap-3 px-6 pb-6 pt-2">
-            <button onclick="closeModalKoki('modalLogout')"
-                    class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                Batal
-            </button>
-            <button onclick="prosesLogout()"
-                    class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 hover:shadow-lg transition-all">
-                Ya, Logout
-            </button>
+            <button onclick="closeModalKoki('modalLogout')" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500">Batal</button>
+            <button onclick="prosesLogout()" class="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600">Ya, Logout</button>
         </div>
     </div>
 </div>
 
-<script>
-// ── Data ──────────────────────────────────────────────
-const menuData = [];
+<div id="flask-data" 
+     data-orders='{{ orders | tojson | safe }}' 
+     data-menu='{{ menu_list | tojson | safe }}' 
+     style="display: none;">
+</div>
 
-let ordersData = [];
+<script>
+// --- INTEGRASI DATA DARI FLASK ---
+const dataEl = document.getElementById('flask-data');
+
+// Ambil data dari attribute, lalu parse ke JSON
+const menuData = JSON.parse(dataEl.getAttribute('data-menu') || '[]');
+let ordersData = JSON.parse(dataEl.getAttribute('data-orders') || '[]');
+
+console.log(ordersData); // Cek di console browser untuk memastikan data masuk
 
 let currentFilterOrder = 'semua';
-let currentFilterStok  = 'Semua';
-let activeOrderId      = null;
+let activeOrderId = null;
 
-// ── Live Clock ────────────────────────────────────────
+// Live Clock
 function updateClock() {
     const now = new Date();
-    document.getElementById('liveClock').textContent =
-        now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('liveClock').textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-// ── Section Switching ─────────────────────────────────
+// UI Section Toggle
 function switchSection(section) {
     ['antrian', 'stok'].forEach(s => {
         document.getElementById(`section-${s}`).classList.toggle('hidden', s !== section);
         const btn = document.getElementById(`nav-${s}`);
         if (s === section) {
             btn.classList.add('bg-white/15', 'text-white', 'border', 'border-yellow-400/60', 'font-semibold');
-            btn.classList.remove('text-white/65', 'hover:bg-white/10');
+            btn.classList.remove('text-white/65');
             btn.querySelector('i').classList.add('text-yellow-400');
         } else {
             btn.classList.remove('bg-white/15', 'text-white', 'border', 'border-yellow-400/60', 'font-semibold');
-            btn.classList.add('text-white/65', 'hover:bg-white/10');
+            btn.classList.add('text-white/65');
             btn.querySelector('i').classList.remove('text-yellow-400');
         }
     });
-
-    const titles = { antrian: 'Antrean Order', stok: 'Update Stok Menu' };
-    document.getElementById('header-section-title').textContent = titles[section];
-
+    document.getElementById('header-section-title').textContent = section === 'antrian' ? 'Antrean Order' : 'Update Stok Menu';
     if (section === 'stok') renderStokTable();
 }
 
-// ── Status Config ─────────────────────────────────────
 const statusConfig = {
-    pending: {
-        label: 'Pending',
-        icon:  'fa-hourglass-start',
-        bg:    'bg-red-50',
-        border:'border-red-200',
-        badge: 'bg-red-100 text-red-600',
-        text:  'text-red-600',
-        ring:  'ring-red-200',
-    },
-    preparing: {
-        label: 'Preparing',
-        icon:  'fa-fire-burner',
-        bg:    'bg-yellow-50',
-        border:'border-yellow-200',
-        badge: 'bg-yellow-100 text-yellow-700',
-        text:  'text-yellow-600',
-        ring:  'ring-yellow-200',
-    },
-    ready: {
-        label: 'Ready',
-        icon:  'fa-check-circle',
-        bg:    'bg-green-50',
-        border:'border-green-200',
-        badge: 'bg-green-100 text-green-700',
-        text:  'text-green-600',
-        ring:  'ring-green-200',
-    }
+    pending: { label: 'Pending', icon: 'fa-hourglass-start', bg: 'bg-red-50', border:'border-red-200', badge: 'bg-red-100 text-red-600', text: 'text-red-600' },
+    preparing: { label: 'Preparing', icon: 'fa-fire-burner', bg: 'bg-yellow-50', border:'border-yellow-200', badge: 'bg-yellow-100 text-yellow-700', text: 'text-yellow-600' },
+    ready: { label: 'Ready', icon: 'fa-check-circle', bg: 'bg-green-50', border:'border-green-200', badge: 'bg-green-100 text-green-700', text: 'text-green-600' }
 };
 
-// ── Render Order Cards ────────────────────────────────
 function renderOrders() {
-    const grid  = document.getElementById('orderGrid');
+    const grid = document.getElementById('orderGrid');
     const empty = document.getElementById('emptyOrders');
-    const filtered = currentFilterOrder === 'semua'
-        ? ordersData
-        : ordersData.filter(o => o.status === currentFilterOrder);
+    const filtered = currentFilterOrder === 'semua' ? ordersData : ordersData.filter(o => o.status === currentFilterOrder);
 
-    // Update counters
-    document.getElementById('count-pending').textContent   = ordersData.filter(o => o.status === 'pending').length;
+    // Update Counters
+    document.getElementById('count-pending').textContent = ordersData.filter(o => o.status === 'pending').length;
     document.getElementById('count-preparing').textContent = ordersData.filter(o => o.status === 'preparing').length;
-    document.getElementById('count-ready').textContent     = ordersData.filter(o => o.status === 'ready').length;
-    document.getElementById('count-total').textContent     = ordersData.length;
-    document.getElementById('badge-antrian').textContent   = ordersData.filter(o => o.status === 'pending').length;
+    document.getElementById('count-ready').textContent = ordersData.filter(o => o.status === 'ready').length;
+    document.getElementById('count-total').textContent = ordersData.length;
+    document.getElementById('badge-antrian').textContent = ordersData.filter(o => o.status === 'pending').length;
 
     if (filtered.length === 0) {
         grid.innerHTML = '';
@@ -461,68 +307,23 @@ function renderOrders() {
 
     grid.innerHTML = filtered.map(order => {
         const cfg = statusConfig[order.status];
-        const isNew = order.status === 'pending';
         return `
-        <div id="card-${order.id}"
-             onclick="openDetailOrder(${order.id})"
-             class="bg-white rounded-2xl border-2 ${cfg.border} p-5 cursor-pointer hover:shadow-lg
-                    hover:-translate-y-0.5 transition-all ${isNew ? 'order-new' : ''}">
-
-            <!-- Card Header -->
+        <div onclick="openDetailOrder(${order.id})" class="bg-white rounded-2xl border-2 ${cfg.border} p-5 cursor-pointer hover:shadow-lg transition-all ${order.status === 'pending' ? 'order-new' : ''}">
             <div class="flex items-start justify-between mb-3">
-                <div>
-                    <p class="font-extrabold text-gray-900 text-base">#${order.id_display}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">
-                        <i class="fa-regular fa-clock mr-1"></i>${order.waktu}
-                    </p>
-                </div>
+                <p class="font-extrabold text-gray-900 text-base">#${order.id_display}</p>
                 <span class="px-3 py-1 rounded-full text-xs font-bold ${cfg.badge} flex items-center gap-1">
                     <i class="fa-solid ${cfg.icon} text-[10px]"></i> ${cfg.label}
                 </span>
             </div>
-
-            <!-- Meja -->
-            <div class="flex items-center gap-1.5 mb-3">
-                <i class="fa-solid fa-chair text-gray-300 text-xs"></i>
-                <span class="text-xs font-semibold text-gray-500">${order.meja}</span>
-            </div>
-
-            <!-- Items -->
+            <div class="text-xs font-semibold text-gray-500 mb-3"><i class="fa-solid fa-chair mr-1"></i>${order.meja} • ${order.waktu}</div>
             <div class="flex flex-col gap-1.5 mb-4">
-                ${order.items.slice(0, 3).map(item => `
-                    <div class="flex items-center justify-between text-xs">
-                        <span class="text-gray-700 font-medium">${item.qty}x ${item.nama}</span>
-                        ${item.catatan ? `<span class="text-orange-400 italic text-[10px]">${item.catatan}</span>` : ''}
-                    </div>
-                `).join('')}
-                ${order.items.length > 3 ? `<p class="text-xs text-gray-400 italic">+${order.items.length - 3} item lainnya...</p>` : ''}
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-2" onclick="event.stopPropagation()">
-                ${order.status !== 'pending' ? `
-                <button onclick="quickUpdateStatus(${order.id}, 'pending')"
-                        class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-red-200 text-red-400 hover:bg-red-50 transition-all">
-                    Pending
-                </button>` : `<div class="flex-1 py-1.5 rounded-lg bg-red-100 text-red-600 text-[11px] font-bold text-center">● Pending</div>`}
-
-                ${order.status !== 'preparing' ? `
-                <button onclick="quickUpdateStatus(${order.id}, 'preparing')"
-                        class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-yellow-200 text-yellow-500 hover:bg-yellow-50 transition-all">
-                    Preparing
-                </button>` : `<div class="flex-1 py-1.5 rounded-lg bg-yellow-100 text-yellow-700 text-[11px] font-bold text-center">● Preparing</div>`}
-
-                ${order.status !== 'ready' ? `
-                <button onclick="quickUpdateStatus(${order.id}, 'ready')"
-                        class="flex-1 py-1.5 rounded-lg text-[11px] font-bold border border-green-200 text-green-500 hover:bg-green-50 transition-all">
-                    Ready
-                </button>` : `<div class="flex-1 py-1.5 rounded-lg bg-green-100 text-green-700 text-[11px] font-bold text-center">● Ready</div>`}
+                ${order.items.slice(0, 3).map(i => `<div class="text-xs text-gray-700 font-medium">${i.qty}x ${i.nama}</div>`).join('')}
+                ${order.items.length > 3 ? `<p class="text-xs text-gray-400 italic">+${order.items.length - 3} lainnya</p>` : ''}
             </div>
         </div>`;
     }).join('');
 }
 
-// ── Quick Update Status ───────────────────────────────
 function quickUpdateStatus(orderId, newStatus) {
     fetch(`/api/koki/update-order-status/${orderId}`, {
         method: 'POST',
@@ -533,255 +334,129 @@ function quickUpdateStatus(orderId, newStatus) {
             const order = ordersData.find(o => o.id === orderId);
             if (order) order.status = newStatus;
             renderOrders();
-            const cfg = statusConfig[newStatus];
-            showToast(`Order #${order.id_display} → ${cfg.label}`, newStatus);
+            showToast(`Order #${order.id_display} diperbarui ke ${newStatus}`);
         }
     });
 }
 
-// ── Filter Orders ─────────────────────────────────────
 function filterOrders(status, btn) {
     currentFilterOrder = status;
-    document.querySelectorAll('.order-filter-btn').forEach(b => {
-        b.classList.remove('bg-[#1B2FAA]', 'text-white', 'bg-red-500', 'bg-yellow-400', 'bg-green-400');
-    });
+    document.querySelectorAll('.order-filter-btn').forEach(b => b.classList.remove('bg-[#1B2FAA]', 'text-white'));
     btn.classList.add('bg-[#1B2FAA]', 'text-white');
     renderOrders();
 }
 
-// ── Open Detail Modal ─────────────────────────────────
 function openDetailOrder(orderId) {
     activeOrderId = orderId;
     const order = ordersData.find(o => o.id === orderId);
     if (!order) return;
-
-    document.getElementById('modalOrderId').textContent   = `Order #${order.id_display}`;
+    document.getElementById('modalOrderId').textContent = `Order #${order.id_display}`;
     document.getElementById('modalOrderTime').textContent = `${order.waktu} • ${order.meja}`;
-
     document.getElementById('modalOrderItems').innerHTML = order.items.map(item => `
-        <div class="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-            <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-full bg-[#1B2FAA]/10 text-[#1B2FAA] text-xs font-bold flex items-center justify-center">${item.qty}</span>
-                <span class="text-sm font-semibold text-gray-800">${item.nama}</span>
-            </div>
-            ${item.catatan ? `<span class="text-xs text-orange-400 italic bg-orange-50 px-2 py-0.5 rounded-full">${item.catatan}</span>` : ''}
+        <div class="flex items-center justify-between py-2 border-b border-gray-50">
+            <span class="text-sm font-semibold">${item.qty}x ${item.nama}</span>
+            <span class="text-xs text-orange-400 italic">${item.catatan || ''}</span>
         </div>
     `).join('');
-
-    // Highlight active status button
-    ['pending', 'preparing', 'ready'].forEach(s => {
-        const btn = document.getElementById(`btn-modal-${s}`);
-        const cfg = statusConfig[s];
-        if (s === order.status) {
-            btn.className = `flex-1 py-2.5 rounded-xl text-xs font-bold ${cfg.bg} ${cfg.text} border-2 ${cfg.border} ring-2 ${cfg.ring}`;
-        } else {
-            btn.className = `flex-1 py-2.5 rounded-xl text-xs font-bold border-2 ${cfg.border} ${cfg.text} hover:${cfg.bg} transition-all`;
-        }
-    });
-
-    document.getElementById('modalDetailOrder').classList.remove('hidden');
     document.getElementById('modalDetailOrder').classList.add('active');
 }
 
-function closeModalDetail() {
-    document.getElementById('modalDetailOrder').classList.add('hidden');
-    document.getElementById('modalDetailOrder').classList.remove('active');
-    activeOrderId = null;
-}
+function closeModalDetail() { document.getElementById('modalDetailOrder').classList.remove('active', 'hidden'); }
 
 function updateStatusFromModal(newStatus) {
-    if (activeOrderId === null) return;
-    quickUpdateStatus(activeOrderId, newStatus);
+    if (activeOrderId) quickUpdateStatus(activeOrderId, newStatus);
     closeModalDetail();
 }
 
-// ── Stok Table ────────────────────────────────────────
-let stokSearchQuery = '';
-
+// --- Fungsi untuk Menampilkan Tabel Stok ---
 function renderStokTable() {
     const tbody = document.getElementById('stokTableBody');
-    const filtered = menuData.filter(m => {
-        const matchKat  = currentFilterStok === 'Semua' || m.kategori === currentFilterStok;
-        const matchSearch = m.nama.toLowerCase().includes(stokSearchQuery.toLowerCase());
-        return matchKat && matchSearch;
-    });
+    const searchTerm = document.getElementById('searchMenu').value.toLowerCase();
+    
+    // Filter data berdasarkan input pencarian
+    const filteredMenu = menuData.filter(m => 
+        m.nama.toLowerCase().includes(searchTerm) || 
+        m.kategori.toLowerCase().includes(searchTerm)
+    );
 
-    tbody.innerHTML = filtered.map((m, i) => {
-        const stokColor = m.stok <= 0 ? 'text-red-500' : m.stok <= 5 ? 'text-orange-500' : 'text-gray-800';
-        const stokBg    = m.stok <= 0 ? 'bg-red-50' : m.stok <= 5 ? 'bg-orange-50' : 'bg-white';
-        return `
-        <tr class="border-b border-gray-100 hover:bg-blue-50/30 transition-colors" id="stok-row-${m.id}">
-            <td class="px-6 py-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-[#1B2FAA]/10 flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-utensils text-[#1B2FAA] text-xs"></i>
-                    </div>
-                    <span class="font-semibold text-gray-800">${m.nama}</span>
-                </div>
-            </td>
+    tbody.innerHTML = filteredMenu.map(m => `
+        <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+            <td class="px-6 py-4 font-semibold text-gray-800">${m.nama}</td>
             <td class="px-6 py-4 text-center">
-                <span class="px-3 py-1 rounded-full text-xs font-bold
-                    ${m.kategori === 'Coffee' ? 'bg-purple-100 text-purple-700' :
-                      m.kategori === 'Non Coffee' ? 'bg-pink-100 text-pink-700' :
-                      m.kategori === 'Food' ? 'bg-blue-100 text-blue-700' :
-                      'bg-yellow-100 text-yellow-700'}">
-                    ${m.kategori}
-                </span>
+                <span class="px-2 py-1 bg-gray-100 text-gray-500 rounded text-[10px] font-bold uppercase">${m.kategori}</span>
             </td>
-            <td class="px-6 py-4 text-center">
-                <span class="text-lg font-extrabold ${stokColor}">${m.stok}</span>
-                ${m.stok === 0 ? '<span class="block text-[10px] text-red-400 font-semibold">HABIS</span>' :
-                  m.stok <= 5  ? '<span class="block text-[10px] text-orange-400 font-semibold">HAMPIR HABIS</span>' : ''}
+            <td class="px-6 py-4 text-center font-bold ${m.stok <= 5 ? 'text-red-500' : 'text-gray-700'}">
+                ${m.stok}
             </td>
             <td class="px-6 py-4">
                 <div class="flex items-center justify-center gap-2">
-                    <button onclick="adjustStok(${m.id}, -1)"
-                            class="w-8 h-8 rounded-lg border-2 border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-500 hover:bg-red-50 font-bold text-lg transition-all flex items-center justify-center">
-                        −
-                    </button>
-                    <input type="number" id="input-stok-${m.id}" value="${m.stok}" min="0"
-                           class="w-16 text-center px-2 py-1.5 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-[#1B2FAA] transition-colors">
-                    <button onclick="adjustStok(${m.id}, 1)"
-                            class="w-8 h-8 rounded-lg border-2 border-gray-200 text-gray-500 hover:border-green-300 hover:text-green-500 hover:bg-green-50 font-bold text-lg transition-all flex items-center justify-center">
-                        +
-                    </button>
-                    <button onclick="simpanStok(${m.id})"
-                            class="px-3 py-1.5 rounded-lg bg-[#1B2FAA] text-white text-xs font-bold hover:bg-[#1E3ACC] transition-all">
-                        Simpan
-                    </button>
+                    <button onclick="updateStok(${m.id}, ${m.stok - 1})" class="w-8 h-8 rounded bg-red-50 text-red-600 hover:bg-red-100"><i class="fa-solid fa-minus text-xs"></i></button>
+                    <button onclick="updateStok(${m.id}, ${m.stok + 1})" class="w-8 h-8 rounded bg-green-50 text-green-600 hover:bg-green-100"><i class="fa-solid fa-plus text-xs"></i></button>
                 </div>
             </td>
             <td class="px-6 py-4 text-center">
-                <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                    <input type="checkbox" ${m.status ? 'checked' : ''}
-                           onchange="toggleStatusMenu(this, ${m.id})">
-                    <span class="toggle-slider"></span>
+                <label class="toggle-switch relative inline-block w-11 h-6">
+                    <input type="checkbox" ${m.status ? 'checked' : ''} onchange="toggleMenuStatus(${m.id}, this.checked)">
+                    <span class="toggle-slider cursor-pointer"></span>
                 </label>
             </td>
-        </tr>`;
-    }).join('');
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr><td colspan="5" class="text-center py-12 text-gray-300">
-                <i class="fa-solid fa-magnifying-glass text-3xl mb-2 block"></i>
-                <p class="text-sm font-semibold">Menu tidak ditemukan</p>
-            </td></tr>`;
-    }
+        </tr>
+    `).join('');
 }
 
-function filterStok() {
-    stokSearchQuery = document.getElementById('searchMenu').value;
-    renderStokTable();
-}
-
-function filterStokKategori(kat, btn) {
-    currentFilterStok = kat;
-    document.querySelectorAll('.stok-filter-btn').forEach(b => {
-        b.classList.remove('bg-[#1B2FAA]', 'text-white');
-        b.classList.add('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
-    });
-    btn.classList.add('bg-[#1B2FAA]', 'text-white');
-    btn.classList.remove('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
-    renderStokTable();
-}
-
-function adjustStok(menuId, delta) {
-    const input = document.getElementById(`input-stok-${menuId}`);
-    const newVal = Math.max(0, parseInt(input.value || 0) + delta);
-    input.value = newVal;
-    // Update local data preview
-    const m = menuData.find(x => x.id === menuId);
-    if (m) m.stok = newVal;
-}
-
-function simpanStok(menuId) {
-    const input  = document.getElementById(`input-stok-${menuId}`);
-    const newStok = parseInt(input.value || 0);
-    const m = menuData.find(x => x.id === menuId);
-    if (!m) return;
-
+// --- Fungsi API untuk Update Stok ---
+function updateStok(menuId, newStok) {
+    if (newStok < 0) return;
+    
     fetch(`/api/koki/update-stok/${menuId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stok: newStok })
-    }).then(r => r.json()).then(data => {
+    })
+    .then(r => r.json())
+    .then(data => {
         if (data.success) {
-            m.stok = newStok;
+            const item = menuData.find(m => m.id === menuId);
+            if (item) item.stok = newStok;
             renderStokTable();
-            showToast(`Stok "${m.nama}" diperbarui → ${newStok}`);
+            showToast("Stok berhasil diperbarui");
         }
     });
 }
 
-function toggleStatusMenu(checkbox, menuId) {
-    const m = menuData.find(x => x.id === menuId);
-    if (m) m.status = checkbox.checked;
-    fetch(`/api/toggle-menu-status/${menuId}`, {
+function toggleMenuStatus(menuId, isChecked) {
+    fetch(`/api/toggle-menu-status/${menuId}`, { // Mengarah ke API di owner_routes
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: checkbox.checked })
-    }).then(r => r.json()).then(data => {
-        if (data.success) showToast(`Status menu diperbarui!`);
-    });
-}
-
-// ── Toast ─────────────────────────────────────────────
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const msg   = document.getElementById('toast-message');
-    const icon  = document.getElementById('toast-icon');
-
-    const colors = {
-        success:   { border: '#10B981', icon: 'fa-circle-check text-green-500' },
-        pending:   { border: '#EF4444', icon: 'fa-hourglass-start text-red-500' },
-        preparing: { border: '#F59E0B', icon: 'fa-fire-burner text-yellow-500' },
-        ready:     { border: '#10B981', icon: 'fa-check-circle text-green-500' },
-    };
-    const c = colors[type] || colors.success;
-    toast.style.borderLeftColor = c.border;
-    icon.className = `fa-solid ${c.icon} text-base`;
-    msg.textContent = message;
-    toast.classList.remove('hide');
-    toast.classList.add('show');
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hide');
-    }, 3000);
-}
-
-// ── Modal helpers ─────────────────────────────────────
-function openModalKoki(id) {
-    const el = document.getElementById(id);
-    el.classList.remove('hidden');
-    el.classList.add('active');
-}
-function closeModalKoki(id) {
-    const el = document.getElementById(id);
-    el.classList.add('hidden');
-    el.classList.remove('active');
-}
-
-// ── Logout ────────────────────────────────────────────
-function konfirmasiLogout() { openModalKoki('modalLogout'); }
-
-function prosesLogout() {
-    showToast('Berhasil logout. Sampai jumpa!', 'success');
-    closeModalKoki('modalLogout');
-    setTimeout(() => { window.location.href = '/login'; }, 1500);
-}
-
-// Close modal on backdrop click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-    overlay.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.add('hidden');
-            this.classList.remove('active');
+        body: JSON.stringify({ status: isChecked })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const item = menuData.find(m => m.id === menuId);
+            if (item) item.status = isChecked;
+            showToast(`Menu ${isChecked ? 'Aktif' : 'Nonaktif'}`);
         }
     });
-});
+}
 
-// ── Init ──────────────────────────────────────────────
+// --- Fungsi untuk Filter Pencarian ---
+function filterStok() {
+    renderStokTable();
+}
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-message').textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function konfirmasiLogout() { document.getElementById('modalLogout').classList.add('active'); }
+function closeModalKoki(id) { document.getElementById(id).classList.remove('active'); }
+function prosesLogout() { window.location.href = '/login'; }
+
+// Init rendering
 renderOrders();
 </script>
 </body>

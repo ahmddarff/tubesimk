@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy_utils import database_exists, create_database, drop_database
 from app import app, db
 from seeders import run_seeders
 
@@ -19,12 +19,18 @@ def init_database():
     APP_PASS = os.getenv("DB_APP_PASSWORD")
 
     with app.app_context():
-        # 1. Pengecekan & Pembuatan DB MYSQL
-        if not database_exists(ROOT_URI):
-            create_database(ROOT_URI)
-            print(f"Database '{DB_NAME}' berhasil diciptakan oleh Root!")
-        else:
-            print(f"Database '{DB_NAME}' sudah ada.")
+        # 1. RESET DATABASE (DROP & CREATE)
+        if database_exists(ROOT_URI):
+            print(f"Menghapus database lama '{DB_NAME}'...")
+            drop_database(ROOT_URI)
+        
+        print(f"Menciptakan database baru '{DB_NAME}'...")
+        create_database(ROOT_URI)
+        # if not database_exists(ROOT_URI):
+        #     create_database(ROOT_URI)
+        #     print(f"Database '{DB_NAME}' berhasil dibuat!")
+        # else:
+        #     print(f"Database '{DB_NAME}' sudah ada.")
         
         # 2. Pembuatan Akun MySQL Otomatis
         root_engine = create_engine(ROOT_URI)

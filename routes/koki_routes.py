@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify
+from .owner_routes import menu_data  # Import menu_data dari owner_routes.py
 
 koki_bp = Blueprint('koki', __name__)
 
@@ -68,8 +69,8 @@ orders_data = [
 def koki_dashboard():
     return render_template('koki/koki_dashboard.html',
         username="Budi",
-        orders=[],
-        menu_list=[]
+        orders=orders_data,
+        menu_list=menu_data
     )
 
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
