@@ -1,0 +1,95 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb -->
+    <div class="mb-8 flex items-center gap-2 text-gray-600">
+        <a href="/customer/buat-reservasi" class="hover:text-terralogBlue">Reservasi Saya</a>
+        <span class="text-gray-400">›</span>
+        <span class="text-gray-800 font-semibold">Detail Reservasi</span>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
+        <div class="flex items-start justify-between mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-3">#AB123</h1>
+                <div class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold">
+                    Menunggu
+                </div>
+            </div>
+            <a href="/customer/buat-reservasi" class="text-gray-600 hover:text-gray-800 text-sm font-semibold">← Kembali</a>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="grid grid-cols-2 gap-8">
+            <!-- Tanggal & Waktu -->
+            <div>
+                <h3 class="text-gray-600 text-sm font-semibold mb-2">Tanggal Reservasi</h3>
+                <p class="text-2xl font-bold text-gray-800 mb-6">06 April 2026</p>
+                
+                <h3 class="text-gray-600 text-sm font-semibold mb-2">Waktu Reservasi</h3>
+                <p class="text-2xl font-bold text-gray-800">15:15 WIB</p>
+            </div>
+
+            <!-- Durasi & Tamu -->
+            <div>
+                <h3 class="text-gray-600 text-sm font-semibold mb-2">Durasi</h3>
+                <p class="text-2xl font-bold text-gray-800 mb-6">2 Jam</p>
+                
+                <h3 class="text-gray-600 text-sm font-semibold mb-2">Jumlah Tamu</h3>
+                <p class="text-2xl font-bold text-gray-800">21 Orang</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informasi Tamu -->
+    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Informasi Tamu</h2>
+        <div class="grid grid-cols-2 gap-8">
+            <div>
+                <p class="text-gray-600 text-sm mb-2">Nama Pemesan</p>
+                <p class="text-lg font-semibold text-gray-800">Matthew Shen</p>
+            </div>
+            <div>
+                <p class="text-gray-600 text-sm mb-2">Nomor Handphone</p>
+                <p class="text-lg font-semibold text-gray-800">+62 812-3456-7890</p>
+            </div>
+            <div>
+                <p class="text-gray-600 text-sm mb-2">Email</p>
+                <p class="text-lg font-semibold text-gray-800">matthew@email.com</p>
+            </div>
+            <div>
+                <p class="text-gray-600 text-sm mb-2">Kebutuhan Khusus (Opsional)</p>
+                <p class="text-lg font-semibold text-gray-800">-</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Reservasi -->
+    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Status Reservasi</h2>
+        <div class="space-y-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <i data-lucide="clock" class="w-6 h-6 text-yellow-600"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-800">Menunggu Konfirmasi</p>
+                    <p class="text-sm text-gray-600">Reservasi sedang menunggu konfirmasi dari pihak restoran</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 mb-12">
+        <a href="/customer/buat-reservasi" class="flex-1 border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition text-center">
+            Kembali
+        </a>
+        <button onclick="alert('Fitur pembatalan akan segera tersedia'); return false;" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg transition">
+            Batalkan Reservasi
+        </button>
+    </div>
+</div>
+{% endblock %}

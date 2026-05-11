@@ -1,0 +1,196 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block title %}Pesanan Aktif - Terralog{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-8 bg-gray-50" x-data="pesananAktifApp()">
+    <div class="max-w-5xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="mb-8 flex items-center gap-2 text-gray-600">
+            <a href="/customer/pesanan-saya" class="hover:text-terralogBlue">Pesanan Saya</a>
+            <span class="text-gray-400">›</span>
+            <span class="text-gray-800 font-semibold">Pesanan Aktif</span>
+        </div>
+
+        <!-- Header Section -->
+        <div class="grid grid-cols-3 gap-6 mb-8">
+            <!-- Left: Customer & Meja Info -->
+            <div class="bg-blue-50 rounded-2xl p-6">
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold mb-1">Nama Pemesan</p>
+                        <p class="text-gray-800 text-lg font-bold">Matthew Shen</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold mb-1">Meja</p>
+                        <p class="text-gray-800 text-lg font-bold">M-102</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Order Number & Status -->
+            <div class="flex flex-col items-center justify-center">
+                <div class="mb-6">
+                    <p class="text-gray-600 text-sm text-center mb-2">No. Pesanan</p>
+                    <div class="bg-terralogBlue text-white px-6 py-3 rounded-xl font-bold text-xl">
+                        #AB123
+                    </div>
+                </div>
+                <button @click="submitPembayaran()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-12 rounded-full transition">
+                    Beri Ulasan
+                </button>
+            </div>
+
+            <!-- Right: Payment Status -->
+            <div class="bg-yellow-50 rounded-2xl p-6 flex flex-col justify-center">
+                <p class="text-gray-600 text-sm font-semibold mb-3">Pembayaran Tunai</p>
+                <div class="text-center mb-4">
+                    <svg class="w-16 h-16 mx-auto mb-3" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g opacity="0.1">
+                            <rect x="20" y="30" width="60" height="40" stroke="currentColor" stroke-width="2" fill="none" rx="4"/>
+                            <line x1="20" y1="45" x2="80" y2="45" stroke="currentColor" stroke-width="2"/>
+                        </g>
+                        <g>
+                            <circle cx="50" cy="50" r="30" fill="#F2C94C" opacity="0.3"/>
+                            <path d="M50 30 L60 45 L40 45 Z M50 70 L40 55 L60 55 Z" fill="#F2C94C"/>
+                        </g>
+                    </svg>
+                </div>
+                <p class="text-gray-800 font-bold text-center mb-2">Menunggu Pembayaran</p>
+                <p class="text-gray-600 text-sm text-center">Silahkan melakukan pembayaran di kasir</p>
+            </div>
+        </div>
+
+        <!-- Progress Status -->
+        <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
+            <h3 class="text-lg font-bold text-gray-800 mb-8 text-center">Status Pesanan</h3>
+            <div class="flex items-center justify-center gap-8">
+                <!-- Status 1: Sedang Dibuat -->
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mb-3 shadow-lg">
+                        <i data-lucide="shopping-cart" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <p class="text-gray-800 font-bold text-sm">Sedang Dibuat</p>
+                </div>
+
+                <!-- Connector Line 1 -->
+                <div class="flex-1 h-1 bg-yellow-400 mb-8"></div>
+
+                <!-- Status 2: Dihidangkan -->
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center mb-3 shadow-lg">
+                        <i data-lucide="bell" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <p class="text-gray-800 font-bold text-sm">Dihidangkan</p>
+                </div>
+
+                <!-- Connector Line 2 -->
+                <div class="flex-1 h-1 bg-gray-300 mb-8"></div>
+
+                <!-- Status 3: Pesanan Selesai -->
+                <div class="flex flex-col items-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-400 flex items-center justify-center mb-3 shadow-lg opacity-60">
+                        <i data-lucide="check" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <p class="text-gray-600 font-bold text-sm">Pesanan Selesai</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items Section -->
+        <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
+            <h3 class="text-lg font-bold text-gray-800 mb-6">Pesanan Anda</h3>
+
+            <!-- Item 1: Terralog Kopi -->
+            <div class="bg-blue-50 rounded-xl p-6 mb-6 border border-blue-200">
+                <div class="flex gap-6 items-start">
+                    <!-- Product Image -->
+                    <div class="w-24 h-24 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-300">
+                        <i data-lucide="coffee" class="w-12 h-12 text-terralogBlue"></i>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-800">Terralog Kopi</h4>
+                                <p class="text-terralogBlue font-semibold">Rp 18.000</p>
+                            </div>
+                            <span class="bg-yellow-400 text-white font-bold px-3 py-1 rounded-lg">x1</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm mb-2">Catatan:</p>
+                            <p class="text-gray-800">Yang ice ya, less sugar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 2: Tagalog Fried Rice -->
+            <div class="bg-orange-50 rounded-xl p-6 border border-orange-200">
+                <div class="flex gap-6 items-start">
+                    <!-- Product Image -->
+                    <div class="w-24 h-24 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-300">
+                        <i data-lucide="rice" class="w-12 h-12 text-terralogOrange"></i>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h4 class="text-lg font-bold text-gray-800">Tagalog Fried Rice</h4>
+                                <p class="text-terralogOrange font-semibold">Rp 25.000</p>
+                            </div>
+                            <span class="bg-yellow-400 text-white font-bold px-3 py-1 rounded-lg">x1</span>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm mb-2">Catatan:</p>
+                            <p class="text-gray-800">Nasinya banyakin ya.., saya belum makan dari 3 hari yang lalu..., jangan pakai bawang merah.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="grid grid-cols-2 gap-6 mb-8">
+            <!-- Metode Pembayaran -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Metode Pembayaran</h3>
+                <p class="text-gray-800 text-base font-semibold">Tunai</p>
+            </div>
+
+            <!-- Total Pembayaran -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Total Pembayaran</h3>
+                <p class="text-terralogBlue text-3xl font-bold">Rp 43.000</p>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex justify-center mb-12">
+            <button @click="submitPembayaran()" class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-4 px-16 rounded-full transition text-lg shadow-lg">
+                Selesaikan Pesanan
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function pesananAktifApp() {
+        return {
+            submitPembayaran() {
+                const message = `Pembayaran berhasil!\n\nNomor Pesanan: #AB123\nTotal: Rp 43.000\nMetode: Tunai\n\nTerima kasih telah berbelanja di Terralog Coffee!`;
+                alert(message);
+                
+                // Redirect back to pesanan saya after payment
+                setTimeout(() => {
+                    window.location.href = '/customer/pesanan-saya';
+                }, 500);
+            }
+        }
+    }
+
+    lucide.createIcons();
+</script>
+{% endblock %}

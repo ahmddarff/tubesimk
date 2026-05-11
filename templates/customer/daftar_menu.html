@@ -1,7 +1,7 @@
-{% extends "layouts/layout_kasir.html" %}
+{% extends "layouts/layout_customer.html" %}
 
 {% block content %}
-<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+<div class="max-w-full mx-auto">
     <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
         activeCategory: 'semua',
         cart: [],
@@ -96,9 +96,14 @@
                             <p class="text-lg font-bold text-terralogBlue mb-3">Rp {{ "{:,}".format(product.harga).replace(',', '.') }}</p>
                             
                             {% if product.status == 'tersedia' %}
-                            <button class="w-full bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-2 rounded-lg transition">
-                                BELI
-                            </button>
+                            <div class="flex gap-2">
+                                <button @click="addToCart({nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'})" class="flex-1 bg-terralogBlue hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition text-sm">
+                                    +
+                                </button>
+                                <button @click="addToCart({nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'}); window.location.href='/customer/checkout'" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition">
+                                    BELI
+                                </button>
+                            </div>
                             {% else %}
                             <button disabled class="w-full bg-gray-300 text-gray-600 font-bold py-2 rounded-lg">
                                 STOK HABIS
@@ -151,15 +156,15 @@
 
                 <!-- Checkout Buttons -->
                 <div class="space-y-2">
-                    <button :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition">
+                    <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition cursor-pointer">
                         <span x-text="cart.length + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
                     </button>
-                    <button class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition">
+                    <button @click="window.location.href='/customer/daftar-menu'" class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition cursor-pointer">
                         Lanjut Belanja
                     </button>
                 </div>
             </div>
         </aside>
     </div>
-</main>
+</div>
 {% endblock %}

@@ -1,0 +1,74 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block title %}Profil Saya - Terralog{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-8 bg-gray-50">
+    <div class="max-w-5xl mx-auto">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">Profil Saya</h1>
+                <p class="text-gray-600">Kelola informasi dasar akun Anda untuk akses aplikasi.</p>
+            </div>
+            <button class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full transition shadow-lg">
+                Edit Profil
+            </button>
+        </div>
+
+        <!-- Main Profile Card -->
+        <div class="bg-white rounded-2xl p-8 shadow-sm">
+            <div class="flex gap-12 mb-8">
+                <!-- Photo Section -->
+                <div class="flex flex-col items-center">
+                    <h3 class="text-lg font-bold text-gray-800 mb-6">Foto Profil</h3>
+                    <div class="w-40 h-40 bg-terralogBlue rounded-full flex items-center justify-center flex-shrink-0 shadow-lg">
+                        <i data-lucide="user" class="w-20 h-20 text-white/70"></i>
+                    </div>
+                </div>
+
+                <!-- Form Section -->
+                <div class="flex-1">
+                    <!-- Username -->
+                    <div class="mb-6">
+                        <label class="text-lg font-bold text-gray-800 block mb-3">Username</label>
+                        <input type="text" value="Matthew Shen" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                    </div>
+
+                    <!-- Nama Lengkap -->
+                    <div class="mb-6">
+                        <label class="text-lg font-bold text-gray-800 block mb-3">Nama Lengkap</label>
+                        <input type="text" value="Matthew Shen" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                    </div>
+
+                    <!-- Email Pribadi -->
+                    <div class="mb-6">
+                        <label class="text-lg font-bold text-gray-800 block mb-3">Email Pribadi</label>
+                        <input type="email" value="matthewmoo67@gmail.com" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                    </div>
+
+                    <!-- Nomor Handphone -->
+                    <div class="mb-6">
+                        <label class="text-lg font-bold text-gray-800 block mb-3">Nomor Handphone</label>
+                        <input type="tel" placeholder="Belum diatur" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-4 justify-center mt-12">
+            <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-12 rounded-full transition">
+                Batal
+            </button>
+            <button class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-12 rounded-full transition">
+                Simpan Perubahan
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
