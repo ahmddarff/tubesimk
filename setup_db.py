@@ -2,7 +2,8 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
 from sqlalchemy_utils import database_exists, create_database
-from app import app, db 
+from app import app, db
+from seeders import run_seeders
 
 load_dotenv()
 
@@ -37,6 +38,9 @@ def init_database():
         # 3. Pembuatan Tabel menggunakan APP_URI dari app.py
         db.create_all()
         print("Tabel-tabel berhasil di-generate/diperbarui!")
+
+        # 4. DATA SEEDER (PENGHUNI AWAL DATABASE)
+        run_seeders()
 
 if __name__ == '__main__':
     print("Memulai proses setup database...")
