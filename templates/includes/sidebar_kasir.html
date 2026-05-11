@@ -1,4 +1,4 @@
-<aside class="relative w-72 bg-terralogBlue text-white flex flex-col min-h-screen p-6 overflow-hidden flex-none">
+<aside class="w-72 bg-terralogBlue text-white flex flex-col min-h-screen p-6 overflow-hidden flex-none {% if role == 'customer' %}fixed left-0 top-0 z-50 h-screen overflow-y-auto{% else %}relative{% endif %}">
     
     <div class="mb-8 px-2 flex justify-center">
     <a href="/kasir">

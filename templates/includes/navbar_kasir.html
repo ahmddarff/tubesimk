@@ -1,29 +1,53 @@
-<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end sticky top-0 z-20">
+<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end z-20 {% if role == 'customer' %}fixed top-0 left-72 right-0{% else %}sticky top-0{% endif %}" x-data="{ showNotif: false, showProfile: false }">
     
     <div class="flex items-center gap-6">
         <!-- Notification Button -->
-        <button class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
-            <i data-lucide="bell" class="w-6 h-6"></i>
-            <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        <div class="relative">
+            <button @click="showNotif = !showNotif" class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <div x-show="showNotif" @click.away="showNotif = false" x-transition class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div class="p-4 border-b border-gray-200">
+                    <p class="text-sm font-bold text-gray-800">Notifikasi</p>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    <a href="#" class="block p-3 hover:bg-gray-50 border-b border-gray-100 text-sm">
+                        <p class="font-semibold text-gray-800">Pesanan siap diambil</p>
+                        <p class="text-xs text-gray-500 mt-1">5 menit lalu</p>
+                    </a>
+                </div>
+            </div>
+        </div>
 
         <div class="h-8 w-[1px] bg-gray-200"></div>
 
         <!-- User Profile -->
-        <div class="flex items-center gap-3">
-            <div class="text-right">
+        <div class="relative">
+            <button @click="showProfile = !showProfile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition">
+                <div class="text-right">
+                    {% if role == 'customer' %}
+                        <p class="text-sm font-bold text-gray-800">Matthew Shen</p>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</p>
+                    {% else %}
+                        <p class="text-sm font-bold text-gray-800">Rahma Sarita</p>
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider">Kasir Senior</p>
+                    {% endif %}
+                </div>
+                <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach">
+                    {% if role == 'customer' %}MS{% else %}RS{% endif %}
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+            </button>
+            <div x-show="showProfile" @click.away="showProfile = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 {% if role == 'customer' %}
-                    <p class="text-sm font-bold text-gray-800">Matthew Shen</p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</p>
+                    <a href="/customer/profil" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
                 {% else %}
-                    <p class="text-sm font-bold text-gray-800">Rahma Sarita</p>
-                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Kasir Senior</p>
+                    <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
                 {% endif %}
+                <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Pengaturan</a>
+                <button onclick="alert('Logout')" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</button>
             </div>
-            <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach">
-                {% if role == 'customer' %}MS{% else %}RS{% endif %}
-            </div>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
         </div>
     </div>
 </nav>

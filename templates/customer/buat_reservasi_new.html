@@ -1,0 +1,151 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block title %}Buat Reservasi - Terralog{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-8 bg-gray-50" x-data="buatReservasiApp()">
+    <div class="max-w-5xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="mb-8 flex items-center gap-2 text-gray-600">
+            <a href="/customer/buat-reservasi" class="hover:text-terralogBlue">Reservasi Saya</a>
+            <span class="text-gray-400">›</span>
+            <span class="text-gray-800 font-semibold">Buat Reservasi</span>
+        </div>
+
+        <!-- Main Form -->
+        <div class="bg-white rounded-2xl p-8 shadow-sm">
+            <!-- Customer Info Section -->
+            <div class="mb-8 pb-8 border-b border-gray-200">
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Nama Pemesan -->
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <label class="text-gray-600 text-sm font-semibold block mb-2">Nama Pemesan</label>
+                        <p class="text-gray-800 text-lg font-bold">Matthew Shen</p>
+                    </div>
+
+                    <!-- No Handphone -->
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <label class="text-gray-600 text-sm font-semibold block mb-2">No Handphone</label>
+                        <p class="text-gray-800 text-lg font-bold">08123457890</p>
+                    </div>
+
+                    <!-- Meja -->
+                    <div class="bg-blue-50 rounded-xl p-6">
+                        <label class="text-gray-600 text-sm font-semibold block mb-3">Meja</label>
+                        <select x-model="meja" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                            <option value="">Pilih Meja</option>
+                            <option value="M-101">M-101</option>
+                            <option value="M-102">M-102</option>
+                            <option value="M-103">M-103</option>
+                            <option value="M-104">M-104</option>
+                            <option value="M-105">M-105</option>
+                            <option value="M-106">M-106</option>
+                            <option value="M-107">M-107</option>
+                            <option value="M-108">M-108</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Reservasi Section -->
+            <div>
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Detail Reservasi</h3>
+                <p class="text-gray-600 text-sm mb-6">Lengkapi informasi di bawah ini untuk mengajukan reservasi</p>
+
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Tanggal Reservasi -->
+                    <div class="bg-blue-50 rounded-xl p-6 text-center">
+                        <i data-lucide="calendar" class="w-12 h-12 text-terralogBlue mx-auto mb-4"></i>
+                        <p class="text-gray-700 font-semibold mb-4">Tanggal Reservasi</p>
+                        <select x-model="tanggal" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                            <option value="">Pilih Tanggal</option>
+                            <option value="2026-05-12">12 Mei 2026</option>
+                            <option value="2026-05-13">13 Mei 2026</option>
+                            <option value="2026-05-14">14 Mei 2026</option>
+                            <option value="2026-05-15">15 Mei 2026</option>
+                            <option value="2026-05-16">16 Mei 2026</option>
+                            <option value="2026-05-17">17 Mei 2026</option>
+                            <option value="2026-05-18">18 Mei 2026</option>
+                        </select>
+                    </div>
+
+                    <!-- Waktu Reservasi -->
+                    <div class="bg-blue-50 rounded-xl p-6 text-center">
+                        <i data-lucide="clock" class="w-12 h-12 text-terralogBlue mx-auto mb-4"></i>
+                        <p class="text-gray-700 font-semibold mb-4">Waktu Reservasi</p>
+                        <select x-model="waktu" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm">
+                            <option value="">Pilih Waktu</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="13:00">13:00 (1:00 PM)</option>
+                            <option value="14:00">14:00 (2:00 PM)</option>
+                            <option value="15:00">15:00 (3:00 PM)</option>
+                            <option value="16:00">16:00 (4:00 PM)</option>
+                            <option value="17:00">17:00 (5:00 PM)</option>
+                            <option value="18:00">18:00 (6:00 PM)</option>
+                            <option value="19:00">19:00 (7:00 PM)</option>
+                            <option value="20:00">20:00 (8:00 PM)</option>
+                        </select>
+                    </div>
+
+                    <!-- Jumlah Tamu -->
+                    <div class="bg-blue-50 rounded-xl p-6 text-center">
+                        <i data-lucide="users" class="w-12 h-12 text-terralogBlue mx-auto mb-4"></i>
+                        <p class="text-gray-700 font-semibold mb-4">Jumlah Tamu</p>
+                        <input type="number" x-model.number="jumlahTamu" placeholder="Input jumlah tamu" min="1" max="20" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm text-center">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-center mt-12">
+                <button @click="submitReservasi()" :disabled="!isFormValid" class="py-4 px-16 rounded-full text-lg font-bold transition shadow-lg" :class="isFormValid ? 'bg-terralogBlue hover:bg-blue-800 text-white cursor-pointer' : 'bg-gray-400 text-gray-600 cursor-not-allowed'">
+                    Ajukan Reservasi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function buatReservasiApp() {
+        return {
+            meja: '',
+            tanggal: '',
+            waktu: '',
+            jumlahTamu: '',
+
+            get isFormValid() {
+                return this.meja && this.tanggal && this.waktu && this.jumlahTamu && this.jumlahTamu > 0;
+            },
+
+            submitReservasi() {
+                if (!this.isFormValid) {
+                    alert('Mohon lengkapi semua field!');
+                    return;
+                }
+
+                const reservasiData = {
+                    meja: this.meja,
+                    tanggal: this.tanggal,
+                    waktu: this.waktu,
+                    jumlahTamu: this.jumlahTamu,
+                    nama: 'Matthew Shen',
+                    nomor: '08123457890'
+                };
+
+                console.log('Reservasi submitted:', reservasiData);
+                alert(`Reservasi berhasil diajukan!\n\nMeja: ${this.meja}\nTanggal: ${this.tanggal}\nWaktu: ${this.waktu}\nJumlah Tamu: ${this.jumlahTamu}`);
+
+                // Reset form
+                this.meja = '';
+                this.tanggal = '';
+                this.waktu = '';
+                this.jumlahTamu = '';
+            }
+        }
+    }
+
+    lucide.createIcons();
+</script>
+{% endblock %}

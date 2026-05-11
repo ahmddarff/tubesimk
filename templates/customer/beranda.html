@@ -1,43 +1,140 @@
-{% extends "layouts/layout_kasir.html" %}
+{% extends "layouts/layout_customer.html" %}
 
 {% block content %}
-<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+<div class="flex-1 p-8 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
-        <!-- Header Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-8 mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Selamat Datang</h1>
-            <p class="text-gray-600 text-lg">Nikmati pengalaman berbelanja kopi premium Anda</p>
+        <!-- Promo Banner -->
+        <div class="relative bg-gradient-to-r from-terralogBlue via-blue-600 to-blue-700 rounded-3xl overflow-hidden mb-12 shadow-lg">
+            <!-- Wave decoration at bottom -->
+            <div class="absolute bottom-0 left-0 right-0 h-20 bg-white" style="clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);"></div>
+            
+            <div class="relative p-12 flex items-center justify-between min-h-64">
+                <!-- Left Side: Text Content -->
+                <div class="flex-1 z-10 text-white">
+                    <h2 class="text-5xl font-black mb-4 leading-tight">FRI-YAY<br>COMBO!</h2>
+                    <p class="text-blue-100 text-lg mb-8 font-semibold">UNTUK 5 ORANG TERCEPAT</p>
+                    <button class="bg-terralogOrange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-colors text-lg">
+                        Pesan Sekarang!
+                    </button>
+                </div>
+
+                <!-- Right Side: Image & Price -->
+                <div class="flex-1 relative z-10 flex flex-col items-end">
+                    <!-- Placeholder for food image -->
+                    <div class="w-48 h-48 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
+                        <i data-lucide="image" class="w-24 h-24 text-white/50"></i>
+                    </div>
+                    
+                    <!-- Price Badge -->
+                    <div class="text-right">
+                        <div class="text-6xl font-black text-white mb-2">28K</div>
+                        <p class="text-blue-100 text-sm font-semibold">CHICKEN KATSU +<br>LECI SUKASHI / LEMON TEA</p>
+                    </div>
+                </div>
+
+                <!-- Terralog Logo in top right -->
+                <div class="absolute top-8 right-8 z-20">
+                    <div class="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Terralog" class="w-12 h-12 object-contain">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Feature Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Card 1: Daftar Menu -->
-            <a href="/customer/daftar-menu" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
-                <div class="w-16 h-16 bg-terralogGold/20 rounded-xl flex items-center justify-center mb-4">
-                    <i data-lucide="menu" class="w-8 h-8 text-terralogGold"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Daftar Menu</h3>
-                <p class="text-gray-600">Jelajahi koleksi kopi premium kami</p>
-            </a>
+        <!-- Greeting -->
+        <div class="mb-12">
+            <h3 class="text-4xl font-bold text-gray-800 mb-2">
+                Hai, <span class="text-terralogBlue">Matthew!</span> Mau pesan apa hari ini?
+            </h3>
+        </div>
 
-            <!-- Card 2: Pesanan Saya -->
-            <a href="/customer/pesanan-saya" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
-                <div class="w-16 h-16 bg-terralogBlue/20 rounded-xl flex items-center justify-center mb-4">
-                    <i data-lucide="shopping-cart" class="w-8 h-8 text-terralogBlue"></i>
-                </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Pesanan Saya</h3>
-                <p class="text-gray-600">Pantau status pesanan Anda</p>
-            </a>
+        <!-- Kategori Menu -->
+        <div class="mb-16">
+            <h4 class="text-2xl font-bold text-gray-800 mb-2">Kategori Menu</h4>
+            <p class="text-gray-600 mb-6">Dari kopi sampai snack, semua ada</p>
+            
+            <div class="grid grid-cols-4 gap-6">
+                <!-- Coffee -->
+                <button class="bg-terralogBlue hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
+                    <div class="text-5xl mb-4">☕</div>
+                    <h5 class="text-xl font-bold">Coffee</h5>
+                </button>
 
-            <!-- Card 3: Buat Reservasi -->
-            <a href="/customer/buat-reservasi" class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow cursor-pointer">
-                <div class="w-16 h-16 bg-terralogPeach/20 rounded-xl flex items-center justify-center mb-4">
-                    <i data-lucide="calendar" class="w-8 h-8 text-terralogPeach"></i>
+                <!-- Non Coffee -->
+                <button class="bg-terralogOrange hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
+                    <div class="text-5xl mb-4">🥤</div>
+                    <h5 class="text-xl font-bold">Non Coffee</h5>
+                </button>
+
+                <!-- Food -->
+                <button class="bg-yellow-400 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-gray-800 transform hover:scale-105">
+                    <div class="text-5xl mb-4">🍱</div>
+                    <h5 class="text-xl font-bold">Food</h5>
+                </button>
+
+                <!-- Snack -->
+                <button class="bg-blue-900 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
+                    <div class="text-5xl mb-4">🍪</div>
+                    <h5 class="text-xl font-bold">Snack</h5>
+                </button>
+            </div>
+        </div>
+
+        <!-- Best Seller -->
+        <div>
+            <h4 class="text-2xl font-bold text-gray-800 mb-2">Best Seller</h4>
+            <p class="text-gray-600 mb-6">Menu andalan yang wajib kamu coba</p>
+
+            <div class="grid grid-cols-4 gap-6">
+                <!-- Product 1 -->
+                <div class="bg-terralogBlue rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 h-40 flex items-center justify-center">
+                        <i data-lucide="coffee" class="w-20 h-20 text-white/50"></i>
+                    </div>
+                    <div class="p-6 text-white">
+                        <h5 class="text-lg font-bold mb-2">TERRALOG KOPI</h5>
+                        <p class="text-blue-100 text-sm mb-4">ICE / HOT</p>
+                        <p class="text-xs text-blue-200 leading-relaxed">Tis kesuksesan untuk rasa pala yang sempurna. dipandu artisan barista kami</p>
+                    </div>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800 mb-2">Buat Reservasi</h3>
-                <p class="text-gray-600">Pesan tempat untuk kunjungan Anda</p>
-            </a>
+
+                <!-- Product 2 -->
+                <div class="bg-terralogOrange rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-700 h-40 flex items-center justify-center">
+                        <i data-lucide="utensils" class="w-20 h-20 text-white/50"></i>
+                    </div>
+                    <div class="p-6 text-white">
+                        <h5 class="text-lg font-bold mb-2">AYAM GEPREK</h5>
+                        <p class="text-orange-100 text-sm mb-4">PEDAS / TIDAK PEDAS</p>
+                        <p class="text-xs text-orange-200 leading-relaxed">Ayam empuk bersaus super pedas, dilengkapi telur mata sapi</p>
+                    </div>
+                </div>
+
+                <!-- Product 3 -->
+                <div class="bg-red-600 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                    <div class="bg-gradient-to-br from-red-600 to-red-800 h-40 flex items-center justify-center">
+                        <i data-lucide="bowl" class="w-20 h-20 text-white/50"></i>
+                    </div>
+                    <div class="p-6 text-white">
+                        <h5 class="text-lg font-bold mb-2">RICEBOWL BEEF TERIYAKI</h5>
+                        <p class="text-red-100 text-sm mb-4">SIGNATURE</p>
+                        <p class="text-xs text-red-200 leading-relaxed">A savory and comforting meal served on fresh rice</p>
+                    </div>
+                </div>
+
+                <!-- Product 4 -->
+                <div class="bg-blue-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                    <div class="bg-gradient-to-br from-blue-800 to-blue-950 h-40 flex items-center justify-center">
+                        <i data-lucide="coffee" class="w-20 h-20 text-white/50"></i>
+                    </div>
+                    <div class="p-6 text-white">
+                        <h5 class="text-lg font-bold mb-2">AMERICANO</h5>
+                        <p class="text-blue-100 text-sm mb-4">ICE / HOT</p>
+                        <p class="text-xs text-blue-200 leading-relaxed">A classic, single espresso shot for a smooth, balanced taste</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</main>
+</div>
 {% endblock %}

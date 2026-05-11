@@ -1,7 +1,7 @@
-{% extends "layouts/layout_kasir.html" %}
+{% extends "layouts/layout_customer.html" %}
 
 {% block content %}
-<main class="flex-1 p-8 bg-gray-50 min-h-screen">
+<div class="max-w-5xl mx-auto">
     <div class="max-w-5xl mx-auto">
         
         <!-- Header -->
@@ -10,10 +10,10 @@
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">Reservasi Saya</h1>
                 <p class="text-gray-600">Kelola dan pantau reservasi Anda</p>
             </div>
-            <button class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition">
+            <a href="/customer/reservasi/new" class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition inline-flex">
                 <i data-lucide="plus" class="w-5 h-5"></i>
                 Buat Reservasi Baru
-            </button>
+            </a>
         </div>
 
         <!-- Reservasi Aktif Section -->
@@ -51,9 +51,9 @@
                                 <p class="text-gray-600 text-sm mb-1">Jumlah Tamu</p>
                                 <p class="text-2xl font-bold text-gray-800">{{ reservation.guests }}</p>
                             </div>
-                            <button class="bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition">
+                            <a href="/customer/reservasi/{{ reservation.id }}" class="bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition inline-block">
                                 Lihat Detail
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -72,9 +72,9 @@
         <div>
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Riwayat</h2>
-                <button class="text-terralogBlue hover:text-terralogBlue/80 font-semibold transition">
+                <a href="/customer/reservasi/history" class="text-terralogBlue hover:text-terralogBlue/80 font-semibold transition">
                     Lihat Semua Riwayat →
-                </button>
+                </a>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
@@ -102,9 +102,9 @@
                         </div>
                     </div>
 
-                    <button class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-2 rounded-lg transition">
+                    <a href="/customer/reservasi/{{ reservation.id }}" class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-2 rounded-lg transition inline-block text-center">
                         Lihat Detail
-                    </button>
+                    </a>
                 </div>
                 {% endfor %}
             </div>
@@ -117,5 +117,5 @@
             {% endif %}
         </div>
     </div>
-</main>
+</div>
 {% endblock %}

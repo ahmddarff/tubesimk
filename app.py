@@ -132,6 +132,23 @@ def customer_daftar_menu():
     return render_template('customer/daftar_menu.html', menu=katalog_menu, segment='daftar_menu', role='customer')
 
 
+@app.route('/customer/checkout')
+def customer_checkout():
+    return render_template('customer/checkout.html', segment='checkout', role='customer')
+
+
+@app.route('/customer/profil')
+def customer_profil():
+    # Data profil user (nantinya dari database)
+    profil_data = {
+        'username': 'Matthew Shen',
+        'nama_lengkap': 'Matthew Shen',
+        'email': 'matthewmoo67@gmail.com',
+        'nomor_telepon': '',
+    }
+    return render_template('customer/profil.html', segment='profil', role='customer', profil=profil_data)
+
+
 @app.route('/customer/buat-reservasi')
 def customer_buat_reservasi():
     # Reservasi Aktif
@@ -170,6 +187,55 @@ def customer_buat_reservasi():
                          segment='buat_reservasi',
                          role='customer',
                          active_reservations=active_reservations,
+                         history_reservations=history_reservations)
+
+
+@app.route('/customer/reservasi/new')
+def customer_buat_reservasi_baru():
+    return render_template('customer/buat_reservasi_new.html', segment='buat_reservasi', role='customer')
+
+
+@app.route('/customer/reservasi/<reservation_id>')
+def customer_reservasi_detail(reservation_id):
+    return render_template('customer/reservasi_detail.html',
+                         segment='buat_reservasi',
+                         role='customer',
+                         reservation_id=reservation_id)
+
+
+@app.route('/customer/reservasi/history')
+def customer_reservasi_history():
+    # Semua Riwayat Reservasi
+    history_reservations = [
+        {
+            "id": "AB650",
+            "status": "Selesai",
+            "date": "05 April 2026",
+            "time": "16:00 WIB",
+            "duration": "1 Jam",
+            "guests": "2"
+        },
+        {
+            "id": "AC780",
+            "status": "Dibatalkan",
+            "date": "06 Desember 2025",
+            "time": "08:00 WIB",
+            "duration": "2+ Jam",
+            "guests": "134"
+        },
+        {
+            "id": "AB456",
+            "status": "Selesai",
+            "date": "15 Maret 2026",
+            "time": "19:30 WIB",
+            "duration": "3 Jam",
+            "guests": "5"
+        }
+    ]
+    
+    return render_template('customer/reservasi_history.html',
+                         segment='buat_reservasi',
+                         role='customer',
                          history_reservations=history_reservations)
 
 
@@ -218,6 +284,15 @@ def customer_pesanan_saya():
                          role='customer',
                          active_orders=active_orders,
                          history_orders=history_orders)
+
+
+@app.route('/customer/pesanan/<order_id>')
+def customer_pesanan_detail(order_id):
+    return render_template('customer/pesanan_aktif_detail.html', 
+                         segment='pesanan_saya',
+                         role='customer',
+                         order_id=order_id)
+
 
 staff_data = [
     {"id": 1, "nama": "Andi Pratama", "shift": "Pagi", "status": "online", "total_transaksi": 42},
