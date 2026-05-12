@@ -489,7 +489,7 @@ function prosesLogout() {
 
     // Redirect ke halaman login setelah 1.5 detik
     setTimeout(() => {
-        window.location.href = '/login';
+        window.location.href = "{{ url_for('auth.logout') }}";    
     }, 1500);
 }
 </script>
