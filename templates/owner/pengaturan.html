@@ -40,19 +40,23 @@
         <!-- Logo -->
         <div class="mb-6">
             <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#1B2FAA]/20 bg-white flex items-center justify-center">
-                <div class="w-full h-full flex items-center justify-center bg-blue-50">
-                    <svg viewBox="0 0 120 120" class="w-28 h-28" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="60" cy="60" r="58" fill="white" stroke="#1B2FAA" stroke-width="2"/>
-                        <text x="60" y="52" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="#1B2FAA">terralog</text>
-                        <text x="60" y="64" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#1B2FAA" letter-spacing="1">COFFEE N EATERY</text>
-                        <g transform="translate(20,70)" opacity="0.7">
-                            <rect x="0" y="15" width="80" height="25" rx="5" fill="#1B2FAA" opacity="0.15"/>
-                            <circle cx="20" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
-                            <circle cx="40" cy="13" r="10" fill="#1B2FAA" opacity="0.3"/>
-                            <circle cx="60" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
-                        </g>
-                    </svg>
-                </div>
+                {% if cafe_info.logo %}
+                    <img src="{{ url_for('static', filename='images/' + cafe_info.logo) }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center bg-blue-50">
+                        <svg viewBox="0 0 120 120" class="w-28 h-28" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="60" cy="60" r="58" fill="white" stroke="#1B2FAA" stroke-width="2"/>
+                            <text x="60" y="52" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="#1B2FAA">terralog</text>
+                            <text x="60" y="64" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#1B2FAA" letter-spacing="1">COFFEE N EATERY</text>
+                            <g transform="translate(20,70)" opacity="0.7">
+                                <rect x="0" y="15" width="80" height="25" rx="5" fill="#1B2FAA" opacity="0.15"/>
+                                <circle cx="20" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
+                                <circle cx="40" cy="13" r="10" fill="#1B2FAA" opacity="0.3"/>
+                                <circle cx="60" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
+                            </g>
+                        </svg>
+                    </div>
+                {% endif %}
             </div>
         </div>
 
