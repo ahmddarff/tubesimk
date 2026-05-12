@@ -75,6 +75,22 @@
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Daftar</h1>
                 <p class="text-gray-600 mb-8">Lengkapi informasi dibawah ini untuk mendaftar</p>
 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            {% if category == 'warning' or category == 'danger' %}
+                                <div class="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 flex items-start gap-3">
+                                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-semibold text-red-800">Pendaftaran Gagal</h3>
+                                        <p class="text-sm text-red-600 mt-0.5">{{ message }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <!-- Register Form -->
                 <form action="/register" method="POST" class="space-y-5">
                     <!-- Username Field -->

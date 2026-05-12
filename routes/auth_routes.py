@@ -57,12 +57,19 @@ def register():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
+        # Validasi 1: Konfirmasi kata sandi
         if password != confirm_password:
             flash("Konfirmasi kata sandi tidak cocok.", "warning")
             return redirect(url_for('auth.register'))
             
+        # Validasi 2: Cek apakah Username sudah ada
         if User.query.filter_by(username=username).first():
             flash("Username sudah digunakan. Silakan pilih yang lain.", "warning")
+            return redirect(url_for('auth.register'))
+
+        # Validasi 3: Cek apakah Email sudah terdaftar
+        if User.query.filter_by(email=email).first():
+            flash("Email sudah terdaftar. Silakan gunakan email lain atau langsung masuk.", "warning")
             return redirect(url_for('auth.register'))
 
         # Enkripsi kata sandi sebelum disimpan ke database
@@ -74,14 +81,23 @@ def register():
             name=fullname, 
             email=email, 
             password=hashed_password, 
-            role='customer'
+            role='customer',
+            is_active=True
         )
         
-        db.session.add(new_user)
-        db.session.commit()
-        
-        flash("Registrasi berhasil. Silakan login.", "success")
-        return redirect(url_for('auth.login'))
+        # Proses simpan ke database yang aman (Try-Except)
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # Jika berhasil, arahkan ke login dan munculkan notifikasi sukses hijau
+            flash("Registrasi berhasil. Silakan masuk.", "success")
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"[ERROR DATABASE REGISTER]: {str(e)}")
+            flash("Terjadi kesalahan pada sistem. Pendaftaran gagal.", "danger")
+            return redirect(url_for('auth.register'))
         
     return render_template('register.html')
 
