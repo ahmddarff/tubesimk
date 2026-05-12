@@ -59,10 +59,11 @@
                 <td class="px-5 py-4">
                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
                         <input type="checkbox" {% if menu.is_available %}checked{% endif %}
-                            onchange="toggleMenuStatus(this, '{{ menu.id }}')">
+                        onchange="toggleMenuStatus(this, '{{ menu.id }}')">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
+                <td class="px-5 py-4 text-sm font-medium text-gray-800">{{ menu.stock }}</td>
             </tr>
             {% else %}
             <tr>
