@@ -32,7 +32,6 @@
     class="p-5 bg-[#F8FAFC] min-h-screen font-['Inter']"
 >
 
-    <!-- Header -->
     <div class="mb-4">
         <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">
             Pengaturan
@@ -43,10 +42,8 @@
         </p>
     </div>
 
-    <!-- Tabs -->
     <div class="flex flex-wrap gap-3 mb-6">
 
-        <!-- AKUN -->
         <button 
             @click="
                 activeTab = 'akun';
@@ -62,7 +59,6 @@
             Profil Akun
         </button>
 
-        <!-- KEAMANAN -->
         <button 
             @click="
                 activeTab = 'keamanan';
@@ -78,7 +74,6 @@
             Keamanan
         </button>
 
-        <!-- APLIKASI -->
         <button 
             @click="
                 activeTab = 'aplikasi';
@@ -96,18 +91,15 @@
 
     </div>
 
-    <!-- Main Card -->
     <div class="bg-white rounded-[1.8rem] shadow-sm border border-gray-100 p-6">
 
-        <!-- ================= AKUN ================= -->
         <div x-show="activeTab === 'akun'" x-transition>
 
-            <!-- Profile -->
             <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
 
                 <div class="relative">
-                    <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg">
-                        RS
+                    <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase">
+                        {{ user.name[:2] }}
                     </div>
 
                     <button 
@@ -120,70 +112,79 @@
 
                 <div>
                     <h2 class="text-2xl font-black text-gray-800">
-                        Rahma Sarita
+                        {{ user.name }}
                     </h2>
 
-                    <p class="text-gray-400 font-medium mt-1 text-sm">
-                        Kasir Senior • ID EMP-2026-001
+                    <p class="text-gray-400 font-medium mt-1 text-sm capitalize">
+                        {{ user.role }} 
                     </p>
                 </div>
 
             </div>
 
-            <!-- Form -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+            <form action="{{ url_for('kasir.pengaturan') }}" method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
 
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
-                        Nama Lengkap
-                    </label>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            Nama Lengkap
+                        </label>
+                        <input 
+                            name="name"
+                            type="text"
+                            value="{{ user.name }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"
+                        >
+                    </div>
 
-                    <input 
-                        type="text"
-                        value="Rahma Sarita"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm"
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            Username
+                        </label>
+                        <input 
+                            name="username"
+                            type="text"
+                            value="{{ user.username }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            Email Kantor
+                        </label>
+                        <input 
+                            name="email"
+                            type="email"
+                            value="{{ user.email if user.email else '' }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            No. Telepon
+                        </label>
+                        <input 
+                            name="phone"
+                            type="text"
+                            value="{{ user.phone if user.phone else '' }}"
+                            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"
+                        >
+                    </div>
+
+                </div>
+
+                <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
+                    <button 
+                        type="submit"
+                        class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm"
                     >
+                        Simpan Perubahan
+                    </button>
                 </div>
-
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
-                        Email Kantor
-                    </label>
-
-                    <input 
-                        type="email"
-                        value="rahma.sarita@terralog.com"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm"
-                    >
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">
-                        Bio Singkat
-                    </label>
-
-                    <textarea 
-                        rows="4"
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition resize-none text-sm"
-                    >Kasir Senior di Terralog Coffee.</textarea>
-                </div>
-
-            </div>
-
-            <!-- Save -->
-            <div class="flex justify-end mt-6">
-                <button 
-                    @click="alert('Profil berhasil diperbarui!')"
-                    class="px-6 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow hover:scale-[1.02] active:scale-95 text-sm"
-                >
-                    Simpan Profil
-                </button>
-            </div>
-
-        </div>
-
-        <!-- ================= KEAMANAN ================= -->
-        <div 
+            </form>
+        </div> <div 
             x-show="activeTab === 'keamanan'"
             x-transition
             class="grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -210,14 +211,12 @@
 
         </div>
 
-        <!-- ================= APLIKASI ================= -->
         <div 
             x-show="activeTab === 'aplikasi'"
             x-transition
             class="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
 
-            <!-- Notifikasi -->
             <div class="border border-gray-100 rounded-[1.5rem] p-5">
 
                 <div class="flex items-start justify-between">
@@ -238,7 +237,6 @@
 
                     </div>
 
-                    <!-- Toggle -->
                     <button 
                         @click="notifEnabled = !notifEnabled"
                         :class="notifEnabled ? 'bg-emerald-500' : 'bg-gray-300'"
@@ -258,7 +256,6 @@
 
     </div>
 
-    <!-- ================= MODAL PASSWORD ================= -->
     <div 
         x-show="showPasswordModal"
         x-cloak
