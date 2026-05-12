@@ -51,22 +51,22 @@
             </tr>
         </thead>
         <tbody id="menuTableBody">
-            {% for m in menu_list %}
-            <tr class="menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors"
-                data-kategori="{{ m.kategori }}">
-                <td class="px-6 py-4 text-center font-bold text-gray-800">{{ m.nama }}</td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.kategori }}</td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ "{:,.0f}".format(m.harga).replace(",", ".") }}</td>
-                <td class="px-6 py-4 text-center">
-                    <div class="flex justify-center">
-                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                            <input type="checkbox" {% if m.status %}checked{% endif %}
-                                   onchange="toggleStatus(this, '{{ m.id }}')">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
+            {% for menu in menu_list %}
+            <tr class="menu-row border-b border-gray-100 hover:bg-gray-50/50 transition-colors" data-kategori="{{ menu.category.name }}">
+                <td class="px-5 py-4 text-sm font-medium text-gray-800">{{ menu.name }}</td>
+                <td class="px-5 py-4 text-sm text-gray-500">{{ menu.category.name }}</td>
+                <td class="px-5 py-4 text-sm font-bold text-[#1B2FAA]">Rp{{ "{:,.0f}".format(menu.price) }}</td>
+                <td class="px-5 py-4">
+                    <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                        <input type="checkbox" {% if menu.is_available %}checked{% endif %}
+                            onchange="toggleMenuStatus(this, '{{ menu.id }}')">
+                        <span class="toggle-slider"></span>
+                    </label>
                 </td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">{{ m.stok }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="px-5 py-8 text-center text-gray-400">Belum ada data menu.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -99,67 +99,52 @@ function filterMenu(kategori, btn) {
 }
 
 // Toggle status (on/off)
-function toggleStatus(checkbox, menuId) {
-    const status = checkbox.checked;
-    fetch(`/api/toggle-menu-status/${menuId}`, {
+function toggleMenuStatus(checkbox, menuId) {
+    fetch(`/owner/api/toggle-menu-status/${menuId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status: checkbox.checked })
     }).then(r => r.json()).then(data => {
-        if (data.success) showToast(data.message);
+        if (data.success) {
+            showToast('Status menu diperbarui!');
+        } else {
+            alert(data.message || 'Terjadi kesalahan.');
+            checkbox.checked = !checkbox.checked; // Kembalikan posisi toggle jika gagal
+        }
+    }).catch(err => {
+        alert("Gagal terhubung ke server.");
+        checkbox.checked = !checkbox.checked;
     });
 }
 
-// Override simpanMenu to also add row to THIS table
-const _origSimpanMenu = window.simpanMenu;
-window.simpanMenu = function() {
+function simpanMenu() {
     const nama     = document.getElementById('namaMenu')?.value.trim();
     const kategori = document.getElementById('kategoriMenu')?.value;
     const harga    = document.getElementById('hargaMenu')?.value;
-    const stok     = document.getElementById('stokMenu')?.value;
+    const deskripsi = document.getElementById('deskripsiMenu')?.value;
+
     if (!nama) { alert('Nama menu wajib diisi!'); return; }
 
-    fetch('/api/tambah-menu', {
+    fetch('/owner/api/tambah-menu', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama, kategori, harga, stok })
+        body: JSON.stringify({ 
+            nama: nama, 
+            kategori: kategori, 
+            harga: harga, 
+            deskripsi: deskripsi 
+        })
     }).then(r => r.json()).then(data => {
         if (data.success) {
-            closeModal('modalTambahMenu');
-            showToast(data.message);
-            ['namaMenu','hargaMenu','stokMenu','deskripsiMenu'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.value = '';
-            });
-
-            // Format harga
-            const hargaNum = parseInt(harga) || 0;
-            const hargaFmt = hargaNum.toLocaleString('id-ID');
-            const stokNum  = parseInt(stok) || 0;
-            const newId    = Date.now();
-
-            // Add new row
-            const tbody = document.getElementById('menuTableBody');
-            const tr = document.createElement('tr');
-            tr.className = 'menu-row border-b border-gray-100 hover:bg-blue-50/30 transition-colors';
-            tr.dataset.kategori = kategori;
-            tr.innerHTML = `
-                <td class="px-6 py-4 text-center font-bold text-gray-800">${nama}</td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">${kategori}</td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">${hargaFmt}</td>
-                <td class="px-6 py-4 text-center">
-                    <div class="flex justify-center">
-                        <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                            <input type="checkbox" checked onchange="toggleStatus(this, '${newId}')">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-center font-bold text-gray-700">${stokNum}</td>
-            `;
-            tbody.appendChild(tr);
+            // Karena sukses, langsung refresh halaman agar tabel memuat data asli dari DB
+            location.reload(); 
+        } else {
+            alert(data.message);
         }
+    }).catch(err => {
+        alert("Terjadi kesalahan pada sistem.");
+        console.error(err);
     });
-};
+}
 </script>
 {% endblock %}
