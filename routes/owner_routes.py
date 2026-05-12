@@ -2,6 +2,10 @@ from flask import Blueprint, render_template, request, jsonify
 
 owner_bp = Blueprint('owner', __name__)
 
+@owner_bp.route('/dashboard')
+def dashboard():
+    return render_template('owner/dashboard.html')
+
 # Mock Data Owner
 profil_cafe = {
     "nama":   "Terralog Coffee & Eatery",
@@ -61,10 +65,6 @@ transaksi_data = [
     {"id_transaksi": "#TRX006", "tanggal": "06 Apr, 12:55:33", "metode": "Cash",  "total": "Rp27.000"},
     {"id_transaksi": "#TRX007", "tanggal": "06 Apr, 12:10:47", "metode": "Debit", "total": "Rp75.000"},
 ]
-
-@owner_bp.route('/dashboard')
-def dashboard():
-    return render_template('owner/dashboard.html', username="Oscar", total_penjualan="Rp2.500.000,00", total_order=124, menu_terlaris="Caramel Latte", menu_terlaris_qty=45, staff=staff_data)
 
 @owner_bp.route('/manajemen-menu')
 def manajemen_menu():
