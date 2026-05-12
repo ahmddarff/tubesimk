@@ -75,9 +75,53 @@ def run_seeders():
             print("✅ Berhasil: Akun Owner (Oscar Piastri) ditambahkan!")
         else:
             print("ℹ️ Lewati: Akun Owner sudah ada.")
+
+        # ==========================================
+        # 4. SEEDER AKUN KASIR
+        # ==========================================
+        kasir_exist = User.query.filter_by(role='kasir').first()
+        
+        if not kasir_exist:
+            hashed_password = generate_password_hash('kasir123') # Password untuk login
+            new_kasir = User(
+                name='Zhang Hao',
+                username='kasir_hao',
+                email='hao.kasir@gmail.com',
+                password=hashed_password,
+                phone='0813-xxxx-xxxx',
+                role='kasir',
+                is_active=True
+            )
+            db.session.add(new_kasir)
+            db.session.commit()
+            print("✅ Berhasil: Akun Kasir (Zhang Hao) ditambahkan!")
+        else:
+            print("ℹ️ Lewati: Akun Kasir sudah ada.")
+
+        # ==========================================
+        # 5. SEEDER AKUN CUSTOMER
+        # ==========================================
+        customer_exist = User.query.filter_by(role='customer').first()
+        
+        if not customer_exist:
+            hashed_password = generate_password_hash('customer123') # Password untuk login
+            new_customer = User(
+                name='Budi Pelanggan',
+                username='customer_budi',
+                email='budi.customer@gmail.com',
+                password=hashed_password,
+                phone='0812-9999-8888',
+                role='customer',
+                is_active=True
+            )
+            db.session.add(new_customer)
+            db.session.commit()
+            print("✅ Berhasil: Akun Customer (Budi Pelanggan) ditambahkan!")
+        else:
+            print("ℹ️ Lewati: Akun Customer sudah ada.")
             
         # ==========================================
-        # 4. SEEDER KATEGORI MENU
+        # 6. SEEDER KATEGORI MENU
         # ==========================================
         # Daftar kategori yang dibutuhkan berdasarkan mock data Anda
         daftar_kategori = ['Food', 'Snack', 'Coffee', 'Non Coffee']
@@ -93,7 +137,7 @@ def run_seeders():
         print("✅ Berhasil: Data Kategori dipastikan tersedia!")
 
         # ==========================================
-        # 5. SEEDER MENU
+        # 7. SEEDER MENU
         # ==========================================
         # Mengambil data kategori dari database untuk mendapatkan ID-nya
         kategori_db = {k.name: k.id for k in Category.query.all()}

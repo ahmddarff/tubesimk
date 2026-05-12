@@ -1,27 +1,20 @@
 from flask import Blueprint, render_template
 
 kasir_bp = Blueprint('kasir', __name__)
+from flask_login import login_required, current_user
+
+kasir_bp = Blueprint('kasir', __name__)
 
 # =========================
 # DASHBOARD
 # =========================
 @kasir_bp.route('/dashboard')
+@login_required
 def dashboard():
-    katalog_menu = [
-        {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "rating": 4.7, "terjual": 11, "status": "tersedia"},
-        {"nama": "Espresso", "harga": 10000, "img": "kopi.png", "rating": 4.8, "terjual": 5, "status": "tersedia"},
-        {"nama": "Sanger", "harga": 18000, "img": "kopi.png", "rating": 4.6, "terjual": 4, "status": "tersedia"},
-        {"nama": "Americano", "harga": 15000, "img": "kopi.png", "rating": 4.3, "terjual": 8, "status": "tersedia"},
-        {"nama": "Cappuccino", "harga": 18000, "img": "kopi.png", "rating": 4.5, "terjual": 5, "status": "tersedia"},
-        {"nama": "Kopi Latte", "harga": 16000, "img": "kopi.png", "rating": 4.3, "terjual": 4, "status": "habis"},
-        {"nama": "Americano", "harga": 15000, "img": "kopi.png", "rating": 4.3, "terjual": 8, "status": "tersedia"},
-        {"nama": "Cappuccino", "harga": 18000, "img": "kopi.png", "rating": 4.5, "terjual": 5, "status": "tersedia"},
-        {"nama": "Kopi Latte", "harga": 16000, "img": "kopi.png", "rating": 4.3, "terjual": 4, "status": "habis"},
-    ]
-
+    # Pastikan file templates/kasir/dashboard.html tersedia
     return render_template(
-        'kasir/dashboard.html',
-        menu=katalog_menu,
+        'kasir/dashboard.html', 
+        username=current_user.name,
         segment='dashboard',
         role='kasir'
     )
