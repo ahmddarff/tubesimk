@@ -107,15 +107,20 @@
                                 </label>
                             </td>
                             <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-1.5 text-gray-700">
-                                    <span>{{ hari.open_time.strftime('%H.%M') if hari.open_time else '00.00' }}</span>
-                                    <i class="fa-regular fa-clock text-gray-400 text-xs"></i>
+                                <div class="flex items-center gap-1.5 text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus-within:border-[#1B2FAA]">
+                                    <input type="time" 
+                                        value="{{ hari.open_time.strftime('%H:%M') if hari.open_time else '00:00' }}"
+                                        onchange="updateWaktu('{{ hari.day_of_week }}', 'buka', this.value)"
+                                        class="bg-transparent border-none outline-none text-sm cursor-pointer w-[75px]">
                                 </div>
                             </td>
+
                             <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-1.5 text-gray-700">
-                                    <span>{{ hari.close_time.strftime('%H.%M') if hari.close_time else '00.00' }}</span>
-                                    <i class="fa-regular fa-clock text-gray-400 text-xs"></i>
+                                <div class="flex items-center gap-1.5 text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus-within:border-[#1B2FAA]">
+                                    <input type="time" 
+                                        value="{{ hari.close_time.strftime('%H:%M') if hari.close_time else '00:00' }}"
+                                        onchange="updateWaktu('{{ hari.day_of_week }}', 'tutup', this.value)"
+                                        class="bg-transparent border-none outline-none text-sm cursor-pointer w-[75px]">
                                 </div>
                             </td>
                         </tr>
@@ -467,6 +472,22 @@ function toggleHari(checkbox, namaHari) {
         body: JSON.stringify({ hari: namaHari, buka: checkbox.checked })
     }).then(r => r.json()).then(data => {
         if (data.success) showToast(`Jadwal ${namaHari} diperbarui!`);
+    });
+}
+
+function updateWaktu(namaHari, jenisWaktu, nilaiWaktu) {
+    if (!nilaiWaktu) return; // Mencegah error jika input kosong
+    
+    fetch('/owner/api/update-waktu-operasional', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hari: namaHari, jenis: jenisWaktu, waktu: nilaiWaktu })
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            showToast(`Jam ${jenisWaktu} hari ${namaHari} berhasil diubah!`);
+        } else {
+            alert(data.message || 'Gagal menyimpan jam operasional.');
+        }
     });
 }
 </script>

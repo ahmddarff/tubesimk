@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user 
 from models import User, CafeSetting, OperationalHour, Menu, Category
@@ -235,24 +236,33 @@ def update_password():
         db.session.rollback()
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
 
-@owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
+@owner_bp.route('/api/update-waktu-operasional', methods=['POST'])
 @login_required
-def toggle_jam_operasional():
+def update_waktu_operasional():
     data = request.json
     hari = data.get("hari")
-    status_buka = data.get("buka")
+    jenis = data.get("jenis") # Akan berisi 'buka' atau 'tutup'
+    waktu_str = data.get("waktu") # Akan berisi string seperti '09:00'
     
-    # Cari jadwal berdasarkan hari di database
+    # Cari jadwal hari tersebut di database
     jadwal = OperationalHour.query.filter_by(day_of_week=hari).first()
     
-    if jadwal:
-        jadwal.is_open = status_buka
+    if jadwal and waktu_str:
+        # Konversi string jam 'HH:MM' dari HTML menjadi objek Time Python
+        waktu_obj = datetime.strptime(waktu_str, '%H:%M').time()
+        
+        # Tentukan apakah yang diubah jam buka atau jam tutup
+        if jenis == 'buka':
+            jadwal.open_time = waktu_obj
+        elif jenis == 'tutup':
+            jadwal.close_time = waktu_obj
+            
         try:
             db.session.commit()
-            return jsonify({"success": True, "message": f"Status hari {hari} diperbarui!"})
+            return jsonify({"success": True, "message": "Waktu berhasil diperbarui!"})
         except Exception as e:
             db.session.rollback()
-            print(f"Error update jadwal: {e}")
+            print(f"Error update waktu: {e}")
             return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
             
-    return jsonify({"success": False, "message": "Hari tidak ditemukan di database!"})
+    return jsonify({"success": False, "message": "Jadwal atau data waktu tidak valid!"})
