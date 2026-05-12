@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user 
-from models import User
+from models import User, Menu, Category
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -71,8 +71,15 @@ transaksi_data = [
 ]
 
 @owner_bp.route('/manajemen-menu')
+@login_required
 def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', username="Oscar", menu_list=menu_data)
+    # Ambil semua data menu dan kategori dari database
+    menus = Menu.query.all()
+    categories = Category.query.all()
+    return render_template('owner/manajemen-menu.html', 
+                           username=current_user.name, 
+                           menu_list=menus, 
+                           categories=categories)
 
 @owner_bp.route('/manajemen-kasir')
 def manajemen_kasir():
@@ -99,22 +106,46 @@ def pengaturan():
 
 # ── Menu APIs ─────────────────────────────────────────
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
+@login_required
 def tambah_menu():
     data = request.json
-    menu_data.append({
-        "id": len(menu_data) + 1, "nama": data.get("nama"),
-        "kategori": data.get("kategori"), "harga": int(data.get("harga") or 0),
-        "status": True, "stok": int(data.get("stok") or 0),
-    })
-    return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+    # Cari kategori berdasarkan nama yang dikirim dari form
+    category = Category.query.filter_by(name=data.get("kategori")).first()
+    
+    if not category:
+        return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
+
+    new_menu = Menu(
+        name=data.get("nama"),
+        category_id=category.id,
+        price=int(data.get("harga") or 0),
+        description=data.get("deskripsi"),
+        is_available=True
+    )
+    
+    try:
+        db.session.add(new_menu)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menambahkan menu."})
 
 @owner_bp.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
+@login_required
 def toggle_menu_status(menu_id):
     data = request.json
-    for m in menu_data:
-        if m["id"] == menu_id:
-            m["status"] = data.get("status"); break
-    return jsonify({"success": True, "message": "Status menu diperbarui!"})
+    # Gunakan db.session.get untuk menghindari LegacyAPIWarning
+    menu = db.session.get(Menu, menu_id)
+    if menu:
+        menu.is_available = data.get("status")
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Status menu diperbarui!"})
+        except:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Gagal memperbarui status."})
+    return jsonify({"success": False, "message": "Menu tidak ditemukan."})
 
 # ── Kasir APIs ────────────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
