@@ -60,19 +60,19 @@
         <div class="flex flex-col gap-5 max-w-2xl">
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Nama Cafe</p>
-                <p class="text-sm text-gray-600" id="viewNamaCafe">Terralog Coffee & Eatery</p>
+                <p class="text-sm text-gray-600" id="viewNamaCafe">{{ cafe_info.cafe_name or 'Belum diatur' }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Nomor Telepon</p>
-                <p class="text-sm text-gray-600" id="viewNoTelp">+62 812-XXXX-XXXX</p>
+                <p class="text-sm text-gray-600" id="viewNoTelp">{{ cafe_info.phone or '-' }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Alamat Lengkap</p>
-                <p class="text-sm text-gray-600" id="viewAlamat">Jl. Aman I No.2, Teladan Bar., Kec. Medan Kota, Kota Medan, Sumatera Utara 20216</p>
+                <p class="text-sm text-gray-600" id="viewAlamat">{{ cafe_info.address or '-' }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Email Bisnis</p>
-                <p class="text-sm text-gray-600" id="viewEmail">hello@terralog.com</p>
+                <p class="text-sm text-gray-600" id="viewEmail">{{ cafe_info.email or '-' }}</p>
             </div>
         </div>
 
@@ -94,23 +94,23 @@
                     <tbody>
                         {% for hari in jam_operasional %}
                         <tr class="border-b border-gray-100 last:border-0 hover:bg-blue-50/20 transition-colors">
-                            <td class="px-5 py-3.5 text-gray-800 font-medium">{{ hari.nama }}</td>
+                            <td class="px-5 py-3.5 text-gray-800 font-medium">{{ hari.day_of_week }}</td>
                             <td class="px-5 py-3.5">
                                 <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                                    <input type="checkbox" {% if hari.buka %}checked{% endif %}
-                                           onchange="toggleHari(this, '{{ hari.nama }}')">
+                                    <input type="checkbox" {% if hari.is_open %}checked{% endif %}
+                                           onchange="toggleHari(this, '{{ hari.day_of_week }}')">
                                     <span class="toggle-slider"></span>
                                 </label>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-1.5 text-gray-700">
-                                    <span>{{ hari.jam_buka }}</span>
+                                    <span>{{ hari.open_time.strftime('%H.%M') if hari.open_time else '00.00' }}</span>
                                     <i class="fa-regular fa-clock text-gray-400 text-xs"></i>
                                 </div>
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center gap-1.5 text-gray-700">
-                                    <span>{{ hari.jam_tutup }}</span>
+                                    <span>{{ hari.close_time.strftime('%H.%M') if hari.close_time else '00.00' }}</span>
                                     <i class="fa-regular fa-clock text-gray-400 text-xs"></i>
                                 </div>
                             </td>
@@ -144,22 +144,22 @@
         <div class="flex flex-col gap-4 max-w-2xl">
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Nama Cafe</label>
-                <input type="text" id="editNamaCafe" value="Terralog Coffee & Eatery"
+                <input type="text" id="editNamaCafe" value="{{ cafe_info.cafe_name or 'Belum diatur' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Nomor Telepon</label>
-                <input type="text" id="editNoTelp" value="+62 812-XXXX-XXXX"
+                <input type="text" id="editNoTelp" value="{{ cafe_info.phone or '-' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Alamat Lengkap</label>
-                <input type="text" id="editAlamat" value="Jl. Aman I No.2, Teladan Bar., Kec. Medan Kota, Kota Medan, Sumatera Utara 20216"
+                <input type="text" id="editAlamat" value="{{ cafe_info.address or '-' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Email Bisnis</label>
-                <input type="email" id="editEmailCafe" value="hello@terralog.com"
+                <input type="email" id="editEmailCafe" value="{{ cafe_info.email or '-' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
             </div>
             <div class="flex justify-end gap-3 mt-2">

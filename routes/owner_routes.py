@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user 
-from models import User, CafeSetting
+from models import User, CafeSetting, OperationalHour
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -10,16 +10,6 @@ owner_bp = Blueprint('owner', __name__)
 @login_required
 def dashboard():
     return render_template('owner/dashboard.html')
-
-jam_operasional = [
-    {"nama": "Senin",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Selasa", "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Rabu",   "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Kamis",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Jumat",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Sabtu",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Minggu", "buka": False, "jam_buka": "10.00", "jam_tutup": "20.00"},
-]
 
 staff_data = [
     {"id": 1, "nama": "Andi Pratama", "shift": "Pagi",  "status": "online",  "total_transaksi": 42},
@@ -58,8 +48,7 @@ transaksi_data = [
 @owner_bp.route('/manajemen-menu')
 @login_required # <--- Mengunci rute
 def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', 
-        username=current_user.name, 
+    return render_template('owner/manajemen-menu.html',
         menu_list=menu_data
     )
 
@@ -68,7 +57,6 @@ def manajemen_menu():
 def manajemen_kasir():
     kasir_online = sum(1 for k in kasir_data if k['status'] == 'online')
     return render_template('owner/manajemen-kasir.html',
-        username=current_user.name, 
         kasir_list=kasir_data,
         kasir_online=kasir_online, 
         total_kasir=len(kasir_data)
@@ -77,30 +65,24 @@ def manajemen_kasir():
 @owner_bp.route('/laporan-penjualan')
 @login_required
 def laporan_penjualan():
-    return render_template('owner/laporan-penjualan.html', 
-        username=current_user.name, 
+    return render_template('owner/laporan-penjualan.html',
         transaksi_list=transaksi_data
     )
 
 @owner_bp.route('/pengaturan')
 @login_required
 def pengaturan():
-    # Tarik data dari database
     cafe_info = CafeSetting.query.first()
     
-    # Format ulang agar cocok dengan variabel HTML
-    data_cafe = {
-        "nama": cafe_info.cafe_name if cafe_info else "Belum diatur",
-        "telp": cafe_info.phone if cafe_info else "-",
-        "alamat": cafe_info.address if cafe_info else "-",
-        "email": cafe_info.email if cafe_info else "-",
-    }
+    # Ambil dan urutkan jadwal
+    jam_db = OperationalHour.query.all()
+    urutan_hari = {"Senin": 1, "Selasa": 2, "Rabu": 3, "Kamis": 4, "Jumat": 5, "Sabtu": 6, "Minggu": 7}
+    jam_db.sort(key=lambda x: urutan_hari.get(x.day_of_week, 8))
 
+    # Lempar objeknya langsung! Tidak perlu dictionary data_cafe
     return render_template('owner/pengaturan.html',
-        username=current_user.name, 
-        profil_cafe=data_cafe, # <--- Masukkan data dari DB ke sini
-        user=current_user,          
-        jam_operasional=jam_operasional
+        cafe_info=cafe_info,
+        jam_operasional=jam_db
     )
 
 # ── Menu APIs ─────────────────────────────────────────
@@ -232,7 +214,20 @@ def update_password():
 @login_required
 def toggle_jam_operasional():
     data = request.json
-    for h in jam_operasional:
-        if h["nama"] == data.get("hari"):
-            h["buka"] = data.get("buka"); break
-    return jsonify({"success": True, "message": "Jadwal diperbarui!"})
+    hari = data.get("hari")
+    status_buka = data.get("buka")
+    
+    # Cari jadwal berdasarkan hari di database
+    jadwal = OperationalHour.query.filter_by(day_of_week=hari).first()
+    
+    if jadwal:
+        jadwal.is_open = status_buka
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": f"Status hari {hari} diperbarui!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error update jadwal: {e}")
+            return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
+            
+    return jsonify({"success": False, "message": "Hari tidak ditemukan di database!"})
