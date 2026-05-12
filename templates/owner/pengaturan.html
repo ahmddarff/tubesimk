@@ -181,7 +181,6 @@
      =========================== -->
 <div id="panel-akun-saya" class="tab-panel hidden">
 
-    <!-- VIEW MODE -->
     <div id="akunSayaView">
         <div class="flex items-start justify-between mb-6">
             <div>
@@ -194,7 +193,6 @@
             </button>
         </div>
 
-        <!-- Avatar -->
         <div class="mb-6">
             <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-200 bg-gray-100">
                 <div class="w-full h-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
@@ -203,39 +201,36 @@
             </div>
         </div>
 
-        <!-- Info Grid -->
         <div class="grid grid-cols-2 gap-x-12 gap-y-5 max-w-2xl">
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Nama Lengkap</p>
-                <p class="text-sm text-gray-600" id="viewNamaLengkap">Oscar Piastri</p>
+                <p class="text-sm text-gray-600" id="viewNamaLengkap">{{ current_user.name }}</p>
             </div>
             <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nama Panggilan</p>
-                <p class="text-sm text-gray-600" id="viewNamaPanggilan">Oscar</p>
+                <p class="text-sm font-bold text-gray-800 mb-1">Nama Panggilan (Username)</p>
+                <p class="text-sm text-gray-600" id="viewNamaPanggilan">{{ current_user.username }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Email Pribadi</p>
-                <p class="text-sm text-gray-600" id="viewEmailPribadi">oscar.owner@gmail.com</p>
+                <p class="text-sm text-gray-600" id="viewEmailPribadi">{{ current_user.email or '-' }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Nomor Handphone</p>
-                <p class="text-sm text-gray-600" id="viewNoHpAkun">0812-xxxx-xxxx</p>
+                <p class="text-sm text-gray-600" id="viewNoHpAkun">{{ current_user.phone or '-' }}</p>
             </div>
             <div>
                 <p class="text-sm font-bold text-gray-800 mb-1">Jabatan (Role)</p>
-                <p class="text-sm text-gray-400" id="viewJabatan">Owner/Pemilik</p>
+                <p class="text-sm text-gray-400" id="viewJabatan">{{ current_user.role | capitalize }}</p>
             </div>
         </div>
     </div>
 
-    <!-- EDIT MODE -->
     <div id="akunSayaEdit" class="hidden">
         <div class="mb-2">
             <h3 class="text-base font-bold text-[#1B2FAA]">Informasi Pribadi</h3>
             <p class="text-xs text-gray-400 mt-0.5">Kelola informasi dasar akun Anda untuk akses aplikasi.</p>
         </div>
 
-        <!-- Avatar with upload -->
         <div class="relative w-28 h-28 cursor-pointer group mb-6" onclick="document.getElementById('uploadAvatar').click()">
             <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-200 bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
                 <i class="fa-solid fa-user text-4xl text-white"></i>
@@ -249,27 +244,27 @@
         <div class="grid grid-cols-2 gap-4 max-w-2xl">
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Nama Lengkap</label>
-                <input type="text" id="editNamaLengkapAkun" value="Oscar Piastri"
+                <input type="text" id="editNamaLengkapAkun" value="{{ current_user.name }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
             </div>
             <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nama Panggilan</label>
-                <input type="text" id="editNamaPanggilan" value="Oscar"
+                <label class="text-sm font-bold text-gray-800">Nama Panggilan (Username)</label>
+                <input type="text" id="editNamaPanggilan" value="{{ current_user.username }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Email Pribadi</label>
-                <input type="email" id="editEmailPribadi" value="oscar.owner@gmail.com"
+                <input type="email" id="editEmailPribadi" value="{{ current_user.email or '' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Nomor Handphone</label>
-                <input type="text" id="editNoHpAkun" value="0812-xxxx-xxxx"
+                <input type="text" id="editNoHpAkun" value="{{ current_user.phone or '' }}"
                        class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-bold text-gray-800">Jabatan (Role)</label>
-                <input type="text" id="editJabatanAkun" value="Owner/Pemilik" disabled
+                <input type="text" id="editJabatanAkun" value="{{ current_user.role | capitalize }}" disabled
                        class="px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed">
             </div>
         </div>
@@ -381,7 +376,7 @@ function simpanProfilCafe() {
 
     if (!nama) { alert('Nama cafe wajib diisi!'); return; }
 
-    fetch('/api/update-profil-cafe', {
+    fetch('/owner/api/update-profil-cafe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nama, telp, alamat, email })
@@ -405,26 +400,32 @@ function toggleAkunEdit(show) {
 }
 
 function simpanAkunSaya() {
-    const nama      = document.getElementById('editNamaLengkapAkun').value.trim();
-    const panggilan = document.getElementById('editNamaPanggilan').value.trim();
-    const email     = document.getElementById('editEmailPribadi').value.trim();
-    const noHp      = document.getElementById('editNoHpAkun').value.trim();
+    const nama     = document.getElementById('editNamaLengkapAkun').value.trim();
+    const username = document.getElementById('editNamaPanggilan').value.trim();
+    const email    = document.getElementById('editEmailPribadi').value.trim();
+    const noHp     = document.getElementById('editNoHpAkun').value.trim();
 
     if (!nama) { alert('Nama lengkap wajib diisi!'); return; }
+    if (!username) { alert('Username wajib diisi!'); return; }
 
-    fetch('/api/update-akun', {
+    fetch('/owner/api/update-akun', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama, panggilan, email, no_hp: noHp })
+        body: JSON.stringify({ nama: nama, username: username, email: email, no_hp: noHp })
     }).then(r => r.json()).then(data => {
         if (data.success) {
             document.getElementById('viewNamaLengkap').textContent  = nama;
-            document.getElementById('viewNamaPanggilan').textContent = panggilan;
-            document.getElementById('viewEmailPribadi').textContent  = email;
-            document.getElementById('viewNoHpAkun').textContent      = noHp;
+            document.getElementById('viewNamaPanggilan').textContent = username;
+            document.getElementById('viewEmailPribadi').textContent  = email || '-';
+            document.getElementById('viewNoHpAkun').textContent      = noHp || '-';
             toggleAkunEdit(false);
             showToast('Akun berhasil diperbarui!');
+        } else {
+            alert(data.message || 'Gagal memperbarui profil.');
         }
+    }).catch(error => {
+        alert('Terjadi kesalahan pada sistem, silakan coba lagi.');
+        console.error(error);
     });
 }
 
@@ -438,7 +439,7 @@ function perbaruiKataSandi() {
     if (baru.length < 8)       { alert('Kata sandi baru minimal 8 karakter!'); return; }
     if (baru !== konfirmasi)   { alert('Konfirmasi kata sandi tidak cocok!'); return; }
 
-    fetch('/api/update-password', {
+    fetch('/owner/api/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password_lama: saatIni, password_baru: baru })
@@ -456,7 +457,7 @@ function perbaruiKataSandi() {
 
 // ── Jam Operasional Toggle ────────────────────────────
 function toggleHari(checkbox, namaHari) {
-    fetch('/api/toggle-jam-operasional', {
+    fetch('/owner/api/toggle-jam-operasional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hari: namaHari, buka: checkbox.checked })

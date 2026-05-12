@@ -1,4 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user 
+from models import User
+from extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 owner_bp = Blueprint('owner', __name__)
 
@@ -83,11 +87,13 @@ def laporan_penjualan():
     return render_template('owner/laporan-penjualan.html', username="Oscar", transaksi_list=transaksi_data)
 
 @owner_bp.route('/pengaturan')
+@login_required
 def pengaturan():
+    # Menggunakan current_user langsung untuk data profil
     return render_template('owner/pengaturan.html',
-        username="Oscar",
-        profil_cafe=profil_cafe,
-        akun_owner=akun_owner,
+        username=current_user.name, # Mengambil nama dari database
+        profil_cafe=profil_cafe,    # Tetap jika profil cafe belum masuk DB
+        user=current_user,          # Mengirim objek user ke template
         jam_operasional=jam_operasional
     )
 
@@ -151,22 +157,51 @@ def update_profil_cafe():
     return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui!"})
 
 @owner_bp.route('/api/update-akun', methods=['POST'])
+@login_required
 def update_akun():
     data = request.json
-    akun_owner.update({
-        "nama": data.get("nama", akun_owner["nama"]),
-        "panggilan": data.get("panggilan", akun_owner["panggilan"]),
-        "email": data.get("email", akun_owner["email"]),
-        "no_hp": data.get("no_hp", akun_owner["no_hp"]),
-    })
-    return jsonify({"success": True, "message": "Akun berhasil diperbarui!"})
+    
+    # Ambil user dari database berdasarkan ID current_user
+    user = User.query.get(current_user.id)
+    
+    if user:
+        user.name = data.get("nama", user.name)
+        user.username = data.get("username", user.username) # Pastikan field ini ada di form
+        user.email = data.get("email", user.email)
+        user.phone = data.get("no_hp", user.phone)
+        
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Akun berhasil diperbarui di database!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating user: {e}")
+            return jsonify({"success": False, "message": "Gagal memperbarui database."})
+            
+    return jsonify({"success": False, "message": "Pengguna tidak ditemukan."})
 
 @owner_bp.route('/api/update-password', methods=['POST'])
+@login_required
 def update_password():
     data = request.json
-    if not data.get("password_lama"):
+    password_lama = data.get("password_lama")
+    password_baru = data.get("password_baru")
+    
+    user = User.query.get(current_user.id)
+    
+    # Verifikasi kata sandi lama
+    if not check_password_hash(user.password, password_lama):
         return jsonify({"success": False, "message": "Kata sandi lama salah!"})
-    return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    
+    # Enkripsi kata sandi baru
+    user.password = generate_password_hash(password_baru)
+    
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
 
 @owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
 def toggle_jam_operasional():
