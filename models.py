@@ -28,14 +28,25 @@ class User(db.Model, UserMixin):
 class CafeSetting(db.Model):
     __tablename__ = 'cafe_settings'
     id                      = db.Column(db.Integer, primary_key=True)
+    cafe_name               = db.Column(db.String(100), default="Terralog Coffee & Eatery")
+    phone                   = db.Column(db.String(20), nullable=True)
+    email                   = db.Column(db.String(100), nullable=True)
+    address                 = db.Column(db.Text, nullable=True)
     is_open                 = db.Column(db.Boolean, default=True)
-    open_time               = db.Column(db.Time, nullable=False)
-    close_time              = db.Column(db.Time, nullable=False)
     reservation_buffer_time = db.Column(db.Integer, default=90) # Dalam menit
     table_clearance_time    = db.Column(db.Integer, default=15) # Dalam menit
     
     updated_at              = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class OperationalHour(db.Model):
+    __tablename__ = 'operational_hours'
+    id          = db.Column(db.Integer, primary_key=True)
+    day_of_week = db.Column(db.String(10), nullable=False, unique=True) # Contoh: "Senin", "Selasa"
+    is_open     = db.Column(db.Boolean, default=True)
+    open_time   = db.Column(db.Time, nullable=False)
+    close_time  = db.Column(db.Time, nullable=False)
+
+    updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 class Category(db.Model):
     __tablename__ = 'categories'
     id          = db.Column(db.Integer, primary_key=True)

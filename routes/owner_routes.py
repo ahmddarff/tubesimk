@@ -1,30 +1,15 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user 
-from models import User
+from models import User, CafeSetting
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
 owner_bp = Blueprint('owner', __name__)
 
 @owner_bp.route('/dashboard')
+@login_required
 def dashboard():
     return render_template('owner/dashboard.html')
-
-# Mock Data Owner
-profil_cafe = {
-    "nama":   "Terralog Coffee & Eatery",
-    "telp":   "+62 812-XXXX-XXXX",
-    "alamat": "Jl. Aman I No.2, Teladan Bar., Kec. Medan Kota, Kota Medan, Sumatera Utara 20216",
-    "email":  "hello@terralog.com",
-}
-
-akun_owner = {
-    "nama":      "Oscar Piastri",
-    "panggilan": "Oscar",
-    "email":     "oscar.owner@gmail.com",
-    "no_hp":     "0812-xxxx-xxxx",
-    "jabatan":   "Owner/Pemilik",
-}
 
 jam_operasional = [
     {"nama": "Senin",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
@@ -71,34 +56,56 @@ transaksi_data = [
 ]
 
 @owner_bp.route('/manajemen-menu')
+@login_required # <--- Mengunci rute
 def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', username="Oscar", menu_list=menu_data)
+    return render_template('owner/manajemen-menu.html', 
+        username=current_user.name, 
+        menu_list=menu_data
+    )
 
 @owner_bp.route('/manajemen-kasir')
+@login_required
 def manajemen_kasir():
     kasir_online = sum(1 for k in kasir_data if k['status'] == 'online')
     return render_template('owner/manajemen-kasir.html',
-        username="Oscar", kasir_list=kasir_data,
-        kasir_online=kasir_online, total_kasir=len(kasir_data)
+        username=current_user.name, 
+        kasir_list=kasir_data,
+        kasir_online=kasir_online, 
+        total_kasir=len(kasir_data)
     )
 
 @owner_bp.route('/laporan-penjualan')
+@login_required
 def laporan_penjualan():
-    return render_template('owner/laporan-penjualan.html', username="Oscar", transaksi_list=transaksi_data)
+    return render_template('owner/laporan-penjualan.html', 
+        username=current_user.name, 
+        transaksi_list=transaksi_data
+    )
 
 @owner_bp.route('/pengaturan')
 @login_required
 def pengaturan():
-    # Menggunakan current_user langsung untuk data profil
+    # Tarik data dari database
+    cafe_info = CafeSetting.query.first()
+    
+    # Format ulang agar cocok dengan variabel HTML
+    data_cafe = {
+        "nama": cafe_info.cafe_name if cafe_info else "Belum diatur",
+        "telp": cafe_info.phone if cafe_info else "-",
+        "alamat": cafe_info.address if cafe_info else "-",
+        "email": cafe_info.email if cafe_info else "-",
+    }
+
     return render_template('owner/pengaturan.html',
-        username=current_user.name, # Mengambil nama dari database
-        profil_cafe=profil_cafe,    # Tetap jika profil cafe belum masuk DB
-        user=current_user,          # Mengirim objek user ke template
+        username=current_user.name, 
+        profil_cafe=data_cafe, # <--- Masukkan data dari DB ke sini
+        user=current_user,          
         jam_operasional=jam_operasional
     )
 
 # ── Menu APIs ─────────────────────────────────────────
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
+@login_required
 def tambah_menu():
     data = request.json
     menu_data.append({
@@ -109,6 +116,7 @@ def tambah_menu():
     return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
 
 @owner_bp.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
+@login_required
 def toggle_menu_status(menu_id):
     data = request.json
     for m in menu_data:
@@ -118,6 +126,7 @@ def toggle_menu_status(menu_id):
 
 # ── Kasir APIs ────────────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
+@login_required
 def tambah_staff():
     data = request.json
     new_id = len(kasir_data) + 1
@@ -128,6 +137,7 @@ def tambah_staff():
     return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
 
 @owner_bp.route('/api/toggle-kasir-status/<int:kasir_id>', methods=['POST'])
+@login_required
 def toggle_kasir_status(kasir_id):
     data = request.json
     for k in kasir_data:
@@ -136,6 +146,7 @@ def toggle_kasir_status(kasir_id):
     return jsonify({"success": True, "message": "Status kasir diperbarui!"})
 
 @owner_bp.route('/api/edit-kasir/<int:kasir_id>', methods=['POST'])
+@login_required
 def edit_kasir(kasir_id):
     data = request.json
     for k in kasir_data:
@@ -146,15 +157,29 @@ def edit_kasir(kasir_id):
 
 # ── Pengaturan APIs ───────────────────────────────────
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
+@login_required
 def update_profil_cafe():
     data = request.json
-    profil_cafe.update({
-        "nama": data.get("nama", profil_cafe["nama"]),
-        "telp": data.get("telp", profil_cafe["telp"]),
-        "alamat": data.get("alamat", profil_cafe["alamat"]),
-        "email": data.get("email", profil_cafe["email"]),
-    })
-    return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui!"})
+    
+    # Ambil baris pertama dari tabel pengaturan cafe
+    cafe_info = CafeSetting.query.first()
+    
+    if cafe_info:
+        # Timpa data lama dengan data baru dari form frontend
+        cafe_info.cafe_name = data.get("nama", cafe_info.cafe_name)
+        cafe_info.phone = data.get("telp", cafe_info.phone)
+        cafe_info.address = data.get("alamat", cafe_info.address)
+        cafe_info.email = data.get("email", cafe_info.email)
+        
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui di database!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error update cafe: {e}")
+            return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
+            
+    return jsonify({"success": False, "message": "Data pengaturan cafe tidak ditemukan di sistem."})
 
 @owner_bp.route('/api/update-akun', methods=['POST'])
 @login_required
@@ -204,6 +229,7 @@ def update_password():
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
 
 @owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
+@login_required
 def toggle_jam_operasional():
     data = request.json
     for h in jam_operasional:

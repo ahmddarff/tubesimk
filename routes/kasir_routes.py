@@ -1,11 +1,6 @@
 from flask import Blueprint, render_template
 
-kasir_bp = Blueprint(
-    'kasir',
-    __name__,
-    url_prefix='/kasir'
-)
-
+kasir_bp = Blueprint('kasir', __name__)
 
 # =========================
 # DASHBOARD
