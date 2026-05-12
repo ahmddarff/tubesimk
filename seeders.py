@@ -77,7 +77,7 @@ def run_seeders():
             print("ℹ️ Lewati: Akun Owner sudah ada.")
             
         # ==========================================
-        # 2. SEEDER KATEGORI MENU
+        # 4. SEEDER KATEGORI MENU
         # ==========================================
         # Daftar kategori yang dibutuhkan berdasarkan mock data Anda
         daftar_kategori = ['Food', 'Snack', 'Coffee', 'Non Coffee']
@@ -93,7 +93,7 @@ def run_seeders():
         print("✅ Berhasil: Data Kategori dipastikan tersedia!")
 
         # ==========================================
-        # 3. SEEDER MENU
+        # 5. SEEDER MENU
         # ==========================================
         # Mengambil data kategori dari database untuk mendapatkan ID-nya
         kategori_db = {k.name: k.id for k in Category.query.all()}
