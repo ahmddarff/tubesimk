@@ -7,93 +7,51 @@
     <div class="max-w-5xl mx-auto">
         <!-- Breadcrumb -->
         <div class="mb-8 flex items-center gap-2 text-gray-600">
-            <a href="/customer/pesanan-saya" class="hover:text-terralogBlue">Pesanan Saya</a>
+            <a href="/customer/pesanan-saya" class="hover:text-terralogBlue font-semibold">Pesanan Saya</a>
             <span class="text-gray-400">›</span>
             <span class="text-gray-800 font-semibold">Pesanan Aktif</span>
         </div>
 
-        <!-- Header Section -->
+        <!-- Main Content Grid -->
         <div class="grid grid-cols-3 gap-6 mb-8">
-            <!-- Left: Customer & Meja Info -->
-            <div class="bg-blue-50 rounded-2xl p-6">
+            <!-- Left: Customer Info -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
                 <div class="space-y-4">
                     <div>
-                        <p class="text-gray-600 text-sm font-semibold mb-1">Nama Pemesan</p>
-                        <p class="text-gray-800 text-lg font-bold" x-text="order.nama">{{ order.nama if order else 'Matthew Shen' }}</p>
+                        <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">Nama Pemesan</p>
+                        <p class="text-gray-800 text-lg font-bold" x-text="order.nama">Matthew Shen</p>
                     </div>
                     <div>
-                        <p class="text-gray-600 text-sm font-semibold mb-1">Meja</p>
-                        <p class="text-gray-800 text-lg font-bold" x-text="order.meja">{{ order.meja if order else 'M-102' }}</p>
+                        <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">No. Pesanan</p>
+                        <p class="text-gray-800 text-lg font-bold" x-text="`AB${order.order_id || '1023'}`">AB1023</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">Pembayaran</p>
+                        <p class="text-gray-800 font-semibold" x-text="paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai'">Non Tunai</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Center: Order Number & Status -->
-            <div class="flex flex-col items-center justify-center">
-                <div class="mb-6">
-                    <p class="text-gray-600 text-sm text-center mb-2">No. Pesanan</p>
-                    <div class="bg-terralogBlue text-white px-6 py-3 rounded-xl font-bold text-xl">
-                        #<span x-text="order.order_id">{{ order.order_id if order else 'AB123' }}</span>
+            <!-- Center: Status -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center">
+                <div class="text-center">
+                    <div class="mb-4">
+                        <svg class="w-16 h-16 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="9" stroke="#1E40AF" stroke-width="2"/>
+                            <path d="M8 12H10M14 12H16M12 8V10M12 14V16" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
                     </div>
+                    <h3 class="text-gray-800 font-bold text-base mb-2">Menunggu Konfirmasi Kasir</h3>
+                    <p class="text-gray-600 text-xs">Yuk selesaikan pembayaranmu, tunggu pesanan anda siap</p>
                 </div>
-                <button @click="submitPembayaran()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-12 rounded-full transition">
-                    Beri Ulasan
-                </button>
             </div>
 
-            <!-- Right: Payment Status -->
-            <div class="bg-yellow-50 rounded-2xl p-6 flex flex-col justify-center">
-                <p class="text-gray-600 text-sm font-semibold mb-3" x-text="`Pembayaran ${order.paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai'}`">Pembayaran {{ 'Tunai' if order and order.paymentMethod == 'tunai' else 'Non Tunai' }}</p>
-                <div class="text-center mb-4">
-                    <svg class="w-16 h-16 mx-auto mb-3" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <g opacity="0.1">
-                            <rect x="20" y="30" width="60" height="40" stroke="currentColor" stroke-width="2" fill="none" rx="4"/>
-                            <line x1="20" y1="45" x2="80" y2="45" stroke="currentColor" stroke-width="2"/>
-                        </g>
-                        <g>
-                            <circle cx="50" cy="50" r="30" fill="#F2C94C" opacity="0.3"/>
-                            <path d="M50 30 L60 45 L40 45 Z M50 70 L40 55 L60 55 Z" fill="#F2C94C"/>
-                        </g>
-                    </svg>
-                </div>
-                <p class="text-gray-800 font-bold text-center mb-2" x-text="order.status">{{ order.status if order else 'Menunggu Pembayaran' }}</p>
-                <p class="text-gray-600 text-sm text-center">Silahkan melakukan pembayaran di kasir</p>
-            </div>
-        </div>
-
-        <!-- Progress Status -->
-        <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
-            <h3 class="text-lg font-bold text-gray-800 mb-8 text-center">Status Pesanan</h3>
-            <div class="flex items-center justify-center gap-8">
-                <!-- Status 1: Sedang Dibuat -->
-                <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mb-3 shadow-lg">
-                        <i data-lucide="shopping-cart" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <p class="text-gray-800 font-bold text-sm">Sedang Dibuat</p>
-                </div>
-
-                <!-- Connector Line 1 -->
-                <div class="flex-1 h-1 bg-yellow-400 mb-8"></div>
-
-                <!-- Status 2: Dihidangkan -->
-                <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center mb-3 shadow-lg">
-                        <i data-lucide="bell" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <p class="text-gray-800 font-bold text-sm">Dihidangkan</p>
-                </div>
-
-                <!-- Connector Line 2 -->
-                <div class="flex-1 h-1 bg-gray-300 mb-8"></div>
-
-                <!-- Status 3: Pesanan Selesai -->
-                <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-full bg-gray-400 flex items-center justify-center mb-3 shadow-lg opacity-60">
-                        <i data-lucide="check" class="w-8 h-8 text-white"></i>
-                    </div>
-                    <p class="text-gray-600 font-bold text-sm">Pesanan Selesai</p>
-                </div>
+            <!-- Right: Payment Method -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm">
+                <p class="text-gray-600 text-xs font-semibold mb-3 uppercase">Metode Pembayaran</p>
+                <p class="text-gray-800 font-bold text-base mb-4">Non Tunai</p>
+                <p class="text-gray-600 text-xs">Total Pembayaran</p>
+                <p class="text-terralogBlue font-bold text-2xl" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 43.000</p>
             </div>
         </div>
 
@@ -102,60 +60,55 @@
             <h3 class="text-lg font-bold text-gray-800 mb-6">Pesanan Anda</h3>
 
             <template x-for="(item, index) in items" :key="index">
-                <div class="rounded-xl p-6 mb-6 border" :class="index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'">
-                    <div class="flex gap-6 items-start">
-                        <!-- Product Image -->
-                        <div class="w-24 h-24 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-300">
-                            <i :data-lucide="index === 0 ? 'coffee' : 'rice'" class="w-12 h-12" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'"></i>
-                        </div>
+                <div class="rounded-xl p-4 mb-4 border-2 flex gap-4 items-start" :class="index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'">
+                    <!-- Product Image Icon -->
+                    <div class="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-200">
+                        <i :data-lucide="index === 0 ? 'coffee' : 'utensils'" class="w-10 h-10" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'"></i>
+                    </div>
 
-                        <!-- Product Info -->
-                        <div class="flex-1">
-                            <div class="flex items-start justify-between mb-4">
-                                <div>
-                                    <h4 class="text-lg font-bold text-gray-800" x-text="item.nama"></h4>
-                                    <p class="font-semibold" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
-                                </div>
-                                <span class="bg-yellow-400 text-white font-bold px-3 py-1 rounded-lg" x-text="`x${item.qty}`"></span>
-                            </div>
+                    <!-- Product Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-2">
                             <div>
-                                <p class="text-gray-600 text-sm mb-2">Catatan:</p>
-                                <p class="text-gray-800" x-text="item.note"></p>
+                                <h4 class="font-bold text-gray-800" x-text="item.nama"></h4>
+                                <p class="font-semibold text-sm" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
                             </div>
+                            <span class="bg-yellow-400 text-white font-bold px-2 py-1 rounded text-sm" x-text="`x${item.qty}`"></span>
                         </div>
+                        <p class="text-gray-600 text-xs" x-show="item.note" x-text="item.note">Masakan 2x gula</p>
                     </div>
                 </div>
             </template>
         </div>
 
         <!-- Payment Section -->
-        <div class="grid grid-cols-2 gap-6 mb-8">
-            <!-- Metode Pembayaran -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Metode Pembayaran</h3>
-                <p class="text-gray-800 text-base font-semibold" x-text="paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai'">{{ 'Tunai' if order and order.paymentMethod == 'tunai' else 'Non Tunai' }}</p>
+        <div class="bg-white rounded-2xl p-6 mb-8 shadow-sm">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-600 text-sm font-semibold mb-2">Metode Pembayaran</p>
+                    <p class="text-gray-800 font-bold" x-text="paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai'">Non Tunai</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-600 text-sm font-semibold mb-2">Total Pembayaran</p>
+                    <p class="text-terralogBlue font-bold text-2xl" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 43.000</p>
+                </div>
             </div>
-
-            <!-- Total Pembayaran -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">Total Pembayaran</h3>
-                <p class="text-terralogBlue text-3xl font-bold" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp {{ "{:,.0f}".format(order.total) if order else "43.000" }}</p>
-            </div>
-        </div>
-
-        <!-- Action Button -->
-        <div class="flex justify-center mb-12">
-            <button @click="submitPembayaran()" class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-4 px-16 rounded-full transition text-lg shadow-lg">
-                Selesaikan Pesanan
-            </button>
         </div>
     </div>
 </div>
 
 <script>
     function pesananAktifApp() {
-        // Get order data from server
-        const orderData = {{ order|tojson if order else 'null' }};
+        // Get order data from sessionStorage or server
+        let orderData = null;
+        const sessionOrder = sessionStorage.getItem('pendingOrder');
+        
+        if (sessionOrder) {
+            orderData = JSON.parse(sessionOrder);
+        } else {
+            // Fallback to template data
+            orderData = {{ order|tojson if order else 'null' }};
+        }
         
         let items = [];
         let paymentMethod = 'tunai';
@@ -171,7 +124,7 @@
             items: items,
             paymentMethod: paymentMethod,
             total: total,
-            order: orderData,
+            order: orderData || {},
             
             submitPembayaran() {
                 const orderNumber = orderData ? orderData.order_id : 'AB123';

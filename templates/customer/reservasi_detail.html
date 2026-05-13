@@ -3,7 +3,7 @@
 {% block title %}Reservasi Saat ini - Terralog{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-8 bg-[#F5F7FF]">
+<div class="flex-1 p-8 bg-[#F5F7FF]" x-data="reservasiDetail()">
     <div class="max-w-6xl mx-auto">
         <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-gray-600">
@@ -117,14 +117,81 @@
 
         <!-- Batalkan Reservasi Button -->
         <div class="flex justify-center">
-            <button onclick="if(confirm('Apakah Anda yakin ingin membatalkan reservasi ini?')) { alert('Reservasi berhasil dibatalkan'); window.location.href='/customer/reservasi-saya'; }" class="w-full max-w-sm py-4 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg">
+            <button @click="showCancelModal = true" class="w-full max-w-sm py-4 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg">
                 Batalkan Reservasi
             </button>
         </div>
+
+        <!-- Cancel Modal Popup -->
+        <div x-show="showCancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showCancelModal = false">
+            <div class="bg-white rounded-[32px] p-8 max-w-md shadow-2xl animate-fade-in">
+                <!-- Emoji Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="text-6xl">😭</div>
+                </div>
+
+                <!-- Title -->
+                <h2 class="text-center text-2xl font-bold text-slate-900 mb-3">Batalkan Reservasi?</h2>
+
+                <!-- Description -->
+                <p class="text-center text-sm text-slate-600 mb-6">Apakah kamu yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat dibatalkan.</p>
+
+                <!-- Textarea -->
+                <textarea x-model="cancelReason" placeholder="Masukkan alasan pembatalan di sini." class="w-full border-2 border-red-300 rounded-3xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none mb-4" rows="4"></textarea>
+
+                <!-- Error Message -->
+                <p x-show="showReasonError" class="text-red-500 text-sm mb-4">*Bagian ini wajib diisi</p>
+
+                <!-- Buttons -->
+                <div class="flex gap-4">
+                    <button @click="showCancelModal = false; cancelReason = ''; showReasonError = false;" class="flex-1 py-3 rounded-full text-lg font-bold text-white bg-green-500 hover:bg-green-600 transition">
+                        Kembali ke halaman
+                    </button>
+                    <button @click="confirmCancel()" class="flex-1 py-3 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition">
+                        Batalkan Reservasi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add fade-in animation -->
+        <style>
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.95);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-out;
+            }
+        </style>
     </div>
 </div>
 
 <script>
+    function reservasiDetail() {
+        return {
+            showCancelModal: false,
+            cancelReason: '',
+            showReasonError: false,
+
+            confirmCancel() {
+                if (!this.cancelReason.trim()) {
+                    this.showReasonError = true;
+                    return;
+                }
+                
+                // Redirect to new reservation page
+                window.location.href = '/customer/reservasi/new';
+            }
+        };
+    }
+
     lucide.createIcons();
 </script>
 {% endblock %}

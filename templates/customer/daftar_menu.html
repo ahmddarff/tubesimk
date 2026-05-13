@@ -5,8 +5,21 @@
     <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
         activeCategory: 'semua',
         cart: [],
+        addedItems: new Set(),
         selectedProduct: null,
         showModal: false,
+        
+        // Initialize with products
+        init() {
+            // Load products from data attributes
+            document.querySelectorAll('[data-product-id]').forEach(el => {
+                const nama = el.getAttribute('data-product-nama');
+                if (nama && !Array.from(this.addedItems).some(item => item === nama)) {
+                    // Initialize empty for first load
+                }
+            });
+        },
+        
         addToCart(product) {
             const existing = this.cart.find(item => item.nama === product.nama);
             if (existing) {
@@ -14,10 +27,46 @@
             } else {
                 this.cart.push({...product, qty: 1});
             }
+            this.addedItems.add(product.nama);
         },
+        
+        incrementQty(productName) {
+            const item = this.cart.find(item => item.nama === productName);
+            if (item) {
+                item.qty += 1;
+            }
+        },
+        
+        decrementQty(productName) {
+            const item = this.cart.find(item => item.nama === productName);
+            if (item && item.qty > 1) {
+                item.qty -= 1;
+            } else if (item && item.qty === 1) {
+                // Remove from cart when qty becomes 0
+                const index = this.cart.indexOf(item);
+                this.cart.splice(index, 1);
+                this.addedItems.delete(productName);
+            }
+        },
+        
+        getItemQty(productName) {
+            const item = this.cart.find(item => item.nama === productName);
+            return item ? item.qty : 0;
+        },
+        
+        isItemAdded(productName) {
+            return this.addedItems.has(productName);
+        },
+        
         removeItem(index) {
+            const item = this.cart[index];
+            // Check if this item still exists in cart after removal
+            if (this.cart.filter(i => i.nama === item.nama).length === 1) {
+                this.addedItems.delete(item.nama);
+            }
             this.cart.splice(index, 1);
         },
+        
         get subtotal() {
             return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
         },
@@ -27,7 +76,7 @@
         get total() {
             return this.subtotal + this.ppn;
         }
-    }">
+    }" @mount="init()">
         
         <!-- Product Grid -->
         <div class="col-span-3">
@@ -66,49 +115,71 @@
                 </div>
 
                 <!-- Product Cards Grid -->
-                <div class="grid grid-cols-4 gap-6">
+                <div class="grid grid-cols-3 gap-6">
                     {% for product in menu %}
                     <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.kategori }}'" 
-                         class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer" 
-                         @click="window.location.href='/customer/menu/{{ product.id }}'">
+                         data-product-id="{{ product.id }}"
+                         data-product-nama="{{ product.nama }}"
+                         data-product-harga="{{ product.harga }}"
+                         data-product-kategori="{{ product.kategori }}"
+                         data-product-status="{{ product.status }}"
+                         data-product-rating="{{ product.rating }}"
+                         class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group">
                         
-                        <!-- Rating Badge -->
-                        <div class="relative">
-                            <img src="https://via.placeholder.com/250x200/E8D5C4/8B7355?text={{ product.nama }}" 
-                                 alt="{{ product.nama }}" class="w-full h-40 object-cover">
-                            <div class="absolute top-3 left-3 bg-white/90 rounded-lg px-2 py-1 flex items-center gap-1">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='%23FFD700'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E" 
-                                     class="w-4 h-4">
-                                <span class="text-sm font-semibold text-gray-800">{{ product.rating }}</span>
+                        <!-- Image Container with Rating Badge and Add Button -->
+                        <div class="relative h-48 overflow-hidden bg-gray-100">
+                            <img src="https://via.placeholder.com/300x250/E8D5C4/8B7355?text={{ product.nama }}" 
+                                 alt="{{ product.nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            
+                            <!-- Rating Badge -->
+                            <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-2 shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FFD700" class="w-4 h-4">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="text-sm font-bold text-gray-800">{{ product.rating }}</span>
                             </div>
                             
+                            <!-- Button Control (Top Right) -->
+                            {% if product.status == 'tersedia' %}
+                            <template x-if="!isItemAdded('{{ product.nama }}')">
+                                <!-- Add Button -->
+                                <button @click.stop="addToCart({id: '{{ product.id }}', nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'})" 
+                                        class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
+                                    +
+                                </button>
+                            </template>
+                            <template x-if="isItemAdded('{{ product.nama }}')">
+                                <!-- Quantity Control -->
+                                <div class="absolute top-4 right-4 flex gap-2 items-center bg-terralogGold rounded-full px-2 py-2 shadow-lg">
+                                    <button @click.stop="decrementQty('{{ product.nama }}')" 
+                                            class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
+                                        −
+                                    </button>
+                                    <span class="w-6 text-center font-bold text-white text-sm" x-text="getItemQty('{{ product.nama }}')">1</span>
+                                    <button @click.stop="incrementQty('{{ product.nama }}')" 
+                                            class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
+                                        +
+                                    </button>
+                                </div>
+                            </template>
+                            {% endif %}
+                            
+                            <!-- Out of Stock Overlay -->
                             {% if product.status == 'habis' %}
-                            <div class="absolute inset-0 bg-black/40 flex items-center justify-center">
-                                <span class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold">HABIS</span>
+                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                                <span class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold text-lg shadow-lg">HABIS</span>
                             </div>
                             {% endif %}
                         </div>
 
                         <!-- Product Info -->
-                        <div class="p-4">
-                            <h3 class="font-bold text-gray-800 text-sm mb-2">{{ product.nama }}</h3>
-                            <p class="text-gray-600 text-xs mb-3">Premium quality coffee</p>
-                            <p class="text-lg font-bold text-terralogBlue mb-3">Rp {{ "{:,}".format(product.harga).replace(',', '.') }}</p>
+                        <div class="p-5 flex-1 flex flex-col">
+                            <h3 class="font-bold text-gray-800 text-base mb-2 line-clamp-2">{{ product.nama }}</h3>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">Premium quality coffee brewed with passion</p>
                             
-                            {% if product.status == 'tersedia' %}
-                            <div class="flex gap-2">
-                                <button @click="addToCart({nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'})" class="flex-1 bg-terralogBlue hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition text-sm">
-                                    +
-                                </button>
-                                <button @click="addToCart({nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'}); window.location.href='/customer/checkout'" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition">
-                                    BELI
-                                </button>
-                            </div>
-                            {% else %}
-                            <button disabled class="w-full bg-gray-300 text-gray-600 font-bold py-2 rounded-lg">
-                                STOK HABIS
-                            </button>
-                            {% endif %}
+                            <!-- Price -->
+                            <p class="text-2xl font-bold text-terralogBlue mb-1">Rp {{ "{:,}".format(product.harga).replace(',', '.') }}</p>
+                            <p class="text-gray-500 text-xs">128B+ Terjual</p>
                         </div>
                     </div>
                     {% endfor %}
@@ -154,17 +225,23 @@
                     </div>
                 </div>
 
-                <!-- Checkout Buttons -->
-                <div class="space-y-2">
+                <!-- Checkout Button -->
+                <div>
                     <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition cursor-pointer">
                         <span x-text="cart.length + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
-                    </button>
-                    <button @click="window.location.href='/customer/daftar-menu'" class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition cursor-pointer">
-                        Lanjut Belanja
                     </button>
                 </div>
             </div>
         </aside>
     </div>
 </div>
+
+<script>
+    // Re-initialize icons when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
 {% endblock %}

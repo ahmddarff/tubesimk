@@ -157,7 +157,7 @@
         </div>
 
         <!-- Review Modal -->
-        <div x-show="showReviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showReviewModal = false">
+        <div x-show="showReviewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showReviewModal = false" style="display: none;">
             <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
                 <!-- Close Button -->
                 <div class="flex justify-end mb-4">
@@ -169,17 +169,17 @@
                 <!-- Title -->
                 <h2 class="text-xl font-bold text-gray-800 mb-6 text-center">Yuk bagikan pendapatmu tentang menu ini!</h2>
 
-                <!-- Review Items -->
-                <template x-for="(item, index) in items" :key="index">
-                    <div class="mb-6 border border-gray-200 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <div>
-                                <h4 class="font-bold text-gray-800" x-text="item.nama"></h4>
-                                <p class="text-sm text-gray-600" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                <!-- Review Item (Single) -->
+                <template x-if="items.length > 0">
+                    <div class="mb-6 border border-gray-200 rounded-xl p-4 bg-gray-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-16 h-16 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-300">
+                                <i data-lucide="coffee" class="w-8 h-8 text-terralogBlue"></i>
                             </div>
-                            <button @click="currentReviewIndex = index" class="bg-terralogBlue hover:bg-blue-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition">
-                                <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                            </button>
+                            <div>
+                                <h4 class="font-bold text-gray-800" x-text="items[currentReviewIndex].nama"></h4>
+                                <p class="text-sm text-terralogBlue font-semibold" x-text="`Rp ${items[currentReviewIndex].harga.toLocaleString('id-ID')}`"></p>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -187,14 +187,22 @@
                 <!-- Rating Stars -->
                 <div class="mb-6">
                     <p class="text-gray-600 text-sm font-semibold mb-3">Rating:</p>
-                    <div class="flex gap-2 justify-center">
-                        <template x-for="star in 5" :key="star">
-                            <button @click="currentRating = star" class="transition transform hover:scale-110">
-                                <i :data-lucide="star <= currentRating ? 'star' : 'star'" 
-                                   :class="star <= currentRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'" 
-                                   class="w-8 h-8"></i>
-                            </button>
-                        </template>
+                    <div class="flex gap-3 justify-center">
+                        <button @click="currentRating = 1" class="transition transform hover:scale-110" title="1 Bintang">
+                            <i class="w-8 h-8" :class="currentRating >= 1 ? 'text-yellow-400' : 'text-gray-300'" data-lucide="star"></i>
+                        </button>
+                        <button @click="currentRating = 2" class="transition transform hover:scale-110" title="2 Bintang">
+                            <i class="w-8 h-8" :class="currentRating >= 2 ? 'text-yellow-400' : 'text-gray-300'" data-lucide="star"></i>
+                        </button>
+                        <button @click="currentRating = 3" class="transition transform hover:scale-110" title="3 Bintang">
+                            <i class="w-8 h-8" :class="currentRating >= 3 ? 'text-yellow-400' : 'text-gray-300'" data-lucide="star"></i>
+                        </button>
+                        <button @click="currentRating = 4" class="transition transform hover:scale-110" title="4 Bintang">
+                            <i class="w-8 h-8" :class="currentRating >= 4 ? 'text-yellow-400' : 'text-gray-300'" data-lucide="star"></i>
+                        </button>
+                        <button @click="currentRating = 5" class="transition transform hover:scale-110" title="5 Bintang">
+                            <i class="w-8 h-8" :class="currentRating >= 5 ? 'text-yellow-400' : 'text-gray-300'" data-lucide="star"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -203,8 +211,8 @@
                     <label class="text-gray-600 text-sm font-semibold block mb-2">Ulasan:</label>
                     <textarea 
                         x-model="reviewText"
-                        placeholder="Berikan penilaianmu sebagai feedback kami den bantu pengguna lain membuat pilihan yang lebih baik!" 
-                        class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-terralogBlue" 
+                        placeholder="Berikan penilaianmu sebagai feedback kami dan bantu pengguna lain membuat pilihan yang lebih baik!" 
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-terralogBlue resize-none" 
                         rows="4"></textarea>
                 </div>
 
@@ -279,12 +287,10 @@
     lucide.createIcons();
     
     // Re-create icons when modal is shown
-    const app = document.querySelector('[x-data]');
-    if (app) {
-        const observer = new MutationObserver(() => {
-            lucide.createIcons();
+    document.addEventListener('alpine:init', () => {
+        document.body.addEventListener('click', () => {
+            setTimeout(() => lucide.createIcons(), 50);
         });
-        observer.observe(app, { childList: true, subtree: true });
-    }
+    });
 </script>
 {% endblock %}

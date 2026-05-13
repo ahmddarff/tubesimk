@@ -209,6 +209,10 @@ def pesanan_history():
 def checkout():
     return render_template('customer/checkout.html', segment='checkout', role='customer')
 
+@customer_bp.route('/pembayaran-nontunai/<order_id>')
+def pembayaran_nontunai(order_id):
+    return render_template('customer/pembayaran_nontunai.html', segment='pembayaran', role='customer', order_id=order_id)
+
 @customer_bp.route('/submit-order', methods=['POST'])
 def submit_order():
     data = request.get_json()

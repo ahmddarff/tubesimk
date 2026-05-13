@@ -209,14 +209,37 @@
                         ppn: this.ppn
                     };
                     
-                    console.log('Order submitted:', orderData);
-                    alert(`Pesanan berhasil! Total: Rp ${this.total.toLocaleString('id-ID')}\nMeja: ${this.meja}\nMetode: ${this.paymentMethod}`);
-                    
-                    // Clear cart from localStorage
-                    localStorage.removeItem('cart');
-                    
-                    // Redirect to pesanan saya
-                    window.location.href = '/customer/pesanan-saya';
+                    // Send order to backend
+                    fetch('/customer/submit-order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(orderData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Store order data in sessionStorage for payment page
+                            const paymentData = {
+                                ...orderData,
+                                order_id: data.order_id
+                            };
+                            sessionStorage.setItem('pendingOrder', JSON.stringify(paymentData));
+                            
+                            // Clear cart from localStorage
+                            localStorage.removeItem('cart');
+                            
+                            // Redirect to non-tunai payment page
+                            window.location.href = `/customer/pembayaran-nontunai/${data.order_id}`;
+                        } else {
+                            alert('Gagal membuat pesanan. Silakan coba lagi.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan. Silakan coba lagi.');
+                    });
                 }
             }
         }

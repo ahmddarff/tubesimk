@@ -1,0 +1,172 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block title %}Pembayaran Non Tunai - Terralog{% endblock %}
+
+{% block content %}
+<div class="flex-1 p-8 bg-gray-50" x-data="paymentNonTunaiApp()" x-init="initOrder()">
+    <div class="max-w-6xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="mb-8 flex items-center gap-2 text-gray-600">
+            <a href="/customer/daftar-menu" class="hover:text-terralogBlue font-semibold">Daftar Menu</a>
+            <span class="text-gray-400">›</span>
+            <span class="text-gray-800 font-semibold">Checkout</span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex gap-8">
+            <!-- Left Section - Payment Info -->
+            <div class="flex-1">
+                <!-- Customer Name -->
+                <div class="bg-white rounded-2xl p-6 mb-8">
+                    <p class="text-gray-700 font-semibold text-sm mb-2">Nama pemesan</p>
+                    <p class="text-gray-800 font-bold text-lg" x-text="nama">Matthew Shen</p>
+                </div>
+
+                <!-- Payment Method Header -->
+                <div class="bg-white rounded-2xl p-6 mb-8">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Pembayaran Non Tunai</h2>
+                    <p class="text-gray-600 text-sm mb-4">Total yang harus dibayar:</p>
+                    <p class="text-3xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 43.000</p>
+                </div>
+
+                <!-- QR Code Section -->
+                <div class="bg-white rounded-2xl p-8 mb-8">
+                    <div class="flex items-center justify-center py-8">
+                        <!-- QR Code Placeholder -->
+                        <div class="bg-gray-100 rounded-lg p-8 flex items-center justify-center">
+                            <div class="w-56 h-56 bg-white rounded-lg flex items-center justify-center border-2 border-gray-300 shadow-md">
+                                <!-- QR Code akan digenerasi di sini -->
+                                <div class="text-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" class="opacity-30">
+                                        <rect width="200" height="200" fill="white"/>
+                                        <rect x="20" y="20" width="40" height="40" fill="black"/>
+                                        <rect x="140" y="20" width="40" height="40" fill="black"/>
+                                        <rect x="20" y="140" width="40" height="40" fill="black"/>
+                                        <g opacity="0.3">
+                                            <rect x="80" y="80" width="10" height="10" fill="black"/>
+                                            <rect x="100" y="80" width="10" height="10" fill="black"/>
+                                            <rect x="80" y="100" width="10" height="10" fill="black"/>
+                                            <rect x="100" y="100" width="10" height="10" fill="black"/>
+                                        </g>
+                                    </svg>
+                                    <p class="text-gray-500 text-sm mt-2">QR Code</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-600 text-sm font-semibold">TERRALOG CAFE</p>
+                        <p class="text-gray-600 text-xs mt-1">NWID: 02501050800</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section - Payment Steps -->
+            <div class="flex-1">
+                <div class="bg-white rounded-2xl p-8 sticky top-24">
+                    <h3 class="text-lg font-bold text-gray-800 mb-6">Langkah - langkah melakukan pembayaran:</h3>
+                    
+                    <!-- Steps -->
+                    <div class="space-y-4">
+                        <!-- Step 1 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-terralogBlue text-white font-bold text-sm">
+                                    1
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-semibold text-sm">Silakan scan kode QR di samping menggunakan aplikasi e-wallet instalah mobile banking anda</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-terralogBlue text-white font-bold text-sm">
+                                    2
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-semibold text-sm">Masukkan nominal sesuai dengan yang telah tersebut</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-terralogBlue text-white font-bold text-sm">
+                                    3
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-semibold text-sm">Selesaikan pembayaran dari aplikasi e-wallet atau mobile banking anda</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center justify-center h-8 w-8 rounded-full bg-terralogBlue text-white font-bold text-sm">
+                                    4
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-semibold text-sm">Jika pembayaran berhasil, klik tombol konfirmasi pembayaran dibawah ini</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confirmation Button -->
+                    <button @click="confirmPayment()" class="w-full bg-terralogBlue hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-full transition mt-8 text-lg shadow-lg">
+                        Konfirmasi Pembayaran
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function paymentNonTunaiApp() {
+        return {
+            nama: 'Matthew Shen',
+            total: 0,
+            orderId: '{{ order_id }}',
+            
+            initOrder() {
+                // Get order data from sessionStorage
+                const orderData = sessionStorage.getItem('pendingOrder');
+                if (orderData) {
+                    const order = JSON.parse(orderData);
+                    this.nama = order.nama || 'Matthew Shen';
+                    this.total = order.total || 0;
+                    this.orderId = order.order_id || '{{ order_id }}';
+                } else {
+                    // Fallback to template data
+                    this.orderId = '{{ order_id }}';
+                }
+            },
+            
+            confirmPayment() {
+                // Show loading
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Memproses...';
+                btn.disabled = true;
+                
+                // Simulate payment verification - in real app, verify with backend
+                setTimeout(() => {
+                    // Clear session storage
+                    sessionStorage.removeItem('pendingOrder');
+                    
+                    // Redirect to order detail page
+                    window.location.href = `/customer/pesanan/${this.orderId}`;
+                }, 2000);
+            }
+        }
+    }
+    
+    lucide.createIcons();
+</script>
+{% endblock %}
