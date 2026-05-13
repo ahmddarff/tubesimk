@@ -97,6 +97,8 @@ class Reservation(db.Model):
     customer_name       = db.Column(db.String(100), nullable=True)
     phone               = db.Column(db.String(20), nullable=False)
     table_id            = db.Column(db.Integer, db.ForeignKey('tables.id'), nullable=False)
+    notes               = db.Column(db.Text, nullable=True) # Catatan khusus saat booking (Opsional)
+    cancellation_reason = db.Column(db.Text, nullable=True) # Alasan jika dibatalkan (Opsional)
     reservation_date    = db.Column(db.Date, nullable=False)
     reservation_time    = db.Column(db.Time, nullable=False)
     status              = db.Column(db.Enum('pending', 'confirmed', 'completed', 'cancelled', name='reservation_status'), default='pending')
