@@ -1,32 +1,16 @@
+from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user 
+from models import User, CafeSetting, OperationalHour, Menu, Category
+from extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 owner_bp = Blueprint('owner', __name__)
 
-# Mock Data Owner
-profil_cafe = {
-    "nama":   "Terralog Coffee & Eatery",
-    "telp":   "+62 812-XXXX-XXXX",
-    "alamat": "Jl. Aman I No.2, Teladan Bar., Kec. Medan Kota, Kota Medan, Sumatera Utara 20216",
-    "email":  "hello@terralog.com",
-}
-
-akun_owner = {
-    "nama":      "Oscar Piastri",
-    "panggilan": "Oscar",
-    "email":     "oscar.owner@gmail.com",
-    "no_hp":     "0812-xxxx-xxxx",
-    "jabatan":   "Owner/Pemilik",
-}
-
-jam_operasional = [
-    {"nama": "Senin",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Selasa", "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Rabu",   "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Kamis",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Jumat",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Sabtu",  "buka": True,  "jam_buka": "09.00", "jam_tutup": "22.00"},
-    {"nama": "Minggu", "buka": False, "jam_buka": "10.00", "jam_tutup": "20.00"},
-]
+@owner_bp.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('owner/dashboard.html')
 
 staff_data = [
     {"id": 1, "nama": "Andi Pratama", "shift": "Pagi",  "status": "online",  "total_transaksi": 42},
@@ -62,56 +46,95 @@ transaksi_data = [
     {"id_transaksi": "#TRX007", "tanggal": "06 Apr, 12:10:47", "metode": "Debit", "total": "Rp75.000"},
 ]
 
-@owner_bp.route('/dashboard')
-def dashboard():
-    return render_template('owner/dashboard.html', username="Oscar", total_penjualan="Rp2.500.000,00", total_order=124, menu_terlaris="Caramel Latte", menu_terlaris_qty=45, staff=staff_data)
-
 @owner_bp.route('/manajemen-menu')
+@login_required
 def manajemen_menu():
-    return render_template('owner/manajemen-menu.html', username="Oscar", menu_list=menu_data)
+    # Ambil semua data menu dan kategori dari database
+    menus = Menu.query.all()
+    categories = Category.query.all()
+    return render_template('owner/manajemen-menu.html',
+                           menu_list=menus, 
+                           categories=categories)
 
 @owner_bp.route('/manajemen-kasir')
+@login_required
 def manajemen_kasir():
     kasir_online = sum(1 for k in kasir_data if k['status'] == 'online')
     return render_template('owner/manajemen-kasir.html',
-        username="Oscar", kasir_list=kasir_data,
-        kasir_online=kasir_online, total_kasir=len(kasir_data)
+        kasir_list=kasir_data,
+        kasir_online=kasir_online, 
+        total_kasir=len(kasir_data)
     )
 
 @owner_bp.route('/laporan-penjualan')
+@login_required
 def laporan_penjualan():
-    return render_template('owner/laporan-penjualan.html', username="Oscar", transaksi_list=transaksi_data)
+    return render_template('owner/laporan-penjualan.html',
+        transaksi_list=transaksi_data
+    )
 
 @owner_bp.route('/pengaturan')
+@login_required
 def pengaturan():
+    cafe_info = CafeSetting.query.first()
+    
+    # Ambil dan urutkan jadwal
+    jam_db = OperationalHour.query.all()
+    urutan_hari = {"Senin": 1, "Selasa": 2, "Rabu": 3, "Kamis": 4, "Jumat": 5, "Sabtu": 6, "Minggu": 7}
+    jam_db.sort(key=lambda x: urutan_hari.get(x.day_of_week, 8))
+
+    # Lempar objeknya langsung! Tidak perlu dictionary data_cafe
     return render_template('owner/pengaturan.html',
-        username="Oscar",
-        profil_cafe=profil_cafe,
-        akun_owner=akun_owner,
-        jam_operasional=jam_operasional
+        cafe_info=cafe_info,
+        jam_operasional=jam_db
     )
 
 # ── Menu APIs ─────────────────────────────────────────
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
+@login_required
 def tambah_menu():
     data = request.json
-    menu_data.append({
-        "id": len(menu_data) + 1, "nama": data.get("nama"),
-        "kategori": data.get("kategori"), "harga": int(data.get("harga") or 0),
-        "status": True, "stok": int(data.get("stok") or 0),
-    })
-    return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+    # Cari kategori berdasarkan nama yang dikirim dari form
+    category = Category.query.filter_by(name=data.get("kategori")).first()
+    
+    if not category:
+        return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
+
+    new_menu = Menu(
+        name=data.get("nama"),
+        category_id=category.id,
+        price=int(data.get("harga") or 0),
+        description=data.get("deskripsi"),
+        is_available=True
+    )
+    
+    try:
+        db.session.add(new_menu)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menambahkan menu."})
 
 @owner_bp.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
+@login_required
 def toggle_menu_status(menu_id):
     data = request.json
-    for m in menu_data:
-        if m["id"] == menu_id:
-            m["status"] = data.get("status"); break
-    return jsonify({"success": True, "message": "Status menu diperbarui!"})
+    # Gunakan db.session.get untuk menghindari LegacyAPIWarning
+    menu = db.session.get(Menu, menu_id)
+    if menu:
+        menu.is_available = data.get("status")
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Status menu diperbarui!"})
+        except:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Gagal memperbarui status."})
+    return jsonify({"success": False, "message": "Menu tidak ditemukan."})
 
 # ── Kasir APIs ────────────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
+@login_required
 def tambah_staff():
     data = request.json
     new_id = len(kasir_data) + 1
@@ -122,6 +145,7 @@ def tambah_staff():
     return jsonify({"success": True, "message": "Staff baru berhasil ditambahkan!"})
 
 @owner_bp.route('/api/toggle-kasir-status/<int:kasir_id>', methods=['POST'])
+@login_required
 def toggle_kasir_status(kasir_id):
     data = request.json
     for k in kasir_data:
@@ -130,6 +154,7 @@ def toggle_kasir_status(kasir_id):
     return jsonify({"success": True, "message": "Status kasir diperbarui!"})
 
 @owner_bp.route('/api/edit-kasir/<int:kasir_id>', methods=['POST'])
+@login_required
 def edit_kasir(kasir_id):
     data = request.json
     for k in kasir_data:
@@ -140,38 +165,104 @@ def edit_kasir(kasir_id):
 
 # ── Pengaturan APIs ───────────────────────────────────
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
+@login_required
 def update_profil_cafe():
     data = request.json
-    profil_cafe.update({
-        "nama": data.get("nama", profil_cafe["nama"]),
-        "telp": data.get("telp", profil_cafe["telp"]),
-        "alamat": data.get("alamat", profil_cafe["alamat"]),
-        "email": data.get("email", profil_cafe["email"]),
-    })
-    return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui!"})
+    
+    # Ambil baris pertama dari tabel pengaturan cafe
+    cafe_info = CafeSetting.query.first()
+    
+    if cafe_info:
+        # Timpa data lama dengan data baru dari form frontend
+        cafe_info.cafe_name = data.get("nama", cafe_info.cafe_name)
+        cafe_info.phone = data.get("telp", cafe_info.phone)
+        cafe_info.address = data.get("alamat", cafe_info.address)
+        cafe_info.email = data.get("email", cafe_info.email)
+        
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui di database!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error update cafe: {e}")
+            return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
+            
+    return jsonify({"success": False, "message": "Data pengaturan cafe tidak ditemukan di sistem."})
 
 @owner_bp.route('/api/update-akun', methods=['POST'])
+@login_required
 def update_akun():
     data = request.json
-    akun_owner.update({
-        "nama": data.get("nama", akun_owner["nama"]),
-        "panggilan": data.get("panggilan", akun_owner["panggilan"]),
-        "email": data.get("email", akun_owner["email"]),
-        "no_hp": data.get("no_hp", akun_owner["no_hp"]),
-    })
-    return jsonify({"success": True, "message": "Akun berhasil diperbarui!"})
+    
+    # Ambil user dari database berdasarkan ID current_user
+    user = User.query.get(current_user.id)
+    
+    if user:
+        user.name = data.get("nama", user.name)
+        user.username = data.get("username", user.username) # Pastikan field ini ada di form
+        user.email = data.get("email", user.email)
+        user.phone = data.get("no_hp", user.phone)
+        
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Akun berhasil diperbarui di database!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error updating user: {e}")
+            return jsonify({"success": False, "message": "Gagal memperbarui database."})
+            
+    return jsonify({"success": False, "message": "Pengguna tidak ditemukan."})
 
 @owner_bp.route('/api/update-password', methods=['POST'])
+@login_required
 def update_password():
     data = request.json
-    if not data.get("password_lama"):
+    password_lama = data.get("password_lama")
+    password_baru = data.get("password_baru")
+    
+    user = User.query.get(current_user.id)
+    
+    # Verifikasi kata sandi lama
+    if not check_password_hash(user.password, password_lama):
         return jsonify({"success": False, "message": "Kata sandi lama salah!"})
-    return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    
+    # Enkripsi kata sandi baru
+    user.password = generate_password_hash(password_baru)
+    
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
 
-@owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
-def toggle_jam_operasional():
+@owner_bp.route('/api/update-waktu-operasional', methods=['POST'])
+@login_required
+def update_waktu_operasional():
     data = request.json
-    for h in jam_operasional:
-        if h["nama"] == data.get("hari"):
-            h["buka"] = data.get("buka"); break
-    return jsonify({"success": True, "message": "Jadwal diperbarui!"})
+    hari = data.get("hari")
+    jenis = data.get("jenis") # Akan berisi 'buka' atau 'tutup'
+    waktu_str = data.get("waktu") # Akan berisi string seperti '09:00'
+    
+    # Cari jadwal hari tersebut di database
+    jadwal = OperationalHour.query.filter_by(day_of_week=hari).first()
+    
+    if jadwal and waktu_str:
+        # Konversi string jam 'HH:MM' dari HTML menjadi objek Time Python
+        waktu_obj = datetime.strptime(waktu_str, '%H:%M').time()
+        
+        # Tentukan apakah yang diubah jam buka atau jam tutup
+        if jenis == 'buka':
+            jadwal.open_time = waktu_obj
+        elif jenis == 'tutup':
+            jadwal.close_time = waktu_obj
+            
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Waktu berhasil diperbarui!"})
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error update waktu: {e}")
+            return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
+            
+    return jsonify({"success": False, "message": "Jadwal atau data waktu tidak valid!"})

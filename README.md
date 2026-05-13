@@ -23,6 +23,7 @@ pip install python-dotenv
 pip install flask_sqlalchemy
 pip install sqlalchemy-utils
 pip install Flask-SQLAlchemy pymysql
+pip install flask_login
 ```
 
 ### 3. Copy File Environment

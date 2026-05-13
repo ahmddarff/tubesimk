@@ -1,34 +1,47 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_required, current_user
+from models import Menu
+from extensions import db
 
-kasir_bp = Blueprint(
-    'kasir',
-    __name__,
-    url_prefix='/kasir'
-)
-
+kasir_bp = Blueprint('kasir', __name__)
 
 # =========================
 # DASHBOARD
 # =========================
 @kasir_bp.route('/dashboard')
+@login_required
 def dashboard():
-    katalog_menu = [
-        {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "rating": 4.7, "terjual": 11, "status": "tersedia"},
-        {"nama": "Espresso", "harga": 10000, "img": "kopi.png", "rating": 4.8, "terjual": 5, "status": "tersedia"},
-        {"nama": "Sanger", "harga": 18000, "img": "kopi.png", "rating": 4.6, "terjual": 4, "status": "tersedia"},
-        {"nama": "Americano", "harga": 15000, "img": "kopi.png", "rating": 4.3, "terjual": 8, "status": "tersedia"},
-        {"nama": "Cappuccino", "harga": 18000, "img": "kopi.png", "rating": 4.5, "terjual": 5, "status": "tersedia"},
-        {"nama": "Kopi Latte", "harga": 16000, "img": "kopi.png", "rating": 4.3, "terjual": 4, "status": "habis"},
-        {"nama": "Americano", "harga": 15000, "img": "kopi.png", "rating": 4.3, "terjual": 8, "status": "tersedia"},
-        {"nama": "Cappuccino", "harga": 18000, "img": "kopi.png", "rating": 4.5, "terjual": 5, "status": "tersedia"},
-        {"nama": "Kopi Latte", "harga": 16000, "img": "kopi.png", "rating": 4.3, "terjual": 4, "status": "habis"},
-    ]
+    # Mengambil seluruh data menu dari database
+    menus_db = Menu.query.all()
+    
+    menu_list = []
+    for m in menus_db:
+        # Menentukan status ketersediaan berdasarkan kolom is_available dan stock
+        # Jika stok adalah None (untuk makanan/minuman yang selalu bisa dimasak) 
+        # atau lebih dari 0, dan status is_available adalah True, maka menu tersedia.
+        if m.is_available and (m.stock is None or m.stock > 0):
+            status_menu = 'tersedia'
+        else:
+            status_menu = 'habis'
+            
+        menu_list.append({
+            "id": m.id,
+            "nama": m.name,
+            "harga": m.price,
+            # Menetapkan gambar bawaan apabila image_url pada database kosong
+            "img": m.image_url if m.image_url else "gambar.png", 
+            "status": status_menu,
+            # Karena model Menu belum memiliki atribut rating, nilai ini dapat 
+            # dibuat statis untuk sementara waktu.
+            "rating": "4.8" 
+        })
 
     return render_template(
-        'kasir/dashboard.html',
-        menu=katalog_menu,
+        'kasir/dashboard.html', 
+        username=current_user.name,
         segment='dashboard',
-        role='kasir'
+        role='kasir',
+        menu=menu_list
     )
 
 
@@ -121,10 +134,34 @@ def riwayat_transaksi():
 # =========================
 # PENGATURAN
 # =========================
-@kasir_bp.route('/pengaturan')
+@kasir_bp.route('/pengaturan', methods=['GET', 'POST'])
+@login_required
 def pengaturan():
+    if request.method == 'POST':
+        # Mengambil data dari formulir
+        name = request.form.get('name')
+        username = request.form.get('username')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+
+        # Memperbarui data pengguna yang sedang login
+        current_user.name = name
+        current_user.username = username
+        current_user.email = email
+        current_user.phone = phone
+
+        try:
+            db.session.commit()
+            flash('Profil berhasil diperbarui!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Gagal memperbarui profil. Username atau email mungkin sudah digunakan.', 'danger')
+        
+        return redirect(url_for('kasir.pengaturan'))
+
     return render_template(
         'kasir/pengaturan.html',
         segment='pengaturan',
-        role='kasir'
+        role='kasir',
+        user=current_user
     )

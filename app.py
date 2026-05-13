@@ -1,9 +1,10 @@
 import os
-from flask import Flask, redirect, url_for
-from extensions import db
+from flask import Flask, render_template, jsonify, request, redirect, url_for
+from extensions import db, login_manager
+from models import User
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv() 
 
 app = Flask(__name__)
 
@@ -20,6 +21,17 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
 db.init_app(app)
+
+# ==========================================
+# KONFIGURASI FLASK-LOGIN
+# ==========================================
+login_manager.init_app(app)
+login_manager.login_view = 'auth.login' # Arahkan ke rute login jika belum autentikasi
+login_manager.login_message = "Silakan login terlebih dahulu untuk mengakses halaman ini."
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))
 
 from models import *
 
@@ -41,7 +53,7 @@ app.register_blueprint(koki_bp, url_prefix='/koki')
 print(app.url_map)
 
 # ==========================================
-# ROOT ROUTE
+# ROUTING UTAMA & MOCK DATA
 # ==========================================
 @app.route('/')
 def home():
