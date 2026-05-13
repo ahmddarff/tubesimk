@@ -70,7 +70,7 @@
                     {% for product in menu %}
                     <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.kategori }}'" 
                          class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer" 
-                         @click="selectedProduct = {nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'}; showModal = true">
+                         @click="window.location.href='/customer/menu/{{ product.id }}'">
                         
                         <!-- Rating Badge -->
                         <div class="relative">

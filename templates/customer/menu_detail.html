@@ -1,0 +1,132 @@
+{% extends "layouts/layout_customer.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto" x-data="{ qty: 1, cart: [] }">
+    <!-- Breadcrumb & Cart Badge -->
+    <div class="mb-8 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-gray-600 text-sm">
+            <a href="/customer/daftar-menu" class="hover:text-terralogBlue transition">Daftar Menu</a>
+            <span>›</span>
+            <span class="text-gray-800 font-semibold">{{ menu.nama }}</span>
+        </div>
+        
+        <!-- Cart Badge -->
+        <div class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm">
+            <span x-text="cart.length">0</span>
+            <span>item dipilih</span>
+            <span x-text="(cart.reduce((sum, item) => sum + (item.harga * item.qty), 0)).toLocaleString('id-ID')">0</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-12">
+        <!-- Left: Image -->
+        <div>
+            <div class="bg-terralogBlue rounded-3xl overflow-hidden shadow-lg">
+                <img src="https://via.placeholder.com/400x350/1F3A93/FFFFFF?text=Terralog+Kopi" 
+                     alt="{{ menu.nama }}" 
+                     class="w-full h-80 object-cover">
+            </div>
+        </div>
+
+        <!-- Right: Info -->
+        <div class="space-y-6">
+            <!-- Product Name -->
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ menu.nama }}</h1>
+            </div>
+
+            <!-- Price -->
+            <div class="bg-terralogGold/10 border-2 border-terralogGold rounded-2xl p-4">
+                <p class="text-gray-600 text-sm mb-1">Harga</p>
+                <p class="text-3xl font-bold text-terralogBlue">Rp {{ "{:,}".format(menu.harga).replace(',', '.') }}</p>
+            </div>
+
+            <!-- Sold Info -->
+            <p class="text-gray-600 text-sm">{{ menu.terjual }}RB+ Terjual</p>
+
+            <!-- Deskripsi -->
+            <div>
+                <h3 class="text-sm font-bold text-gray-800 mb-2">Deskripsi</h3>
+                <p class="text-gray-700 leading-relaxed text-sm">{{ menu.deskripsi }}</p>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center border-2 border-terralogBlue rounded-lg bg-white w-fit">
+                    <button @click="qty = Math.max(1, qty - 1)" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold">
+                        -
+                    </button>
+                    <input x-model.number="qty" type="number" class="w-12 text-center border-0 focus:outline-none font-bold" min="1">
+                    <button @click="qty += 1" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold">
+                        +
+                    </button>
+                </div>
+
+                <!-- Add to Cart Button -->
+                {% if menu.status == 'tersedia' %}
+                    <button @click="cart.push({nama: '{{ menu.nama }}', harga: {{ menu.harga }}, qty: qty}); qty = 1" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm">
+                        Keranjang
+                    </button>
+                {% else %}
+                    <button disabled class="flex-1 bg-gray-300 text-gray-600 font-bold py-2 rounded-lg cursor-not-allowed text-sm">
+                        Stok Habis
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Rating & Reviews Section -->
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1 bg-terralogBlue text-white px-3 py-1 rounded-lg font-bold text-sm">
+                            <span>★ {{ menu.rating }}</span>
+                        </div>
+                        <span class="text-gray-600 text-sm font-semibold">Ulasan ({{ menu.review_count }}rb ulasan)</span>
+                    </div>
+                    <a href="#" class="text-terralogBlue font-bold text-sm hover:underline">Lihat Semua ></a>
+                </div>
+
+                <!-- Reviews List -->
+                {% if menu.reviews %}
+                    <div class="space-y-4">
+                        {% for review in menu.reviews %}
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="flex items-start gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-700 flex-shrink-0">
+                                        {{ review.nama[0].upper() }}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
+                                            <span class="text-gray-500 text-xs">{{ review.date }}</span>
+                                        </div>
+                                        
+                                        <!-- Rating Stars -->
+                                        <div class="flex gap-0.5 mb-2">
+                                            {% for i in range(5) %}
+                                                {% if i < review.rating %}
+                                                    <span class="text-yellow-400 text-sm">★</span>
+                                                {% else %}
+                                                    <span class="text-gray-300 text-sm">★</span>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+
+                                        <!-- Review Text -->
+                                        <p class="text-gray-700 text-xs leading-relaxed">{{ review.text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}

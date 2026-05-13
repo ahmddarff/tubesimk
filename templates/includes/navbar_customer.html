@@ -1,72 +1,46 @@
-<!-- Navbar Customer -->
-<nav class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-72 right-0 z-40">
-    <div class="px-8 py-4 flex items-center justify-between">
-        
-        <!-- Left: Page Title -->
-        <div class="flex-1">
-            <h1 class="text-2xl font-bold text-gray-800">Daftar Menu</h1>
-            <p class="text-xs text-gray-500 mt-1">Pilih menu favorit Anda</p>
-        </div>
-
-        <!-- Center: Category Filter Tabs -->
-        <div class="flex gap-2 flex-wrap justify-center">
-            <button class="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-terralogBlue text-white hover:shadow-md">
-                Semua
+<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end z-20 fixed top-0 left-72 right-0" x-data="{ showNotif: false, showProfile: false }">
+    
+    <div class="flex items-center gap-6">
+        <!-- Notification Button -->
+        <div class="relative">
+            <button @click="showNotif = !showNotif" class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <button class="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Coffee
-            </button>
-            <button class="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Non Coffee
-            </button>
-            <button class="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Food
-            </button>
-            <button class="px-4 py-2 rounded-full text-sm font-semibold transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Snack
-            </button>
-        </div>
-
-        <!-- Right: User Info -->
-        <div class="flex-1 flex justify-end items-center gap-4" x-data="{ showNotif: false, showProfile: false }">
-            <!-- Notification -->
-            <div class="relative">
-                <button @click="showNotif = !showNotif" class="p-2 hover:bg-gray-100 rounded-lg transition relative">
-                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-                <div x-show="showNotif" @click.away="showNotif = false" x-transition class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div class="p-4 border-b border-gray-200">
-                        <p class="text-sm font-bold text-gray-800">Notifikasi</p>
-                    </div>
-                    <div class="max-h-80 overflow-y-auto">
-                        <a href="#" class="block p-3 hover:bg-gray-50 border-b border-gray-100 text-sm">
-                            <p class="font-semibold text-gray-800">Pesanan siap diambil</p>
-                            <p class="text-xs text-gray-500 mt-1">5 menit lalu</p>
-                        </a>
-                    </div>
+            <div x-show="showNotif" @click.away="showNotif = false" x-transition class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div class="p-4 border-b border-gray-200">
+                    <p class="text-sm font-bold text-gray-800">Notifikasi</p>
                 </div>
-            </div>
-            
-            <!-- Profile -->
-            <div class="relative">
-                <button @click="showProfile = !showProfile" class="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition">
-                    <div class="w-8 h-8 rounded-full bg-terralogBlue text-white flex items-center justify-center text-xs font-bold">
-                        MS
-                    </div>
-                    <div class="hidden sm:block">
-                        <p class="text-xs font-semibold text-gray-800">Matthew Shen</p>
-                        <p class="text-[10px] text-gray-500">Customer</p>
-                    </div>
-                </button>
-                <div x-show="showProfile" @click.away="showProfile = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
-                    <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Pengaturan</a>
-                    <button onclick="alert('Logout')" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</button>
+                <div class="max-h-80 overflow-y-auto">
+                    <a href="#" class="block p-3 hover:bg-gray-50 border-b border-gray-100 text-sm">
+                        <p class="font-semibold text-gray-800">Pesanan siap diambil</p>
+                        <p class="text-xs text-gray-500 mt-1">5 menit lalu</p>
+                    </a>
                 </div>
             </div>
         </div>
+
+        <div class="h-8 w-[1px] bg-gray-200"></div>
+
+        <!-- User Profile -->
+        <div class="relative">
+            <button @click="showProfile = !showProfile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition">
+                <div class="text-right">
+                    <p class="text-sm font-bold text-gray-800">Matthew Shen</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">Customer</p>
+                </div>
+                <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach">
+                    MS
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+            </button>
+            <div x-show="showProfile" @click.away="showProfile = false" x-transition class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <a href="/customer/profil" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
+                <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Pengaturan</a>
+                <button onclick="alert('Logout')" class="w-full text-left px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</button>
+            </div>
+        </div>
+
     </div>
+
 </nav>
