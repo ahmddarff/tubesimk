@@ -70,11 +70,8 @@
         get subtotal() {
             return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
         },
-        get ppn() {
-            return this.subtotal * 0.1;
-        },
         get total() {
-            return this.subtotal + this.ppn;
+            return this.subtotal;
         }
     }" @mount="init()">
         
@@ -218,10 +215,6 @@
                     <div class="flex justify-between text-sm text-gray-600">
                         <span>Subtotal</span>
                         <span>Rp <span x-text="subtotal.toLocaleString('id-ID')"></span></span>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-600">
-                        <span>PPN (10%)</span>
-                        <span>Rp <span x-text="ppn.toLocaleString('id-ID')"></span></span>
                     </div>
                 </div>
 

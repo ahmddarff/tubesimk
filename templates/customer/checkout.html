@@ -130,12 +130,8 @@
                 return this.items.reduce((sum, item) => sum + (item.harga * item.qty), 0);
             },
             
-            get ppn() {
-                return Math.round(this.subtotal * 0.1);
-            },
-            
             get total() {
-                return this.subtotal + this.ppn;
+                return this.subtotal;
             },
             
             incrementItem(index) {
@@ -169,8 +165,7 @@
                         items: this.items,
                         paymentMethod: this.paymentMethod,
                         total: this.total,
-                        subtotal: this.subtotal,
-                        ppn: this.ppn
+                        subtotal: this.subtotal
                     };
                     
                     // Send order to backend
@@ -205,8 +200,7 @@
                         items: this.items,
                         paymentMethod: this.paymentMethod,
                         total: this.total,
-                        subtotal: this.subtotal,
-                        ppn: this.ppn
+                        subtotal: this.subtotal
                     };
                     
                     // Send order to backend
