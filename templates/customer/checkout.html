@@ -5,45 +5,48 @@
 {% block content %}
 <div class="flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
     <div class="max-w-5xl mx-auto">
-        <!-- Breadcrumb -->
-        <div class="mb-8 flex items-center gap-2 text-gray-600">
-            <a href="/customer/daftar-menu" class="hover:text-terralogBlue">Daftar Menu</a>
-            <span class="text-gray-400">›</span>
-            <span class="text-gray-800 font-semibold">Checkout</span>
+        <!-- Breadcrumb & Summary Header -->
+        <div class="mb-8 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-gray-600">
+                <a href="/customer/daftar-menu" class="hover:text-terralogBlue">Daftar Menu</a>
+                <span class="text-gray-400">›</span>
+                <span class="text-gray-800 font-semibold">Checkout</span>
+            </div>
+            <div class="bg-yellow-400 text-gray-800 font-bold px-6 py-3 rounded-2xl text-right">
+                <div class="text-sm" x-text="`${items.length} item dipesan`"></div>
+                <div class="text-2xl" x-text="`${total.toLocaleString('id-ID')}`"></div>
+            </div>
         </div>
 
         <div class="flex gap-8">
             <!-- Main Content -->
             <div class="flex-1">
-                <!-- Header with summary -->
-                <div class="bg-white rounded-2xl p-6 mb-8 flex items-center justify-between">
-                    <h1 class="text-3xl font-bold text-gray-800">Checkout</h1>
-                    <div class="bg-yellow-400 text-gray-800 font-bold px-6 py-3 rounded-2xl text-right">
-                        <div class="text-sm" x-text="`${items.length} item dipilih`"></div>
-                        <div class="text-2xl" x-text="`${total.toLocaleString('id-ID')}`"></div>
-                    </div>
-                </div>
-
-                <!-- Meja Selection -->
+                <!-- Customer Info & Meja Header -->
                 <div class="bg-white rounded-2xl p-6 mb-8">
-                    <label class="text-gray-700 font-semibold mb-3 block">Meja</label>
-                    <select x-model="meja" class="w-full md:w-48 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-terralogBlue">
-                        <option value="M-102">M-102</option>
-                        <option value="M-101">M-101</option>
-                        <option value="M-103">M-103</option>
-                        <option value="M-104">M-104</option>
-                    </select>
-                </div>
-
-                <!-- Customer Info -->
-                <div class="bg-white rounded-2xl p-6 mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-800">Nama pemesan</h3>
-                        <button @click="editingName = !editingName" class="text-terralogBlue hover:text-blue-700 transition">
-                            <i data-lucide="edit-2" class="w-5 h-5"></i>
-                        </button>
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between gap-4">
+                                <div>
+                                    <label class="text-gray-700 text-sm font-semibold block mb-2">Nama pemesan</label>
+                                    <div class="flex items-center gap-3">
+                                        <input type="text" x-model="nama" :disabled="!editingName" class="border border-gray-300 rounded-lg px-4 py-2 text-gray-800" :class="editingName ? 'bg-white' : 'bg-gray-50'">
+                                        <button @click="editingName = !editingName" class="text-terralogBlue hover:text-blue-700 transition">
+                                            <i data-lucide="edit-2" class="w-5 h-5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <label class="text-gray-700 text-sm font-semibold block mb-2">Meja</label>
+                            <select x-model="meja" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                                <option value="M-102">M-102</option>
+                                <option value="M-101">M-101</option>
+                                <option value="M-103">M-103</option>
+                                <option value="M-104">M-104</option>
+                            </select>
+                        </div>
                     </div>
-                    <input type="text" x-model="nama" :disabled="!editingName" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-800" :class="editingName ? 'bg-white' : 'bg-gray-50'">
                 </div>
 
                 <!-- Orders -->
@@ -51,28 +54,25 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-6">Pesanan Anda</h3>
 
                     <template x-for="(item, index) in items" :key="index">
-                        <div class="rounded-xl p-6 mb-6 border-2" :class="index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'">
-                            <div class="flex gap-4 mb-6">
-                                <div class="w-24 h-24 rounded-lg flex items-center justify-center flex-shrink-0" :class="index === 0 ? 'bg-terralogBlue' : 'bg-terralogOrange'">
-                                    <i :data-lucide="index === 0 ? 'coffee' : 'rice'" class="w-12 h-12 text-white/50"></i>
-                                </div>
+                        <div class="rounded-xl p-6 mb-6 border-2 bg-blue-50 border-blue-200">
+                            <div class="flex items-start justify-between mb-4">
                                 <div class="flex-1">
                                     <h4 class="text-lg font-bold text-gray-800 mb-2" x-text="item.nama"></h4>
-                                    <p class="font-semibold text-lg" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                    <p class="font-semibold text-lg text-gray-600" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
                                 </div>
-                                <div class="flex gap-2">
-                                    <button @click="decrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-2 rounded-lg transition">-</button>
-                                    <div class="px-4 py-2 border border-gray-300 rounded-lg text-center min-w-12" x-text="item.qty"></div>
-                                    <button @click="incrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-2 rounded-lg transition">+</button>
+                                <div class="flex gap-2 items-center">
+                                    <button @click="decrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-1 rounded-lg transition w-8">−</button>
+                                    <div class="px-3 py-1 border border-gray-300 rounded-lg text-center min-w-12" x-text="item.qty"></div>
+                                    <button @click="incrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-1 rounded-lg transition w-8">+</button>
                                 </div>
-                                <button @click="deleteItem(index)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg transition flex items-center gap-2">
+                                <button @click="deleteItem(index)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg transition ml-4 flex items-center gap-2">
                                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                                     Hapus
                                 </button>
                             </div>
                             <div>
                                 <label class="text-gray-700 font-semibold text-sm mb-2 block">Catatan:</label>
-                                <textarea placeholder="Masukkan catatan pesanan ini..." @input="updateNote(index, $event.target.value)" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none text-gray-700" :class="index === 0 ? 'focus:ring-2 focus:ring-blue-400' : 'focus:ring-2 focus:ring-orange-400'" rows="3" :value="item.note"></textarea>
+                                <textarea placeholder="Masukkan catatan pesanan ini..." @input="updateNote(index, $event.target.value)" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none text-gray-700 focus:ring-2 focus:ring-blue-400" rows="2" :value="item.note"></textarea>
                             </div>
                         </div>
                     </template>
@@ -106,11 +106,21 @@
 
 <script>
     function checkoutApp() {
+        // Load cart from localStorage
+        const savedCart = localStorage.getItem('cart');
+        const cartItems = savedCart ? JSON.parse(savedCart) : [
+            { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
+            { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
+        ];
+        
+        // Transform cart items to include notes
+        const items = cartItems.map(item => ({
+            ...item,
+            note: item.note || ''
+        }));
+        
         return {
-            items: [
-                { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
-                { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
-            ],
+            items: items,
             meja: 'M-102',
             nama: 'Matthew Shen',
             editingName: false,
@@ -152,24 +162,62 @@
                     return;
                 }
                 
-                const orderData = {
-                    meja: this.meja,
-                    nama: this.nama,
-                    items: this.items,
-                    paymentMethod: this.paymentMethod,
-                    total: this.total,
-                    subtotal: this.subtotal,
-                    ppn: this.ppn
-                };
-                
-                console.log('Order submitted:', orderData);
-                alert(`Pesanan berhasil! Total: Rp ${this.total.toLocaleString('id-ID')}\nMeja: ${this.meja}\nMetode: ${this.paymentMethod}`);
-                
-                // Reset form
-                this.items = [
-                    { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
-                    { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
-                ];
+                if (this.paymentMethod === 'tunai') {
+                    const orderData = {
+                        meja: this.meja,
+                        nama: this.nama,
+                        items: this.items,
+                        paymentMethod: this.paymentMethod,
+                        total: this.total,
+                        subtotal: this.subtotal,
+                        ppn: this.ppn
+                    };
+                    
+                    // Send order to backend
+                    fetch('/customer/submit-order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(orderData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Clear cart from localStorage
+                            localStorage.removeItem('cart');
+                            
+                            // Redirect to pesanan detail with order_id
+                            window.location.href = `/customer/pesanan/${data.order_id}`;
+                        } else {
+                            alert('Gagal membuat pesanan. Silakan coba lagi.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan. Silakan coba lagi.');
+                    });
+                } else {
+                    // Non-tunai payment method
+                    const orderData = {
+                        meja: this.meja,
+                        nama: this.nama,
+                        items: this.items,
+                        paymentMethod: this.paymentMethod,
+                        total: this.total,
+                        subtotal: this.subtotal,
+                        ppn: this.ppn
+                    };
+                    
+                    console.log('Order submitted:', orderData);
+                    alert(`Pesanan berhasil! Total: Rp ${this.total.toLocaleString('id-ID')}\nMeja: ${this.meja}\nMetode: ${this.paymentMethod}`);
+                    
+                    // Clear cart from localStorage
+                    localStorage.removeItem('cart');
+                    
+                    // Redirect to pesanan saya
+                    window.location.href = '/customer/pesanan-saya';
+                }
             }
         }
     }

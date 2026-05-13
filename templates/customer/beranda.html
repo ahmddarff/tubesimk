@@ -3,49 +3,11 @@
 {% block content %}
 <div class="flex-1 p-8 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
-        <!-- Promo Banner -->
-        <div class="relative bg-gradient-to-r from-terralogBlue via-blue-600 to-blue-700 rounded-3xl overflow-hidden mb-12 shadow-lg">
-            <!-- Wave decoration at bottom -->
-            <div class="absolute bottom-0 left-0 right-0 h-20 bg-white" style="clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);"></div>
-            
-            <div class="relative p-12 flex items-center justify-between min-h-64">
-                <!-- Left Side: Text Content -->
-                <div class="flex-1 z-10 text-white">
-                    <h2 class="text-5xl font-black mb-4 leading-tight">FRI-YAY<br>COMBO!</h2>
-                    <p class="text-blue-100 text-lg mb-8 font-semibold">UNTUK 5 ORANG TERCEPAT</p>
-                    <button class="bg-terralogOrange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl transition-colors text-lg">
-                        Pesan Sekarang!
-                    </button>
-                </div>
-
-                <!-- Right Side: Image & Price -->
-                <div class="flex-1 relative z-10 flex flex-col items-end">
-                    <!-- Placeholder for food image -->
-                    <div class="w-48 h-48 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
-                        <i data-lucide="image" class="w-24 h-24 text-white/50"></i>
-                    </div>
-                    
-                    <!-- Price Badge -->
-                    <div class="text-right">
-                        <div class="text-6xl font-black text-white mb-2">28K</div>
-                        <p class="text-blue-100 text-sm font-semibold">CHICKEN KATSU +<br>LECI SUKASHI / LEMON TEA</p>
-                    </div>
-                </div>
-
-                <!-- Terralog Logo in top right -->
-                <div class="absolute top-8 right-8 z-20">
-                    <div class="bg-white/20 backdrop-blur-sm rounded-full p-4">
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Terralog" class="w-12 h-12 object-contain">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Greeting -->
+        <!-- Greeting Banner -->
         <div class="mb-12">
-            <h3 class="text-4xl font-bold text-gray-800 mb-2">
-                Hai, <span class="text-terralogBlue">Matthew!</span> Mau pesan apa hari ini?
-            </h3>
+            <div class="overflow-hidden rounded-3xl shadow-lg">
+                <img src="{{ url_for('static', filename='images/banner.png') }}" alt="Banner" class="w-full h-auto object-cover">
+            </div>
         </div>
 
         <!-- Kategori Menu -->

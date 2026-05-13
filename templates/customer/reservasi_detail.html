@@ -1,95 +1,130 @@
 {% extends "layouts/layout_customer.html" %}
 
+{% block title %}Reservasi Saat ini - Terralog{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <!-- Breadcrumb -->
-    <div class="mb-8 flex items-center gap-2 text-gray-600">
-        <a href="/customer/buat-reservasi" class="hover:text-terralogBlue">Reservasi Saya</a>
-        <span class="text-gray-400">›</span>
-        <span class="text-gray-800 font-semibold">Detail Reservasi</span>
-    </div>
+<div class="flex-1 p-8 bg-[#F5F7FF]">
+    <div class="max-w-6xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="mb-6 flex items-center gap-2 text-gray-600">
+            <a href="/customer/reservasi-saya" class="text-sm font-medium text-slate-500 hover:text-terralogBlue">Reservasi Saya</a>
+            <span class="text-gray-400">›</span>
+            <span class="text-sm font-semibold text-slate-900">Reservasi Saat ini</span>
+        </div>
 
-    <!-- Header -->
-    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
-        <div class="flex items-start justify-between mb-8">
-            <div>
-                <h1 class="text-4xl font-bold text-gray-800 mb-3">#AB123</h1>
-                <div class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold">
-                    Menunggu
+        <div class="flex justify-between items-start mb-8 gap-8">
+            <!-- Info Card -->
+            <div class="bg-white rounded-[28px] border-2 border-[#D6E4FF] shadow-sm p-8 flex-1">
+                <div class="space-y-6">
+                    <!-- Nama Pemesan -->
+                    <div class="flex justify-between items-center pb-6 border-b border-gray-100">
+                        <p class="text-sm font-semibold text-slate-600">Nama Pemesan</p>
+                        <p class="text-base font-bold text-slate-900">{{ nama }}</p>
+                    </div>
+                    
+                    <!-- No Handphone -->
+                    <div class="flex justify-between items-center pb-6 border-b border-gray-100">
+                        <p class="text-sm font-semibold text-slate-600">No Handphone</p>
+                        <p class="text-base font-bold text-slate-900">{{ nomor }}</p>
+                    </div>
+                    
+                    <!-- Meja -->
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm font-semibold text-slate-600">Meja</p>
+                        <p class="text-base font-bold text-slate-900">{{ meja }}</p>
+                    </div>
                 </div>
             </div>
-            <a href="/customer/buat-reservasi" class="text-gray-600 hover:text-gray-800 text-sm font-semibold">← Kembali</a>
-        </div>
 
-        <!-- Details Grid -->
-        <div class="grid grid-cols-2 gap-8">
-            <!-- Tanggal & Waktu -->
-            <div>
-                <h3 class="text-gray-600 text-sm font-semibold mb-2">Tanggal Reservasi</h3>
-                <p class="text-2xl font-bold text-gray-800 mb-6">06 April 2026</p>
-                
-                <h3 class="text-gray-600 text-sm font-semibold mb-2">Waktu Reservasi</h3>
-                <p class="text-2xl font-bold text-gray-800">15:15 WIB</p>
-            </div>
-
-            <!-- Durasi & Tamu -->
-            <div>
-                <h3 class="text-gray-600 text-sm font-semibold mb-2">Durasi</h3>
-                <p class="text-2xl font-bold text-gray-800 mb-6">2 Jam</p>
-                
-                <h3 class="text-gray-600 text-sm font-semibold mb-2">Jumlah Tamu</h3>
-                <p class="text-2xl font-bold text-gray-800">21 Orang</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Informasi Tamu -->
-    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Informasi Tamu</h2>
-        <div class="grid grid-cols-2 gap-8">
-            <div>
-                <p class="text-gray-600 text-sm mb-2">Nama Pemesan</p>
-                <p class="text-lg font-semibold text-gray-800">Matthew Shen</p>
-            </div>
-            <div>
-                <p class="text-gray-600 text-sm mb-2">Nomor Handphone</p>
-                <p class="text-lg font-semibold text-gray-800">+62 812-3456-7890</p>
-            </div>
-            <div>
-                <p class="text-gray-600 text-sm mb-2">Email</p>
-                <p class="text-lg font-semibold text-gray-800">matthew@email.com</p>
-            </div>
-            <div>
-                <p class="text-gray-600 text-sm mb-2">Kebutuhan Khusus (Opsional)</p>
-                <p class="text-lg font-semibold text-gray-800">-</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Status Reservasi -->
-    <div class="bg-white rounded-2xl shadow-sm p-8 mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">Status Reservasi</h2>
-        <div class="space-y-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                    <i data-lucide="clock" class="w-6 h-6 text-yellow-600"></i>
+            <!-- Status Card -->
+            <div class="text-right">
+                <div class="inline-block mb-6">
+                    <span class="bg-terralogGold text-blue-900 px-8 py-3 rounded-full text-sm font-bold">Dijadwalkan</span>
                 </div>
-                <div>
-                    <p class="font-semibold text-gray-800">Menunggu Konfirmasi</p>
-                    <p class="text-sm text-gray-600">Reservasi sedang menunggu konfirmasi dari pihak restoran</p>
+                <div class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold inline-block">
+                    <p class="text-xs text-gray-300 mb-2">No. Reservasi</p>
+                    <p class="text-2xl">#{{ reservasi_id }}</p>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Action Buttons -->
-    <div class="flex gap-4 mb-12">
-        <a href="/customer/buat-reservasi" class="flex-1 border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-3 rounded-lg transition text-center">
-            Kembali
-        </a>
-        <button onclick="alert('Fitur pembatalan akan segera tersedia'); return false;" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg transition">
-            Batalkan Reservasi
-        </button>
+        <!-- Status Timeline -->
+        <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 mb-8">
+            <div class="flex justify-between items-end">
+                <!-- Reservasi Dijadwalkan -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-terralogGold shadow-lg mb-4">
+                        <i data-lucide="calendar" class="w-8 h-8 text-blue-900"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-900 text-center">Reservasi Dijadwalkan</p>
+                </div>
+
+                <!-- Connector Line -->
+                <div class="flex-1 h-1 bg-gray-200 mx-2 mb-12"></div>
+
+                <!-- Berlangsungan -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 shadow-lg mb-4">
+                        <i data-lucide="clock" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-600 text-center">Berlangsungan</p>
+                </div>
+
+                <!-- Connector Line -->
+                <div class="flex-1 h-1 bg-gray-200 mx-2 mb-12"></div>
+
+                <!-- Reservasi Selesai -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 shadow-lg mb-4">
+                        <i data-lucide="check-circle" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-600 text-center">Reservasi Selesai</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Reservasi -->
+        <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 mb-8">
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Tanggal Reservasi -->
+                <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
+                        <i data-lucide="calendar" class="w-8 h-8 text-terralogBlue"></i>
+                    </div>
+                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Tanggal Reservasi</p>
+                    <p class="text-lg font-bold text-slate-900">{{ tanggal_display }}</p>
+                </div>
+
+                <!-- Waktu Reservasi -->
+                <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
+                        <i data-lucide="clock" class="w-8 h-8 text-terralogBlue"></i>
+                    </div>
+                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Waktu Reservasi</p>
+                    <p class="text-lg font-bold text-slate-900">{{ waktu_display }}</p>
+                </div>
+
+                <!-- Jumlah Tamu -->
+                <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
+                        <i data-lucide="users" class="w-8 h-8 text-terralogBlue"></i>
+                    </div>
+                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Jumlah Tamu</p>
+                    <p class="text-lg font-bold text-slate-900">{{ jumlah_tamu }} Orang</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batalkan Reservasi Button -->
+        <div class="flex justify-center">
+            <button onclick="if(confirm('Apakah Anda yakin ingin membatalkan reservasi ini?')) { alert('Reservasi berhasil dibatalkan'); window.location.href='/customer/reservasi-saya'; }" class="w-full max-w-sm py-4 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg">
+                Batalkan Reservasi
+            </button>
+        </div>
     </div>
 </div>
+
+<script>
+    lucide.createIcons();
+</script>
 {% endblock %}

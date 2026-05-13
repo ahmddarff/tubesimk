@@ -1,4 +1,7 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from datetime import datetime
+import random
+import string
 
 customer_bp = Blueprint('customer', __name__)
 
@@ -108,6 +111,47 @@ def buat_reservasi():
     
     return render_template('customer/buat_reservasi.html', segment='buat_reservasi', role='customer', active_reservations=active_reservations, history_reservations=history_reservations)
 
+@customer_bp.route('/buat-reservasi/submit', methods=['POST'])
+def submit_buat_reservasi():
+    # Get form data
+    tanggal = request.form.get('tanggal')
+    waktu = request.form.get('waktu')
+    jumlah_tamu = request.form.get('jumlah_tamu')
+    meja = request.form.get('meja')
+    
+    # Generate reservation ID
+    reservasi_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    # Format tanggal display
+    if tanggal:
+        date_obj = datetime.strptime(tanggal, '%Y-%m-%d')
+        day_names = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+        month_names = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                       'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+        day_name = day_names[date_obj.weekday()]
+        month_name = month_names[date_obj.month - 1]
+        tanggal_display = f'{date_obj.day:02d} {month_name} {date_obj.year} ({day_name})'
+    
+    # Format waktu display
+    if waktu:
+        try:
+            time_obj = datetime.strptime(waktu, '%H:%M')
+            end_hour = (time_obj.hour + 2) % 24
+            waktu_display = f'{time_obj.strftime("%H:%M")} - {end_hour:02d}:00 WIB'
+        except:
+            waktu_display = waktu
+    
+    return render_template('customer/reservasi_detail.html', 
+                         nama='Matthew Shen',
+                         nomor='08123457890',
+                         meja=meja,
+                         tanggal_display=tanggal_display,
+                         waktu_display=waktu_display,
+                         jumlah_tamu=jumlah_tamu,
+                         reservasi_id=reservasi_id,
+                         segment='buat_reservasi',
+                         role='customer')
+
 @customer_bp.route('/pesanan-saya')
 def pesanan_saya():
     active_orders = [{"id": "AB123", "status": "Hidangkan", "date": "06 April 2026", "time": "15:15 WIB", "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}], "total": 43000}]
@@ -135,9 +179,62 @@ def pesanan_saya():
     ]
     return render_template('customer/pesanan_saya.html', segment='pesanan_saya', role='customer', active_orders=active_orders, history_orders=history_orders)
 
+@customer_bp.route('/pesanan-saya/history')
+def pesanan_history():
+    history_orders = [
+        {
+            "id": "AB098",
+            "status": "Selesai",
+            "date": "14 Februari 2026",
+            "time": "21:48 WIB",
+            "products": [
+                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}
+            ],
+            "total": 38000
+        },
+        {
+            "id": "AB073",
+            "status": "Dibatalkan",
+            "date": "13 Januari 2026",
+            "time": "17:45 WIB",
+            "products": [
+                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 1}
+            ],
+            "total": 18000
+        }
+    ]
+    return render_template('customer/pesanan_history.html', segment='pesanan_saya', role='customer', history_orders=history_orders)
+
 @customer_bp.route('/checkout')
 def checkout():
     return render_template('customer/checkout.html', segment='checkout', role='customer')
+
+@customer_bp.route('/submit-order', methods=['POST'])
+def submit_order():
+    data = request.get_json()
+    
+    # Generate order ID
+    order_id = 'AB' + ''.join(random.choices(string.digits, k=3))
+    
+    # Store order in session
+    if 'orders' not in session:
+        session['orders'] = {}
+    
+    session['orders'][order_id] = {
+        'order_id': order_id,
+        'nama': data.get('nama'),
+        'meja': data.get('meja'),
+        'items': data.get('items'),
+        'paymentMethod': data.get('paymentMethod'),
+        'total': data.get('total'),
+        'subtotal': data.get('subtotal'),
+        'ppn': data.get('ppn'),
+        'created_at': datetime.now().strftime('%d %B %Y %H:%M'),
+        'status': 'Menunggu Pembayaran'
+    }
+    session.modified = True
+    
+    return jsonify({'order_id': order_id, 'success': True})
 
 @customer_bp.route('/profil')
 def profil():
@@ -145,7 +242,24 @@ def profil():
 
 @customer_bp.route('/pesanan/<order_id>')
 def pesanan_detail(order_id):
-    return render_template('customer/pesanan_aktif_detail.html', segment='pesanan_saya', role='customer', order_id=order_id)
+    # Get order from session
+    order = None
+    if 'orders' in session and order_id in session['orders']:
+        order = session['orders'][order_id]
+    
+    return render_template('customer/pesanan_aktif_detail.html', segment='pesanan_saya', role='customer', order=order, order_id=order_id)
+
+@customer_bp.route('/pesanan/<order_id>/selesai')
+def pesanan_selesai(order_id):
+    # Get order from session
+    order = None
+    if 'orders' in session and order_id in session['orders']:
+        order = session['orders'][order_id]
+        # Mark order as completed
+        order['status'] = 'Selesai'
+        session.modified = True
+    
+    return render_template('customer/pesanan_selesai.html', segment='pesanan_saya', role='customer', order=order, order_id=order_id)
 
 @customer_bp.route('/reservasi/new')
 def reservasi_new():

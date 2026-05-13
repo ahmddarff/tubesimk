@@ -1,7 +1,7 @@
 {% extends "layouts/layout_customer.html" %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto" x-data="{ qty: 1, cart: [] }">
+<div class="max-w-6xl mx-auto" x-data="menuDetailApp()">
     <!-- Breadcrumb & Cart Badge -->
     <div class="mb-8 flex items-center justify-between">
         <div class="flex items-center gap-2 text-gray-600 text-sm">
@@ -11,12 +11,12 @@
         </div>
         
         <!-- Cart Badge -->
-        <div class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm">
+        <button @click="goToCheckout()" class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm hover:bg-yellow-500 transition" :disabled="cart.length === 0">
             <span x-text="cart.length">0</span>
             <span>item dipilih</span>
             <span x-text="(cart.reduce((sum, item) => sum + (item.harga * item.qty), 0)).toLocaleString('id-ID')">0</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
-        </div>
+        </button>
     </div>
 
     <div class="grid grid-cols-2 gap-12">
@@ -54,22 +54,22 @@
             <!-- Quantity Selector -->
             <div class="flex items-center gap-3">
                 <div class="flex items-center border-2 border-terralogBlue rounded-lg bg-white w-fit">
-                    <button @click="qty = Math.max(1, qty - 1)" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold">
+                    <button @click="qty = Math.max(1, qty - 1)" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold" type="button">
                         -
                     </button>
                     <input x-model.number="qty" type="number" class="w-12 text-center border-0 focus:outline-none font-bold" min="1">
-                    <button @click="qty += 1" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold">
+                    <button @click="qty += 1" class="px-3 py-2 text-terralogBlue hover:bg-blue-50 transition font-bold" type="button">
                         +
                     </button>
                 </div>
 
                 <!-- Add to Cart Button -->
                 {% if menu.status == 'tersedia' %}
-                    <button @click="cart.push({nama: '{{ menu.nama }}', harga: {{ menu.harga }}, qty: qty}); qty = 1" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm">
+                    <button @click="addToCart()" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm" type="button">
                         Keranjang
                     </button>
                 {% else %}
-                    <button disabled class="flex-1 bg-gray-300 text-gray-600 font-bold py-2 rounded-lg cursor-not-allowed text-sm">
+                    <button disabled class="flex-1 bg-gray-300 text-gray-600 font-bold py-2 rounded-lg cursor-not-allowed text-sm" type="button">
                         Stok Habis
                     </button>
                 {% endif %}
@@ -127,6 +127,41 @@
 </div>
 
 <script>
+    function menuDetailApp() {
+        return {
+            qty: 1,
+            cart: [],
+            
+            addToCart() {
+                // Add item to cart
+                this.cart.push({
+                    nama: '{{ menu.nama }}',
+                    harga: {{ menu.harga }},
+                    qty: this.qty
+                });
+                
+                // Reset quantity
+                this.qty = 1;
+                
+                // Show notification
+                console.log('Item ditambah ke keranjang!');
+            },
+            
+            goToCheckout() {
+                if (this.cart.length === 0) {
+                    alert('Pilih minimal 1 item!');
+                    return;
+                }
+                
+                // Save cart to localStorage
+                localStorage.setItem('cart', JSON.stringify(this.cart));
+                
+                // Redirect to checkout
+                window.location.href = '/customer/checkout';
+            }
+        }
+    }
+
     lucide.createIcons();
 </script>
 {% endblock %}
