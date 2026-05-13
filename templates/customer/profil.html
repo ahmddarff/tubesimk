@@ -3,7 +3,7 @@
 {% block title %}Profil Saya - Terralog{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-8 bg-gray-50">
+<div class="flex-1 p-8 bg-gray-50" x-data="profilApp()">
     <div class="max-w-5xl mx-auto">
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
@@ -11,7 +11,7 @@
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">Profil Saya</h1>
                 <p class="text-gray-600">Kelola informasi dasar akun Anda untuk akses aplikasi.</p>
             </div>
-            <button class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full transition shadow-lg">
+            <button @click="isEditing = true" x-show="!isEditing" class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-full transition shadow-lg">
                 Edit Profil
             </button>
         </div>
@@ -32,36 +32,36 @@
                     <!-- Username -->
                     <div class="mb-6">
                         <label class="text-lg font-bold text-gray-800 block mb-3">Username</label>
-                        <input type="text" value="Matthew Shen" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                        <input type="text" x-model="formData.username" :disabled="!isEditing" :class="isEditing ? 'bg-white' : 'bg-gray-50'" class="w-full border border-gray-300 rounded-lg px-5 py-3 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue transition">
                     </div>
 
                     <!-- Nama Lengkap -->
                     <div class="mb-6">
                         <label class="text-lg font-bold text-gray-800 block mb-3">Nama Lengkap</label>
-                        <input type="text" value="Matthew Shen" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                        <input type="text" x-model="formData.nama_lengkap" :disabled="!isEditing" :class="isEditing ? 'bg-white' : 'bg-gray-50'" class="w-full border border-gray-300 rounded-lg px-5 py-3 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue transition">
                     </div>
 
                     <!-- Email Pribadi -->
                     <div class="mb-6">
                         <label class="text-lg font-bold text-gray-800 block mb-3">Email Pribadi</label>
-                        <input type="email" value="matthewmoo67@gmail.com" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                        <input type="email" x-model="formData.email" :disabled="!isEditing" :class="isEditing ? 'bg-white' : 'bg-gray-50'" class="w-full border border-gray-300 rounded-lg px-5 py-3 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue transition">
                     </div>
 
                     <!-- Nomor Handphone -->
                     <div class="mb-6">
                         <label class="text-lg font-bold text-gray-800 block mb-3">Nomor Handphone</label>
-                        <input type="tel" placeholder="Belum diatur" disabled class="w-full border border-gray-300 rounded-lg px-5 py-3 bg-gray-50 text-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue">
+                        <input type="tel" x-model="formData.nomor_handphone" :disabled="!isEditing" :class="isEditing ? 'bg-white' : 'bg-gray-50'" placeholder="Belum diatur" class="w-full border border-gray-300 rounded-lg px-5 py-3 text-gray-700 text-base focus:outline-none focus:ring-2 focus:ring-terralogBlue transition">
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Action Buttons -->
-        <div class="flex gap-4 justify-center mt-12">
-            <button class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-12 rounded-full transition">
+        <div x-show="isEditing" class="flex gap-4 justify-center mt-12">
+            <button @click="cancelEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-12 rounded-full transition">
                 Batal
             </button>
-            <button class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-12 rounded-full transition">
+            <button @click="saveChanges()" class="bg-terralogBlue hover:bg-blue-800 text-white font-bold py-3 px-12 rounded-full transition">
                 Simpan Perubahan
             </button>
         </div>
@@ -69,6 +69,38 @@
 </div>
 
 <script>
+    function profilApp() {
+        return {
+            isEditing: false,
+            formData: {
+                username: 'Matthew Shen',
+                nama_lengkap: 'Matthew Shen',
+                email: 'matthewmoo67@gmail.com',
+                nomor_handphone: ''
+            },
+            originalData: {
+                username: 'Matthew Shen',
+                nama_lengkap: 'Matthew Shen',
+                email: 'matthewmoo67@gmail.com',
+                nomor_handphone: ''
+            },
+
+            cancelEdit() {
+                // Reset form data to original values
+                this.formData = { ...this.originalData };
+                this.isEditing = false;
+            },
+
+            saveChanges() {
+                // Save the changes (could send to server)
+                this.originalData = { ...this.formData };
+                this.isEditing = false;
+                // Optional: Show success message
+                // alert('Profil berhasil diperbarui!');
+            }
+        };
+    }
+
     lucide.createIcons();
 </script>
 {% endblock %}
