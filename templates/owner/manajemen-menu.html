@@ -42,8 +42,8 @@
                 <th class="px-6 py-4 text-left font-bold text-gray-800 w-[20%]">Nama Menu</th>
                 <th class="px-6 py-4 text-left font-bold text-gray-800 w-[15%]">Kategori</th>
                 <th class="px-6 py-4 text-left font-bold text-gray-800 w-[15%]">Harga</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[15%]">Status</th>
                 <th class="px-6 py-4 text-center font-bold text-gray-800 w-[10%]">Stok</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[15%]">Status</th>
                 <th class="px-6 py-4 text-center font-bold text-gray-800 w-[15%]">Aksi</th>
             </tr>
         </thead>
@@ -66,15 +66,15 @@
                 <td class="px-6 py-4 font-medium text-gray-800">{{ menu.name }}</td>
                 <td class="px-6 py-4 text-gray-500">{{ menu.category.name }}</td>
                 <td class="px-6 py-4 font-bold text-terralogBlue">Rp{{ "{:,.0f}".format(menu.price) }}</td>
+                <td class="px-6 py-4 text-center font-medium">
+                    {{ menu.stock if menu.stock is not none else '-' }}
+                </td>
                 <td class="px-6 py-4 text-center">
                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
                         <input type="checkbox" {% if menu.is_available %}checked{% endif %}
                                onchange="toggleMenuStatus(this, '{{ menu.id }}')">
                         <span class="toggle-slider"></span>
                     </label>
-                </td>
-                <td class="px-6 py-4 text-center font-medium">
-                    {{ menu.stock if menu.stock is not none else '-' }}
                 </td>
                 <td class="px-6 py-4 text-center">
                     <button type="button" 
