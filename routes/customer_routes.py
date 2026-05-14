@@ -1,6 +1,4 @@
-import os
-import random
-import string
+import os, random, string
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,6 +9,10 @@ from models import User, Menu, Category, Order, OrderItem, Table
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
+
+@customer_bp.route('/profil')
+def profil():
+    return render_template('customer/profil.html', segment='profil', role='customer')
 
 # =========================
 # BERANDA & MENU

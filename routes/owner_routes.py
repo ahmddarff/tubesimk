@@ -92,31 +92,50 @@ def pengaturan():
     )
 
 # ── Menu APIs ─────────────────────────────────────────
+# Pastikan folder upload ada
+UPLOAD_FOLDER = 'static/uploads/menu'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
 @login_required
 def tambah_menu():
-    data = request.json
-    # Cari kategori berdasarkan nama yang dikirim dari form
-    category = Category.query.filter_by(name=data.get("kategori")).first()
-    
-    if not category:
-        return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
-
-    new_menu = Menu(
-        name=data.get("nama"),
-        category_id=category.id,
-        price=int(data.get("harga") or 0),
-        description=data.get("deskripsi"),
-        is_available=True
-    )
-    
     try:
-        db.session.add(new_menu)
+        # Karena mengirim file (FormData), gunakan request.form bukan request.json
+        nama = request.form.get('nama')
+        kategori_name = request.form.get('kategori')
+        harga = request.form.get('harga')
+        deskripsi = request.form.get('deskripsi')
+        
+        # Ambil file foto
+        foto = request.files.get('foto')
+        filename = None
+
+        if foto and foto.filename != '':
+            filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{foto.filename}")
+            foto.save(os.path.join(UPLOAD_FOLDER, filename))
+            img_path = f"uploads/menu/{filename}"
+        else:
+            img_path = "uploads/menu/default.png" # Path foto default jika tidak upload
+
+        # Simpan ke Database
+        menu_baru = Menu(
+            name=nama,
+            category_name=kategori_name,
+            price=harga,
+            description=deskripsi,
+            image_url=img_path, # Simpan path-nya
+            is_available=True
+        )
+        
+        db.session.add(menu_baru)
         db.session.commit()
-        return jsonify({"success": True, "message": "Menu baru berhasil ditambahkan!"})
+        
+        return jsonify({"success": True, "message": "Menu berhasil ditambahkan!"})
+    
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": "Gagal menambahkan menu."})
+        return jsonify({"success": False, "message": str(e)})
 
 @owner_bp.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
 @login_required
