@@ -122,8 +122,8 @@ def edit_kategori(id):
     
     nama_baru = request.form.get('nama')
     if not nama_baru:
-         return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
-         
+        return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
+        
     # Cek duplikat dengan nama lain yang sudah ada
     exist = Category.query.filter(Category.name == nama_baru, Category.id != id).first()
     if exist:

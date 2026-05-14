@@ -262,23 +262,39 @@
         </div>
     </div>
 </div>
+
+<div id="modalConfirm" class="modal-overlay hidden fixed inset-0 z-[200] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-sm bg-white rounded-[2rem] p-6 text-center shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 border-4 border-white shadow-sm">
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+        </div>
+        <h3 class="text-2xl font-black text-gray-800 mb-2">Konfirmasi Hapus</h3>
+        <p id="confirmMessage" class="text-sm font-medium text-gray-500 mb-8 px-4">Apakah Anda yakin?</p>
+        
+        <div class="flex gap-3">
+            <button onclick="closeModal('modalConfirm')" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition text-sm">
+                Batal
+            </button>
+            <button id="confirmActionBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition shadow-md text-sm">
+                Ya, Hapus
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 // Fungsi Filter Kategori
 function filterMenu(kategori, btn) {
-    // Reset semua warna tombol ke garis luar (outline)
     document.querySelectorAll('.filter-btn').forEach(b => {
         b.classList.remove('bg-terralogBlue', 'text-white');
         b.classList.add('border-2', 'border-terralogBlue', 'text-terralogBlue');
     });
     
-    // Warnai tombol yang sedang diklik menjadi solid
     btn.classList.add('bg-terralogBlue', 'text-white');
     btn.classList.remove('border-2', 'border-terralogBlue', 'text-terralogBlue');
 
-    // Sembunyikan atau tampilkan baris tabel
     document.querySelectorAll('.menu-row').forEach(row => {
         const rowKat = row.dataset.kategori;
         if (kategori === 'Semua' || rowKat === kategori) {
@@ -293,7 +309,7 @@ function filterMenu(kategori, btn) {
 
 function tambahKategori() {
     const nama = document.getElementById('inputKategoriBaru').value.trim();
-    if (!nama) return alert('Nama kategori tidak boleh kosong!');
+    if (!nama) return showToast('Nama kategori tidak boleh kosong!', 'error');
 
     const formData = new FormData();
     formData.append('nama', nama);
@@ -302,15 +318,14 @@ function tambahKategori() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast(data.message);
+            showToast(data.message, 'success');
             setTimeout(() => location.reload(), 1000);
-        } else { alert(data.message); }
-    });
+        } else { showToast(data.message, 'error'); }
+    }).catch(() => showToast('Gagal menghubungi server', 'error'));
 }
 
-// Fungsi ini dipanggil dari dalam Alpine.js
 function simpanEditKategori(id, namaBaru) {
-    if (!namaBaru.trim()) return alert('Nama kategori tidak boleh kosong!');
+    if (!namaBaru.trim()) return showToast('Nama kategori tidak boleh kosong!', 'error');
     
     const formData = new FormData();
     formData.append('nama', namaBaru);
@@ -319,29 +334,37 @@ function simpanEditKategori(id, namaBaru) {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast(data.message);
+            showToast(data.message, 'success');
             setTimeout(() => location.reload(), 1000);
-        } else { alert(data.message); }
-    });
+        } else { showToast(data.message, 'error'); }
+    }).catch(() => showToast('Gagal menghubungi server', 'error'));
 }
 
 function hapusKategori(id) {
-    if (!confirm('Yakin ingin menghapus kategori ini? Pastikan tidak ada menu yang menggunakannya.')) return;
+    // Gunakan Modal Konfirmasi Custom
+    document.getElementById('confirmMessage').innerText = 'Yakin ingin menghapus kategori ini? Pastikan tidak ada menu yang menggunakannya.';
+    const btn = document.getElementById('confirmActionBtn');
     
-    fetch(`/owner/api/hapus-kategori/${id}`, { method: 'POST' })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message);
-            setTimeout(() => location.reload(), 1000);
-        } else { 
-            // Memunculkan alert error yang ramah (misal karena masih dipakai menu)
-            alert(data.message); 
-        }
-    });
+    btn.onclick = function() {
+        closeModal('modalConfirm'); // Tutup modal konfirmasi
+        
+        fetch(`/owner/api/hapus-kategori/${id}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else { 
+                showToast(data.message, 'error'); 
+            }
+        }).catch(() => showToast('Gagal menghubungi server', 'error'));
+    };
+    
+    openModal('modalConfirm');
 }
 
-// Handler klik edit (Anti VSCode Error)
+// --- JAVASCRIPT MANAJEMEN MENU ---
+
 function handleEditClick(btn) {
     const data = {
         id: btn.getAttribute('data-id'),
@@ -364,14 +387,12 @@ function openEditModal(data) {
     document.getElementById('editDeskripsiMenu').value = data.deskripsi;
     document.getElementById('editStatusMenu').checked = data.status;
 
-    // Reset Alpine data untuk stok via JS manual atau ID
     const hasStockCheck = document.getElementById('editHasStock');
     const stokInput = document.getElementById('editStokMenu');
     
     if (data.stok && data.stok !== '') {
         hasStockCheck.checked = true;
         stokInput.value = data.stok;
-        // Trigger event change agar Alpine.js menyadari perubahan
         hasStockCheck.dispatchEvent(new Event('change'));
     } else {
         hasStockCheck.checked = false;
@@ -379,7 +400,6 @@ function openEditModal(data) {
         hasStockCheck.dispatchEvent(new Event('change'));
     }
 
-    // Logic Gambar Seeder vs Upload
     const preview = document.getElementById('editImagePreview');
     if (data.img) {
         preview.src = data.img.startsWith('http') ? data.img : `/static/${data.img}`;
@@ -409,17 +429,22 @@ function updateMenu() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Menu diperbarui!');
+            showToast('Menu diperbarui!', 'success');
             setTimeout(() => location.reload(), 1000);
-        } else { alert(data.message); }
-    });
+        } else { showToast(data.message, 'error'); }
+    }).catch(() => showToast('Gagal menghubungi server', 'error'));
 }
 
 function simpanMenu() {
+    const nama = document.getElementById('namaMenu').value.trim();
+    const harga = document.getElementById('hargaMenu').value;
+
+    if (!nama || !harga) return showToast('Nama dan Harga wajib diisi!', 'error');
+
     const formData = new FormData();
-    formData.append('nama', document.getElementById('namaMenu').value);
+    formData.append('nama', nama);
     formData.append('kategori', document.getElementById('kategoriMenu').value);
-    formData.append('harga', document.getElementById('hargaMenu').value);
+    formData.append('harga', harga);
     formData.append('deskripsi', document.getElementById('deskripsiMenu').value);
     
     const hasStock = document.getElementById('hasStockTambah').checked;
@@ -432,10 +457,10 @@ function simpanMenu() {
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Menu baru ditambahkan!');
+            showToast('Menu baru ditambahkan!', 'success');
             setTimeout(() => location.reload(), 1000);
-        } else { alert(data.message); }
-    });
+        } else { showToast(data.message, 'error'); }
+    }).catch(() => showToast('Gagal menghubungi server', 'error'));
 }
 
 function previewImage(input, previewId, iconId) {
@@ -457,8 +482,14 @@ function toggleMenuStatus(checkbox, menuId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: checkbox.checked })
     }).then(r => r.json()).then(data => {
-        if (data.success) showToast('Status diperbarui!');
-        else { checkbox.checked = !checkbox.checked; alert(data.message); }
+        if (data.success) showToast('Status diperbarui!', 'success');
+        else { 
+            checkbox.checked = !checkbox.checked; 
+            showToast(data.message, 'error'); 
+        }
+    }).catch(() => {
+        checkbox.checked = !checkbox.checked; 
+        showToast('Gagal menghubungi server', 'error');
     });
 }
 </script>

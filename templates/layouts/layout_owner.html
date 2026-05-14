@@ -58,8 +58,8 @@
 
 <body class="bg-[#F5F7FF] font-sans">
 
-    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 border-green-500 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all">
-        <i class="fa-solid fa-circle-check text-green-500 text-base"></i>
+    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all">
+        <i id="toast-icon" class="fa-solid text-base"></i>
         <span id="toast-message">Berhasil!</span>
     </div>
 
@@ -96,10 +96,25 @@
         });
 
         // Toast Fungsionalitas
-        function showToast(message) {
+        // Toast Fungsionalitas Upgrade
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const msg   = document.getElementById('toast-message');
+            const icon  = document.getElementById('toast-icon');
+
             msg.textContent = message;
+
+            // Reset classes
+            toast.className = 'toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all';
+            
+            if (type === 'success') {
+                toast.classList.add('border-green-500');
+                icon.className = 'fa-solid fa-circle-check text-green-500 text-base';
+            } else if (type === 'error') {
+                toast.classList.add('border-red-500');
+                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-base';
+            }
+
             toast.classList.remove('hide');
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); toast.classList.add('hide'); }, 3500);
