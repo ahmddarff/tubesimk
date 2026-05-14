@@ -48,6 +48,7 @@
                 <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Harga</th>
                 <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Status</th>
                 <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Stok</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Aksi</th>
             </tr>
         </thead>
         <tbody id="menuTableBody">
@@ -64,6 +65,12 @@
                     </label>
                 </td>
                 <td class="px-5 py-4 text-sm font-medium text-gray-800">{{ menu.stock }}</td>
+                <td class="px-5 py-4 text-center">
+                    <button onclick="openEditModal('{{ menu.id }}', '{{ menu.name }}', '{{ menu.category.name }}', '{{ menu.price }}', '{{ menu.stock or '' }}', '{{ menu.description or '' }}', '{{ menu.image_url or '' }}')"
+                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </button>
+                </td>
             </tr>
             {% else %}
             <tr>
@@ -121,6 +128,23 @@
                 </div>
             </div>
 
+            <div class="mb-4" x-data="{ hasStock: false }">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Manajemen Stok</label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" x-model="hasStock" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terralogBlue"></div>
+                        <span class="ml-2 text-xs font-medium text-gray-600" x-text="hasStock ? 'Stok Terbatas' : 'Selalu Tersedia (Dimasak)'"></span>
+                    </label>
+                </div>
+                
+                <div x-show="hasStock" x-transition>
+                    <input type="number" id="stokMenu" placeholder="Jumlah stok awal (contoh: 20)" 
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm">
+                </div>
+                <p class="text-[10px] text-gray-400 mt-1" x-show="!hasStock">*Menu akan selalu tersedia selama bahan baku ada.</p>
+            </div>
+
             <div>
                 <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Deskripsi (Opsional)</label>
                 <textarea id="deskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700" placeholder="Masukkan komposisi atau deskripsi singkat..."></textarea>
@@ -136,6 +160,71 @@
             </button>
         </div>
         
+    </div>
+</div>
+
+<div id="modalEditMenu" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-lg bg-white rounded-[2rem] p-8 shadow-2xl relative">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-black text-gray-800">Edit Menu</h3>
+            <button onclick="closeModal('modalEditMenu')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <input type="hidden" id="editMenuId">
+        <div class="space-y-5">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden border-2 border-gray-200">
+                    <img id="editImagePreview" src="" class="w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <input type="file" id="editFotoMenu" accept="image/*" class="hidden" onchange="previewEditImage(this)">
+                    <button type="button" onclick="document.getElementById('editFotoMenu').click()" class="px-4 py-2 bg-gray-100 rounded-xl text-xs font-bold">Ganti Foto</button>
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
+                    Nama Menu <span class="text-[10px] normal-case font-medium">(Tidak dapat diubah)</span>
+                </label>
+                <input type="text" id="editNamaMenu" readonly
+                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed outline-none text-sm font-bold shadow-inner">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <select id="editKategoriMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+                    {% for kat in categories %}
+                        <option value="{{ kat.name }}">{{ kat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" id="editHargaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Harga">
+            </div>
+
+            <div class="mb-4" x-data="{ hasStock: false }">
+                <label class="flex items-center gap-2 mb-2 cursor-pointer w-fit">
+                    <input type="checkbox" id="hasStockTambah" x-model="hasStock" class="w-4 h-4 rounded border-gray-300 text-terralogBlue focus:ring-terralogBlue">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Gunakan Manajemen Stok</span>
+                </label>
+                
+                <div x-show="hasStock" x-transition class="mt-2">
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase">Jumlah Stok Awal</label>
+                    <input type="number" id="stokMenu" placeholder="Contoh: 50" 
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700">
+                </div>
+                
+                <p class="text-[10px] text-gray-400 mt-1" x-show="!hasStock">
+                    *Menu akan dianggap selalu tersedia (dimasak berdasarkan bahan baku).
+                </p>
+            </div>
+
+            <textarea id="editDeskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Deskripsi"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
+            <button onclick="closeModal('modalEditMenu')" class="px-6 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 text-sm">Batal</button>
+            <button onclick="updateMenu()" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold transition shadow-md text-sm">Simpan Perubahan</button>
+        </div>
     </div>
 </div>
 
@@ -184,32 +273,44 @@ function toggleMenuStatus(checkbox, menuId) {
 }
 
 function simpanMenu() {
-    const nama     = document.getElementById('namaMenu')?.value.trim();
-    const kategori = document.getElementById('kategoriMenu')?.value;
-    const harga    = document.getElementById('hargaMenu')?.value;
-    const deskripsi = document.getElementById('deskripsiMenu')?.value;
+    const nama = document.getElementById('namaMenu').value.trim();
+    const kategori = document.getElementById('kategoriMenu').value;
+    const harga = document.getElementById('hargaMenu').value;
+    const deskripsi = document.getElementById('deskripsiMenu').value;
+    const foto = document.getElementById('fotoMenu').files[0];
+    
+    // Cek apakah checkbox stok dicentang
+    const hasStock = document.getElementById('hasStockTambah').checked;
+    const stokValue = document.getElementById('stokMenu').value;
+    const stok = hasStock ? stokValue : ""; // Kirim kosong jika tidak pakai manajemen stok
 
-    if (!nama) { alert('Nama menu wajib diisi!'); return; }
+    if (!nama || !harga) { 
+        alert('Nama dan Harga wajib diisi!'); 
+        return; 
+    }
+
+    const formData = new FormData();
+    formData.append('nama', nama);
+    formData.append('kategori', kategori);
+    formData.append('harga', harga);
+    formData.append('stok', stok); // Backend akan menerima "" sebagai None/NULL
+    formData.append('deskripsi', deskripsi);
+    if (foto) {
+        formData.append('foto', foto);
+    }
 
     fetch('/owner/api/tambah-menu', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            nama: nama, 
-            kategori: kategori, 
-            harga: harga, 
-            deskripsi: deskripsi 
-        })
-    }).then(r => r.json()).then(data => {
+        body: formData 
+    })
+    .then(r => r.json())
+    .then(data => {
         if (data.success) {
-            // Karena sukses, langsung refresh halaman agar tabel memuat data asli dari DB
-            location.reload(); 
+            showToast('Menu berhasil ditambahkan!');
+            setTimeout(() => location.reload(), 1000);
         } else {
             alert(data.message);
         }
-    }).catch(err => {
-        alert("Terjadi kesalahan pada sistem.");
-        console.error(err);
     });
 }
 
@@ -229,45 +330,67 @@ function previewImage(input) {
     }
 }
 
-// Update fungsi simpanMenu untuk mendukung pengiriman file (FormData)
-function simpanMenu() {
-    const nama = document.getElementById('namaMenu').value.trim();
-    const kategori = document.getElementById('kategoriMenu').value;
-    const harga = document.getElementById('hargaMenu').value;
-    const deskripsi = document.getElementById('deskripsiMenu').value;
-    const foto = document.getElementById('fotoMenu').files[0];
-
-    if (!nama || !harga) { 
-        alert('Nama dan Harga wajib diisi!'); 
-        return; 
+// edit menu
+function openEditModal(id, nama, kategori, harga, stok, deskripsi, imgUrl) {
+    document.getElementById('editMenuId').value = id;
+    document.getElementById('editNamaMenu').value = nama;
+    document.getElementById('editKategoriMenu').value = kategori;
+    document.getElementById('editHargaMenu').value = harga;
+    document.getElementById('editDeskripsiMenu').value = deskripsi;
+    
+    const stokInput = document.getElementById('editStokMenu');
+    const hasStockCheck = document.getElementById('editHasStock');
+    
+    if (stok && stok !== 'None' && stok !== '') {
+        hasStockCheck.checked = true;
+        stokInput.value = stok;
+        // Trigger Alpine.js jika perlu, atau gunakan JS manual untuk show/hide
+    } else {
+        hasStockCheck.checked = false;
+        stokInput.value = '';
     }
 
-    // Gunakan FormData karena kita mengirimkan file
+    const preview = document.getElementById('editImagePreview');
+    preview.src = imgUrl ? `/static/${imgUrl}` : '/static/uploads/menu/default.png';
+
+    openModal('modalEditMenu');
+}
+
+function updateMenu() {
+    const id = document.getElementById('editMenuId').value;
     const formData = new FormData();
-    formData.append('nama', nama);
-    formData.append('kategori', kategori);
-    formData.append('harga', harga);
-    formData.append('deskripsi', deskripsi);
-    if (foto) {
-        formData.append('foto', foto);
-    }
+    formData.append('nama', document.getElementById('editNamaMenu').value);
+    formData.append('kategori', document.getElementById('editKategoriMenu').value);
+    formData.append('harga', document.getElementById('editHargaMenu').value);
+    formData.append('deskripsi', document.getElementById('editDeskripsiMenu').value);
+    
+    const hasStock = document.getElementById('editHasStock').checked;
+    formData.append('stok', hasStock ? document.getElementById('editStokMenu').value : "");
+    
+    const foto = document.getElementById('editFotoMenu').files[0];
+    if (foto) formData.append('foto', foto);
 
-    fetch('/owner/api/tambah-menu', {
+    fetch(`/owner/api/edit-menu/${id}`, {
         method: 'POST',
-        body: formData // Jangan set headers Content-Type manual kalau pakai FormData
+        body: formData
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showToast('Menu berhasil diperbarui!');
+            setTimeout(() => location.reload(), 1000);
         } else {
             alert(data.message);
         }
-    })
-    .catch(err => {
-        console.error(err);
-        alert("Gagal menyimpan menu.");
     });
+}
+
+function previewEditImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => { document.getElementById('editImagePreview').src = e.target.result; };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 </script>
 {% endblock %}
