@@ -49,6 +49,16 @@ def menu_detail(menu_id):
 # RESERVASI
 # =========================
 
+@customer_bp.route('/menu/<int:menu_id>/ulasan')
+def menu_reviews(menu_id):
+    # Mengambil data menu dari basis data berdasarkan ID
+    menu = Menu.query.get_or_404(menu_id)
+    
+    return render_template('customer/menu_reviews.html', 
+                           menu=menu, 
+                           segment='daftar_menu', 
+                           role='customer')
+
 @customer_bp.route('/buat-reservasi')
 def buat_reservasi():
     # Data statis untuk tampilan (dapat diganti query database nantinya)

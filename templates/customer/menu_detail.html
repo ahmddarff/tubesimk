@@ -19,7 +19,8 @@
         </button>
     </div>
 
-    <div class="grid grid-cols-2 gap-12">
+    <!-- Top: Grid Gambar + Info -->
+    <div class="grid grid-cols-2 gap-12 mb-10">
         <!-- Left: Image -->
         <div>
             <div class="bg-terralogBlue rounded-3xl overflow-hidden shadow-lg">
@@ -49,7 +50,9 @@
             </div>
 
             <!-- Sold Info -->
-            <p class="text-gray-600 text-sm">{{ menu.terjual }}RB+ Terjual</p>
+            {% if menu.terjual %}
+                <p class="text-gray-600 text-sm">{{ menu.terjual }}RB+ Terjual</p>
+            {% endif %}
 
             <!-- Deskripsi -->
             <div>
@@ -80,55 +83,76 @@
                     </button>
                 {% endif %}
             </div>
+        </div>
+    </div>
 
-            <!-- Rating & Reviews Section -->
-            <div class="border-t border-gray-200 pt-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-1 bg-terralogBlue text-white px-3 py-1 rounded-lg font-bold text-sm">
-                            <span>★ {{ menu.rating }}</span>
-                        </div>
-                        <span class="text-gray-600 text-sm font-semibold">Ulasan ({{ menu.review_count }}rb ulasan)</span>
+    <!-- Bottom: Ulasan Full Width -->
+    <div class="border-t border-gray-200 pt-6">
+        <!-- Rating Header Row -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                {% if menu.rating %}
+                    <div class="inline-flex items-center gap-1 bg-terralogBlue text-white px-2 py-1 rounded font-bold text-xs">
+                        <span>★ {{ menu.rating }}</span>
                     </div>
-                    <a href="#" class="text-terralogBlue font-bold text-sm hover:underline">Lihat Semua ></a>
-                </div>
-
-                <!-- Reviews List -->
-                {% if menu.reviews %}
-                    <div class="space-y-4">
-                        {% for review in menu.reviews %}
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <div class="flex items-start gap-3 mb-2">
-                                    <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center font-bold text-gray-700 flex-shrink-0">
-                                        {{ review.nama[0].upper() }}
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
-                                            <span class="text-gray-500 text-xs">{{ review.date }}</span>
-                                        </div>
-                                        
-                                        <!-- Rating Stars -->
-                                        <div class="flex gap-0.5 mb-2">
-                                            {% for i in range(5) %}
-                                                {% if i < review.rating %}
-                                                    <span class="text-yellow-400 text-sm">★</span>
-                                                {% else %}
-                                                    <span class="text-gray-300 text-sm">★</span>
-                                                {% endif %}
-                                            {% endfor %}
-                                        </div>
-
-                                        <!-- Review Text -->
-                                        <p class="text-gray-700 text-xs leading-relaxed">{{ review.text }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
+                {% else %}
+                    <div class="inline-flex items-center gap-1 bg-gray-300 text-gray-600 px-2 py-1 rounded font-bold text-xs">
+                        <span>★</span>
                     </div>
                 {% endif %}
+                <span class="text-gray-700 text-sm font-semibold">
+                    Ulasan
+                    {% if menu.review_count %}
+                        ({{ menu.review_count }}rb ulasan)
+                    {% else %}
+                        (belum ada ulasan)
+                    {% endif %}
+                </span>
             </div>
+            <a href="/customer/menu/{{ menu.id }}/ulasan" class="text-terralogBlue font-bold text-xs hover:underline">Lihat Semua ›</a>
         </div>
+
+        <!-- Reviews List -->
+        {% if menu.reviews and menu.reviews|length > 0 %}
+            <div class="grid grid-cols-2 gap-4">
+                {% for review in menu.reviews %}
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                        <div class="flex gap-3">
+                            <!-- Avatar -->
+                            <div class="w-10 h-10 rounded-full bg-terralogBlue flex items-center justify-center font-bold text-white flex-shrink-0 text-sm">
+                                {{ review.nama[0].upper() }}
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <!-- Name and Date -->
+                                <div class="flex items-center justify-between mb-1">
+                                    <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
+                                    <span class="text-gray-400 text-xs">{{ review.date }}</span>
+                                </div>
+                                
+                                <!-- Rating Stars -->
+                                <div class="flex gap-0.5 mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <span class="text-yellow-400 text-sm">★</span>
+                                        {% else %}
+                                            <span class="text-gray-300 text-sm">★</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Review Text -->
+                                <p class="text-gray-700 text-xs leading-relaxed">{{ review.text }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-10 text-gray-400">
+                <p class="text-sm">Belum ada ulasan untuk menu ini.</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 
@@ -139,17 +163,17 @@
             cart: [],
             
             addToCart() {
-                // Add item to cart
-                this.cart.push({
-                    nama: '{{ menu.name }}',
-                    harga: '{{ menu.price }}',
-                    qty: this.qty
-                });
-                
-                // Reset quantity
+                const existingIndex = this.cart.findIndex(item => item.nama === '{{ menu.name }}');
+                if (existingIndex !== -1) {
+                    this.cart[existingIndex].qty += this.qty;
+                } else {
+                    this.cart.push({
+                        nama: '{{ menu.name }}',
+                        harga: {{ menu.price }},
+                        qty: this.qty
+                    });
+                }
                 this.qty = 1;
-                
-                // Show notification
                 console.log('Item ditambah ke keranjang!');
             },
             
@@ -158,11 +182,7 @@
                     alert('Pilih minimal 1 item!');
                     return;
                 }
-                
-                // Save cart to localStorage
                 localStorage.setItem('cart', JSON.stringify(this.cart));
-                
-                // Redirect to checkout
                 window.location.href = '/customer/checkout';
             }
         }
