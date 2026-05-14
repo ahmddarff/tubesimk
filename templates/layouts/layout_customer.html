@@ -13,6 +13,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>[x-cloak] { display: none !important; }</style>
+    <style>
+        .customer-page-shell {
+            padding: 0 !important;
+            box-sizing: border-box;
+            width: 100%;
+        }
+    </style>
     
     <script>
         tailwind.config = {
@@ -44,7 +51,7 @@
                 {% include 'includes/navbar.html' %}
             </header>
 
-            <main class="flex-1 p-8 overflow-x-hidden">
+            <main class="flex-1 p-10 overflow-x-hidden">
                 {% block content %}{% endblock %}
             </main>
             

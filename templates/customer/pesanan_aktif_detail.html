@@ -3,8 +3,8 @@
 {% block title %}Pesanan Aktif - Terralog{% endblock %}
 
 {% block content %}
-<div class="flex-1 p-8 bg-gray-50" x-data="pesananAktifApp()" @load="$watch('items', () => lucide.createIcons())">
-    <div class="max-w-5xl mx-auto">
+<div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="pesananAktifApp()" @load="$watch('items', () => lucide.createIcons())">
+    <div class="max-w-5xl">
         <!-- Breadcrumb -->
         <div class="mb-8 flex items-center gap-2 text-gray-600">
             <a href="/customer/pesanan-saya" class="hover:text-terralogBlue font-semibold">Pesanan Saya</a>

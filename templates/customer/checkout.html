@@ -8,8 +8,8 @@
     // noinspection JSUnusedAssignment
     window.preFilledItems = {{ pre_filled_items|tojson if pre_filled_items else '[]' }};
 </script>
-<div class="flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
-    <div class="max-w-5xl mx-auto">
+<div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
+    <div class="max-w-5xl">
         <!-- Breadcrumb & Summary Header -->
         <div class="mb-8 flex items-center justify-between">
             <div class="flex items-center gap-2 text-gray-600">
