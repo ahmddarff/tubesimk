@@ -1,380 +1,291 @@
 {% extends "layouts/layout_owner.html" %}
-{% block title %}Pengaturan{% endblock %}
-{% block breadcrumb %}Pengaturan{% endblock %}
+{% block title %}Pengaturan Sistem{% endblock %}
 
 {% block content %}
+<div 
+    x-data="{ 
+        activeTab: 'profil-cafe',
+        // State untuk Keamanan
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
 
-<!-- Tab Navigation -->
-<div class="flex gap-0 mb-6 border-b border-gray-200">
-    <button onclick="switchTab('profil-cafe')"
-            id="tab-profil-cafe"
-            class="tab-btn flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-[#1B2FAA] text-[#1B2FAA] -mb-px transition-all">
-        <i class="fa-solid fa-circle-user"></i> Profil Cafe
-    </button>
-    <button onclick="switchTab('akun-saya')"
-            id="tab-akun-saya"
-            class="tab-btn flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 -mb-px hover:text-gray-600 transition-all">
-        <i class="fa-solid fa-shield-halved"></i> Akun Saya
-    </button>
-    <button onclick="switchTab('keamanan')"
-            id="tab-keamanan"
-            class="tab-btn flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-400 -mb-px hover:text-gray-600 transition-all">
-        <i class="fa-solid fa-gear"></i> Keamanan
-    </button>
-</div>
+        savePassword() {
+            if (!this.currentPassword) { alert('Kata sandi saat ini wajib diisi!'); return; }
+            if (this.newPassword.length < 8) { alert('Kata sandi baru minimal 8 karakter!'); return; }
+            if (this.newPassword !== this.confirmPassword) { alert('Konfirmasi password tidak cocok!'); return; }
 
-<!-- ===========================
-     TAB 1: PROFIL CAFE
-     =========================== -->
-<div id="panel-profil-cafe" class="tab-panel">
+            fetch('{{ url_for('owner.update_password') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password_lama: this.currentPassword, 
+                    password_baru: this.newPassword 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    this.currentPassword = '';
+                    this.newPassword = '';
+                    this.confirmPassword = '';
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+    }"
+    x-init="$nextTick(() => lucide.createIcons())"
+    class="min-h-screen"
+>
 
-    <!-- VIEW MODE -->
-    <div id="profilCafeView">
-        <div class="flex justify-end mb-4">
-            <button onclick="toggleProfilCafeEdit(true)"
-                    class="px-5 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                Edit Profil
-            </button>
-        </div>
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Pengaturan Sistem</h1>
+        <p class="text-gray-500 mt-1 text-sm">Kelola profil bisnis dan akun personal Anda secara langsung</p>
+    </div>
 
-        <!-- Logo -->
-        <div class="mb-6">
-            <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#1B2FAA]/20 bg-white flex items-center justify-center">
-                {% if cafe_info.logo %}
-                    <img src="{{ url_for('static', filename='images/' + cafe_info.logo) }}" class="w-full h-full object-cover">
-                {% else %}
-                    <div class="w-full h-full flex items-center justify-center bg-blue-50">
-                        <svg viewBox="0 0 120 120" class="w-28 h-28" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="60" cy="60" r="58" fill="white" stroke="#1B2FAA" stroke-width="2"/>
-                            <text x="60" y="52" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="#1B2FAA">terralog</text>
-                            <text x="60" y="64" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#1B2FAA" letter-spacing="1">COFFEE N EATERY</text>
-                            <g transform="translate(20,70)" opacity="0.7">
-                                <rect x="0" y="15" width="80" height="25" rx="5" fill="#1B2FAA" opacity="0.15"/>
-                                <circle cx="20" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
-                                <circle cx="40" cy="13" r="10" fill="#1B2FAA" opacity="0.3"/>
-                                <circle cx="60" cy="15" r="10" fill="#1B2FAA" opacity="0.3"/>
-                            </g>
-                        </svg>
+    <div class="flex flex-wrap gap-3 mb-6">
+        <button @click="activeTab = 'profil-cafe'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'profil-cafe' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
+            <i data-lucide="coffee" class="w-4 h-4"></i> Profil Cafe
+        </button>
+
+        <button @click="activeTab = 'akun-saya'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'akun-saya' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
+            <i data-lucide="user" class="w-4 h-4"></i> Akun Saya
+        </button>
+
+        <button @click="activeTab = 'keamanan'; $nextTick(() => lucide.createIcons())"
+            :class="activeTab === 'keamanan' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
+            <i data-lucide="shield-check" class="w-4 h-4"></i> Keamanan
+        </button>
+    </div>
+
+    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+        <div x-show="activeTab === 'profil-cafe'" x-transition x-cloak>
+            <div class="flex flex-col md:flex-row md:items-center gap-8 mb-10 pb-8 border-b border-gray-50">
+                <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50 bg-white flex items-center justify-center relative group flex-none shadow-sm">
+                    {% if cafe_info and cafe_info.logo %}
+                        <img id="logoPreview" src="{{ url_for('static', filename='images/' + cafe_info.logo) }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div id="logoPlaceholder" class="w-full h-full flex items-center justify-center bg-blue-50 text-terralogBlue font-black text-xs">LOGO</div>
+                    {% endif %}
+                    
+                    <input type="file" id="inputLogo" class="hidden" accept="image/*" onchange="uploadLogo(this)">
+                    
+                    <div onclick="document.getElementById('inputLogo').click()" 
+                        class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer">
+                        <i data-lucide="camera" class="w-6 h-6 text-white"></i>
                     </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Info -->
-        <div class="flex flex-col gap-5 max-w-2xl">
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nama Cafe</p>
-                <p class="text-sm text-gray-600" id="viewNamaCafe">{{ cafe_info.cafe_name or 'Belum diatur' }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nomor Telepon</p>
-                <p class="text-sm text-gray-600" id="viewNoTelp">{{ cafe_info.phone or '-' }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Alamat Lengkap</p>
-                <p class="text-sm text-gray-600" id="viewAlamat">{{ cafe_info.address or '-' }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Email Bisnis</p>
-                <p class="text-sm text-gray-600" id="viewEmail">{{ cafe_info.email or '-' }}</p>
-            </div>
-        </div>
-
-        <!-- Jam Operasional -->
-        <div class="mt-8 max-w-2xl">
-            <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100">
-                    <h3 class="text-sm font-bold text-[#1B2FAA]">Jam Operasional Cafe</h3>
                 </div>
-                <table class="w-full text-sm border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-100 bg-gray-50/50">
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Hari</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Status</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Jam Buka</th>
-                            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500">Jam Tutup</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for hari in jam_operasional %}
-                        <tr class="border-b border-gray-100 last:border-0 hover:bg-blue-50/20 transition-colors">
-                            <td class="px-5 py-3.5 text-gray-800 font-medium">{{ hari.day_of_week }}</td>
-                            <td class="px-5 py-3.5">
-                                <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                                    <input type="checkbox" {% if hari.is_open %}checked{% endif %}
-                                           onchange="toggleHari(this, '{{ hari.day_of_week }}')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                            </td>
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-1.5 text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus-within:border-[#1B2FAA]">
-                                    <input type="time" 
-                                        value="{{ hari.open_time.strftime('%H:%M') if hari.open_time else '00:00' }}"
-                                        onchange="updateWaktu('{{ hari.day_of_week }}', 'buka', this.value)"
-                                        class="bg-transparent border-none outline-none text-sm cursor-pointer w-[75px]">
-                                </div>
-                            </td>
 
-                            <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-1.5 text-gray-700 border border-gray-200 rounded-lg px-2 py-1 bg-white focus-within:border-[#1B2FAA]">
-                                    <input type="time" 
-                                        value="{{ hari.close_time.strftime('%H:%M') if hari.close_time else '00:00' }}"
-                                        onchange="updateWaktu('{{ hari.day_of_week }}', 'tutup', this.value)"
-                                        class="bg-transparent border-none outline-none text-sm cursor-pointer w-[75px]">
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- EDIT MODE -->
-    <div id="profilCafeEdit" class="hidden">
-        <!-- Logo with upload -->
-        <div class="mb-6">
-            <div class="relative w-32 h-32 cursor-pointer group" onclick="document.getElementById('uploadLogo').click()">
-                <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-[#1B2FAA]/20 bg-blue-50 flex items-center justify-center">
-                    <svg viewBox="0 0 120 120" class="w-28 h-28" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="60" cy="60" r="58" fill="white" stroke="#1B2FAA" stroke-width="2"/>
-                        <text x="60" y="52" text-anchor="middle" font-family="Syne,sans-serif" font-weight="800" font-size="16" fill="#1B2FAA">terralog</text>
-                        <text x="60" y="64" text-anchor="middle" font-family="sans-serif" font-size="7" fill="#1B2FAA" letter-spacing="1">COFFEE N EATERY</text>
-                    </svg>
-                </div>
-                <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <i class="fa-solid fa-camera text-white text-xl"></i>
+                <div class="flex-1">
+                    <h3 class="text-3xl font-black text-gray-800 tracking-tight mb-3">
+                        {{ cafe_info.cafe_name if cafe_info else 'Terralog Coffee' }}
+                    </h3>
+                    
+                    <div class="flex items-center gap-3 bg-blue-50 w-fit px-4 py-2.5 rounded-2xl border border-blue-100">
+                        <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Status Bisnis:</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black text-gray-400">OFF</span>
+                            <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                                <input type="checkbox" id="cafeStatus" 
+                                    {% if cafe_info.is_open %}checked{% endif %} 
+                                    onchange="updateStatusCafe(this)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="text-[10px] font-black text-terralogBlue">ON</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <input type="file" id="uploadLogo" accept="image/*" class="hidden">
-        </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Cafe</label>
+                    <input id="editNamaCafe" type="text" value="{{ cafe_info.cafe_name if cafe_info else '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                </div>
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Nomor Telepon</label>
+                    <input id="editNoTelp" type="text" value="{{ cafe_info.phone if cafe_info else '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                </div>
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Email Bisnis</label>
+                    <input id="editEmailCafe" type="email" value="{{ cafe_info.email if cafe_info else '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                </div>
+                <div> <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</label>
+                    <textarea id="editAlamat" rows="1" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">{{ cafe_info.address if cafe_info else '' }}</textarea>
+                </div>
+            </div>
 
-        <div class="flex flex-col gap-4 max-w-2xl">
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nama Cafe</label>
-                <input type="text" id="editNamaCafe" value="{{ cafe_info.cafe_name or 'Belum diatur' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nomor Telepon</label>
-                <input type="text" id="editNoTelp" value="{{ cafe_info.phone or '-' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Alamat Lengkap</label>
-                <input type="text" id="editAlamat" value="{{ cafe_info.address or '-' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Email Bisnis</label>
-                <input type="email" id="editEmailCafe" value="{{ cafe_info.email or '-' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors w-full">
-            </div>
-            <div class="flex justify-end gap-3 mt-2">
-                <button onclick="toggleProfilCafeEdit(false)"
-                        class="px-6 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                    Batal
-                </button>
-                <button onclick="simpanProfilCafe()"
-                        class="px-6 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:shadow-lg transition-all">
-                    Simpan Perubahan
+            <div class="flex justify-end mt-12 pt-6 border-t border-gray-50">
+                <button type="button" onclick="simpanProfilCafe()" class="px-10 py-4 bg-terralogBlue hover:bg-blue-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-lg active:scale-95">
+                    Simpan Perubahan Cafe
                 </button>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- ===========================
-     TAB 2: AKUN SAYA
-     =========================== -->
-<div id="panel-akun-saya" class="tab-panel hidden">
-
-    <div id="akunSayaView">
-        <div class="flex items-start justify-between mb-6">
-            <div>
-                <h3 class="text-base font-bold text-[#1B2FAA]">Informasi Pribadi</h3>
-                <p class="text-xs text-gray-400 mt-0.5">Kelola informasi dasar akun Anda untuk akses aplikasi.</p>
-            </div>
-            <button onclick="toggleAkunEdit(true)"
-                    class="px-5 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                Edit Profil
-            </button>
-        </div>
-
-        <div class="mb-6">
-            <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-200 bg-gray-100">
-                <div class="w-full h-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
-                    <i class="fa-solid fa-user text-4xl text-white"></i>
+            <div class="mt-10 border-t border-gray-50 pt-8">
+                <h4 class="text-sm font-bold text-terralogBlue mb-4">Jadwal Operasional</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="text-gray-400 border-b border-gray-100">
+                            <tr>
+                                <th class="text-left py-3 font-bold uppercase tracking-tighter text-[10px]">Hari</th>
+                                <th class="text-left py-3 font-bold uppercase tracking-tighter text-[10px]">Status</th>
+                                <th class="text-left py-3 font-bold uppercase tracking-tighter text-[10px]">Buka</th>
+                                <th class="text-left py-3 font-bold uppercase tracking-tighter text-[10px]">Tutup</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hari in jam_operasional %}
+                            <tr class="border-b border-gray-50 last:border-0">
+                                <td class="py-4 font-bold text-gray-700">{{ hari.day_of_week }}</td>
+                                <td class="py-4">
+                                    <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                                        <input type="checkbox" {% if hari.is_open %}checked{% endif %} onchange="toggleHari(this, '{{ hari.day_of_week }}')">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </td>
+                                <td class="py-4">
+                                    <input type="time" value="{{ hari.open_time.strftime('%H:%M') if hari.open_time else '00:00' }}" onchange="updateWaktu('{{ hari.day_of_week }}', 'buka', this.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
+                                </td>
+                                <td class="py-4">
+                                    <input type="time" value="{{ hari.close_time.strftime('%H:%M') if hari.close_time else '00:00' }}" onchange="updateWaktu('{{ hari.day_of_week }}', 'tutup', this.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-x-12 gap-y-5 max-w-2xl">
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nama Lengkap</p>
-                <p class="text-sm text-gray-600" id="viewNamaLengkap">{{ current_user.name }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nama Panggilan (Username)</p>
-                <p class="text-sm text-gray-600" id="viewNamaPanggilan">{{ current_user.username }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Email Pribadi</p>
-                <p class="text-sm text-gray-600" id="viewEmailPribadi">{{ current_user.email or '-' }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Nomor Handphone</p>
-                <p class="text-sm text-gray-600" id="viewNoHpAkun">{{ current_user.phone or '-' }}</p>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-gray-800 mb-1">Jabatan (Role)</p>
-                <p class="text-sm text-gray-400" id="viewJabatan">{{ current_user.role | capitalize }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="akunSayaEdit" class="hidden">
-        <div class="mb-2">
-            <h3 class="text-base font-bold text-[#1B2FAA]">Informasi Pribadi</h3>
-            <p class="text-xs text-gray-400 mt-0.5">Kelola informasi dasar akun Anda untuk akses aplikasi.</p>
-        </div>
-
-        <div class="relative w-28 h-28 cursor-pointer group mb-6" onclick="document.getElementById('uploadAvatar').click()">
-            <div class="w-28 h-28 rounded-full overflow-hidden border-4 border-gray-200 bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center">
-                <i class="fa-solid fa-user text-4xl text-white"></i>
-            </div>
-            <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <i class="fa-solid fa-camera-retro text-white text-xl"></i>
-            </div>
-            <input type="file" id="uploadAvatar" accept="image/*" class="hidden">
-        </div>
-
-        <div class="grid grid-cols-2 gap-4 max-w-2xl">
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nama Lengkap</label>
-                <input type="text" id="editNamaLengkapAkun" value="{{ current_user.name }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nama Panggilan (Username)</label>
-                <input type="text" id="editNamaPanggilan" value="{{ current_user.username }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Email Pribadi</label>
-                <input type="email" id="editEmailPribadi" value="{{ current_user.email or '' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Nomor Handphone</label>
-                <input type="text" id="editNoHpAkun" value="{{ current_user.phone or '' }}"
-                       class="px-4 py-2.5 bg-blue-50/50 border border-blue-100 rounded-xl text-sm outline-none focus:border-[#1B2FAA] transition-colors">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-bold text-gray-800">Jabatan (Role)</label>
-                <input type="text" id="editJabatanAkun" value="{{ current_user.role | capitalize }}" disabled
-                       class="px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-400 cursor-not-allowed">
-            </div>
-        </div>
-
-        <div class="flex justify-end gap-3 mt-5 max-w-2xl">
-            <button onclick="toggleAkunEdit(false)"
-                    class="px-6 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                Batal
-            </button>
-            <button onclick="simpanAkunSaya()"
-                    class="px-6 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:shadow-lg transition-all">
-                Simpan Perubahan
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- ===========================
-     TAB 3: KEAMANAN
-     =========================== -->
-<div id="panel-keamanan" class="tab-panel hidden">
-    <div class="max-w-sm">
-        <h3 class="text-base font-bold text-[#1B2FAA] mb-5">Ubah Kata Sandi</h3>
-
-        <div class="flex flex-col gap-4">
-            <!-- Kata Sandi Saat Ini -->
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-gray-800">Kata Sandi Saat Ini</label>
-                <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                    <input type="password" id="passSaatIni" placeholder="Masukkan kata sandi"
-                           class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                    <button type="button" onclick="togglePassword('passSaatIni', this)"
-                            class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                        <i class="fa-regular fa-eye"></i>
+        <div x-show="activeTab === 'akun-saya'" x-transition x-cloak>
+            <div class="flex flex-col md:flex-row md:items-center gap-6 pb-8 border-b border-gray-100 mb-8">
+                <div class="relative group">
+                    <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-xl uppercase border-4 border-blue-50 overflow-hidden">
+                        {% if current_user.photo %}
+                            <img id="userPhotoPreview" src="{{ url_for('static', filename='images/' + current_user.photo) }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <span id="userInitial">{{ current_user.name[:2] }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <input type="file" id="inputFotoAkun" class="hidden" accept="image/*" onchange="uploadFotoAkun(this)">
+                    
+                    <button onclick="document.getElementById('inputFotoAkun').click()" 
+                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300">
+                        <i data-lucide="camera" class="w-6 h-6 text-white"></i>
                     </button>
                 </div>
-            </div>
-
-            <!-- Kata Sandi Baru -->
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-gray-800">Kata Sandi Baru</label>
-                <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                    <input type="password" id="passBaru" placeholder="Masukkan kata sandi"
-                           class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                    <button type="button" onclick="togglePassword('passBaru', this)"
-                            class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                        <i class="fa-regular fa-eye"></i>
-                    </button>
+                
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">{{ current_user.name }}</h2>
+                    <p class="text-terralogBlue font-bold text-sm tracking-widest uppercase mt-1">Pemilik Utama (Owner)</p>
                 </div>
             </div>
 
-            <!-- Konfirmasi Kata Sandi Baru -->
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-gray-800">Konfirmasi Kata Sandi Baru</label>
-                <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                    <input type="password" id="passKonfirmasi" placeholder="Masukkan kata sandi"
-                           class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                    <button type="button" onclick="togglePassword('passKonfirmasi', this)"
-                            class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                        <i class="fa-regular fa-eye"></i>
+            <form @submit.prevent>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Nama Lengkap</label>
+                        <input id="editNamaLengkapAkun" type="text" value="{{ current_user.name }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Username</label>
+                        <input id="editNamaPanggilan" type="text" value="{{ current_user.username }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Email Pribadi</label>
+                        <input id="editEmailPribadi" type="email" value="{{ current_user.email or '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">No. Handphone</label>
+                        <input id="editNoHpAkun" type="text" value="{{ current_user.phone or '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
+                    </div>
+                </div>
+                <div class="flex justify-end mt-12">
+                    <button type="button" onclick="simpanAkunSaya()" class="px-10 py-4 bg-terralogBlue hover:bg-blue-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition shadow-lg active:scale-95">
+                        Simpan Akun
                     </button>
                 </div>
-            </div>
+            </form>
+        </div>
 
-            <p class="text-xs text-gray-400">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
+        <div x-show="activeTab === 'keamanan'" x-transition x-cloak>
+            <div class="max-w-md">
+                <h3 class="text-lg font-bold text-gray-800 mb-2">Keamanan Akun</h3>
+                <p class="text-sm text-gray-400 mb-8 leading-relaxed">Perbarui kata sandi secara berkala untuk menjaga keamanan akses dashboard Owner.</p>
 
-            <div class="flex justify-end mt-1">
-                <button onclick="perbaruiKataSandi()"
-                        class="px-6 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                    Perbarui Kata Sandi
-                </button>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Kata Sandi Saat Ini</label>
+                        <input type="password" x-model="currentPassword" placeholder="Masukkan kata sandi lama" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold shadow-sm">
+                    </div>
+                    <div class="grid grid-cols-1 gap-5">
+                        <div>
+                            <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Kata Sandi Baru</label>
+                            <input type="password" x-model="newPassword" placeholder="Minimal 8 karakter" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Konfirmasi Password Baru</label>
+                            <input type="password" x-model="confirmPassword" placeholder="Ulangi kata sandi baru" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold shadow-sm">
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <button @click="savePassword()" class="w-full py-4 bg-terralogBlue hover:bg-blue-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg transition active:scale-95">
+                            Perbarui Kata Sandi
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// ── Tab Switching ──────────────────────────────────────
-function switchTab(tabId) {
-    // Hide all panels
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-    // Deactivate all tab buttons
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('border-[#1B2FAA]', 'text-[#1B2FAA]');
-        b.classList.add('border-transparent', 'text-gray-400');
-    });
-    // Show selected panel
-    document.getElementById(`panel-${tabId}`).classList.remove('hidden');
-    // Activate selected tab button
-    const activeBtn = document.getElementById(`tab-${tabId}`);
-    activeBtn.classList.add('border-[#1B2FAA]', 'text-[#1B2FAA]');
-    activeBtn.classList.remove('border-transparent', 'text-gray-400');
-}
+// ── Fungsi Profil Cafe ────────────────────────────────────────
+function uploadLogo(input) {
+    if (!input.files || !input.files[0]) return;
 
-// ── Profil Cafe ────────────────────────────────────────
-function toggleProfilCafeEdit(show) {
-    document.getElementById('profilCafeView').classList.toggle('hidden', show);
-    document.getElementById('profilCafeEdit').classList.toggle('hidden', !show);
+    const formData = new FormData();
+    formData.append('logo', input.files[0]);
+
+    fetch('/owner/api/update-logo-cafe', {
+        method: 'POST',
+        body: formData // Gunakan FormData untuk mengirim file
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            // Update preview gambar secara instan tanpa reload
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('logoPreview');
+                if (img) {
+                    img.src = e.target.result;
+                } else {
+                    // Jika sebelumnya cuma placeholder, ganti jadi tag img
+                    location.reload(); 
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengunggah logo');
+    });
 }
 
 function simpanProfilCafe() {
@@ -391,21 +302,59 @@ function simpanProfilCafe() {
         body: JSON.stringify({ nama, telp, alamat, email })
     }).then(r => r.json()).then(data => {
         if (data.success) {
-            // Update view values
-            document.getElementById('viewNamaCafe').textContent  = nama;
-            document.getElementById('viewNoTelp').textContent    = telp;
-            document.getElementById('viewAlamat').textContent    = alamat;
-            document.getElementById('viewEmail').textContent     = email;
-            toggleProfilCafeEdit(false);
             showToast('Profil cafe berhasil diperbarui!');
+        } else {
+            alert(data.message || 'Gagal menyimpan profil cafe.');
         }
     });
 }
 
-// ── Akun Saya ─────────────────────────────────────────
-function toggleAkunEdit(show) {
-    document.getElementById('akunSayaView').classList.toggle('hidden', show);
-    document.getElementById('akunSayaEdit').classList.toggle('hidden', !show);
+function updateStatusCafe(checkbox) {
+    fetch('/owner/api/toggle-cafe-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: checkbox.checked })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+        } else {
+            alert(data.message || 'Gagal memperbarui status.');
+            checkbox.checked = !checkbox.checked; // Kembalikan posisi jika gagal
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        checkbox.checked = !checkbox.checked;
+    });
+}
+
+// ── Fungsi Akun Saya ─────────────────────────────────────────
+function uploadFotoAkun(input) {
+    if (!input.files || !input.files[0]) return;
+
+    const formData = new FormData();
+    formData.append('foto', input.files[0]);
+
+    fetch('/owner/api/update-foto-akun', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            // Reload halaman untuk memperbarui foto di navbar juga
+            setTimeout(() => { location.reload(); }, 1000);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Terjadi kesalahan saat mengunggah foto profil');
+    });
 }
 
 function simpanAkunSaya() {
@@ -423,71 +372,50 @@ function simpanAkunSaya() {
         body: JSON.stringify({ nama: nama, username: username, email: email, no_hp: noHp })
     }).then(r => r.json()).then(data => {
         if (data.success) {
-            document.getElementById('viewNamaLengkap').textContent  = nama;
-            document.getElementById('viewNamaPanggilan').textContent = username;
-            document.getElementById('viewEmailPribadi').textContent  = email || '-';
-            document.getElementById('viewNoHpAkun').textContent      = noHp || '-';
-            toggleAkunEdit(false);
-            showToast('Akun berhasil diperbarui!');
+            showToast('Informasi akun berhasil diperbarui!');
+            setTimeout(() => { location.reload(); }, 1000);
         } else {
-            alert(data.message || 'Gagal memperbarui profil.');
-        }
-    }).catch(error => {
-        alert('Terjadi kesalahan pada sistem, silakan coba lagi.');
-        console.error(error);
-    });
-}
-
-// ── Keamanan ──────────────────────────────────────────
-function perbaruiKataSandi() {
-    const saatIni    = document.getElementById('passSaatIni').value;
-    const baru       = document.getElementById('passBaru').value;
-    const konfirmasi = document.getElementById('passKonfirmasi').value;
-
-    if (!saatIni)              { alert('Kata sandi saat ini wajib diisi!'); return; }
-    if (baru.length < 8)       { alert('Kata sandi baru minimal 8 karakter!'); return; }
-    if (baru !== konfirmasi)   { alert('Konfirmasi kata sandi tidak cocok!'); return; }
-
-    fetch('/owner/api/update-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password_lama: saatIni, password_baru: baru })
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            document.getElementById('passSaatIni').value    = '';
-            document.getElementById('passBaru').value       = '';
-            document.getElementById('passKonfirmasi').value = '';
-            showToast('Kata sandi berhasil diperbarui!');
-        } else {
-            alert(data.message || 'Gagal memperbarui kata sandi.');
+            alert(data.message || 'Gagal memperbarui akun.');
         }
     });
 }
 
-// ── Jam Operasional Toggle ────────────────────────────
+// ── Fungsi Operasional ────────────────────────────────────
 function toggleHari(checkbox, namaHari) {
+    // Mengirim data ke route /owner/api/toggle-jam-operasional
     fetch('/owner/api/toggle-jam-operasional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hari: namaHari, buka: checkbox.checked })
-    }).then(r => r.json()).then(data => {
-        if (data.success) showToast(`Jadwal ${namaHari} diperbarui!`);
+        body: JSON.stringify({ 
+            hari: namaHari, 
+            buka: checkbox.checked // Nilai True jika dicentang, False jika tidak
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(`Jadwal hari ${namaHari} berhasil diperbarui!`);
+        } else {
+            alert(data.message || 'Gagal memperbarui status hari.');
+            // Kembalikan posisi checkbox jika gagal
+            checkbox.checked = !checkbox.checked;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        alert('Terjadi kesalahan koneksi.');
+        checkbox.checked = !checkbox.checked;
     });
 }
 
 function updateWaktu(namaHari, jenisWaktu, nilaiWaktu) {
-    if (!nilaiWaktu) return; // Mencegah error jika input kosong
-    
+    if (!nilaiWaktu) return; 
     fetch('/owner/api/update-waktu-operasional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hari: namaHari, jenis: jenisWaktu, waktu: nilaiWaktu })
     }).then(r => r.json()).then(data => {
-        if (data.success) {
-            showToast(`Jam ${jenisWaktu} hari ${namaHari} berhasil diubah!`);
-        } else {
-            alert(data.message || 'Gagal menyimpan jam operasional.');
-        }
+        if (data.success) showToast(`Jam ${jenisWaktu} ${namaHari} disimpan!`);
     });
 }
 </script>

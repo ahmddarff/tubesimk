@@ -19,13 +19,14 @@
         [x-cloak] { display: none !important; }
         body { font-family: 'Inter', sans-serif; }
 
-        /* Pertahankan CSS Toggle dan Animasi Temanmu */
+        /* Style Toggle Switch (Masih dipakai di Pengaturan) */
         .toggle-switch input { display: none; }
         .toggle-slider { position: absolute; inset: 0; background: #CBD5E0; border-radius: 50px; transition: 0.3s; }
         .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         .toggle-switch input:checked + .toggle-slider { background: #0022AA; }
         .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
 
+        /* Animasi Modal & Toast */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
@@ -47,7 +48,6 @@
                         terralogGold: '#F2C94C',
                         terralogOrange: '#E99817',
                         terralogPeach: '#F7E190',
-                        brand: { dark: '#0022AA', mid: '#1E3ACC', light: '#2B47E8' } // Bridge untuk kode lama
                     }
                 }
             }
@@ -64,7 +64,7 @@
     </div>
 
     <div class="min-h-screen flex">
-        <aside class="fixed left-0 top-0 w-72 h-screen z-40">
+        <aside class="fixed left-0 top-0 w-72 h-screen z-40 shadow-lg">
             {% include 'includes/sidebar.html' %}
         </aside>
 
@@ -74,25 +74,6 @@
             </header>
 
             <main class="flex-1 p-8 overflow-x-hidden">
-                <div class="flex items-center justify-between py-4 mb-2">
-                    <div class="flex items-center gap-2 text-sm font-semibold text-gray-800">
-                        <i data-lucide="chevron-right" class="w-4 h-4 text-terralogBlue"></i>
-                        <span>{% block breadcrumb %}Dashboard{% endblock %}</span>
-                    </div>
-                    <div class="flex flex-col items-end gap-1">
-                        <span class="text-[0.7rem] text-gray-400">Jadwal hari ini: 09:00 – 22:00</span>
-                        <div class="flex items-center gap-2 text-sm font-medium text-gray-500">
-                            <span>Status Cafe</span>
-                            <span class="text-xs font-semibold text-gray-400">OFF</span>
-                            <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                                <input type="checkbox" id="cafeStatus" checked>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <span class="text-xs font-semibold text-terralogBlue">ON</span>
-                        </div>
-                    </div>
-                </div>
-
                 {% block content %}{% endblock %}
             </main>
         </div>
@@ -101,7 +82,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
         
-        // Modal Logic
+        // Modal Fungsionalitas
         function openModal(id) {
             const el = document.getElementById(id);
             if(el) { el.classList.remove('hidden'); el.classList.add('active'); }
@@ -114,7 +95,7 @@
             overlay.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
         });
 
-        // Toast Logic
+        // Toast Fungsionalitas
         function showToast(message) {
             const toast = document.getElementById('toast');
             const msg   = document.getElementById('toast-message');

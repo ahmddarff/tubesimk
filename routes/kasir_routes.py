@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from models import Menu
 from extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 kasir_bp = Blueprint('kasir', __name__)
 
@@ -165,3 +166,24 @@ def pengaturan():
         role='kasir',
         user=current_user
     )
+
+@kasir_bp.route('/api/update-password', methods=['POST'])
+@login_required
+def update_password():
+    data = request.json
+    password_lama = data.get("password_lama")
+    password_baru = data.get("password_baru")
+    
+    # Verifikasi kata sandi saat ini
+    if not check_password_hash(current_user.password, password_lama):
+        return jsonify({"success": False, "message": "Kata sandi saat ini salah!"})
+    
+    # Enkripsi dan simpan kata sandi baru
+    current_user.password = generate_password_hash(password_baru)
+    
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})

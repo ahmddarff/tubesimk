@@ -1,9 +1,11 @@
+import os
 from datetime import datetime
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user 
 from models import User, CafeSetting, OperationalHour, Menu, Category
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 owner_bp = Blueprint('owner', __name__)
 
@@ -164,6 +166,87 @@ def edit_kasir(kasir_id):
     return jsonify({"success": True, "message": "Profil staf berhasil diedit!"})
 
 # ── Pengaturan APIs ───────────────────────────────────
+@owner_bp.route('/api/update-logo-cafe', methods=['POST'])
+@login_required
+def update_logo_cafe():
+    if 'logo' not in request.files:
+        return jsonify({"success": False, "message": "Tidak ada file yang diunggah"})
+    
+    file = request.files['logo']
+    if file.filename == '':
+        return jsonify({"success": False, "message": "Nama file kosong"})
+
+    if file:
+        cafe = CafeSetting.query.first()
+        if not cafe:
+            return jsonify({"success": False, "message": "Data cafe tidak ditemukan"})
+
+        # 1. Hapus foto lama jika ada
+        if cafe.logo:
+            old_path = os.path.join(current_app.root_path, 'static/images', cafe.logo)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except Exception as e:
+                    print(f"Gagal menghapus foto lama: {e}")
+
+        # 2. Simpan foto baru
+        filename = secure_filename(file.filename)
+        # Opsional: tambahkan timestamp agar nama unik dan menghindari cache browser
+        unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        
+        file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
+        file.save(file_path)
+
+        # 3. Update database
+        cafe.logo = unique_filename
+        db.session.commit()
+        
+        return jsonify({
+            "success": True, 
+            "message": "Logo berhasil diperbarui!", 
+            "filename": unique_filename
+        })
+            
+    return jsonify({"success": False, "message": "Gagal mengunggah logo"})
+
+@owner_bp.route('/api/update-foto-akun', methods=['POST'])
+@login_required
+def update_foto_akun():
+    if 'foto' not in request.files:
+        return jsonify({"success": False, "message": "Tidak ada file yang diunggah"})
+    
+    file = request.files['foto']
+    if file.filename == '':
+        return jsonify({"success": False, "message": "Nama file kosong"})
+
+    if file:
+        user = User.query.get(current_user.id)
+        
+        # Hapus foto lama jika ada dan bukan foto default
+        if user.photo:
+            old_path = os.path.join(current_app.root_path, 'static/images', user.photo)
+            if os.path.exists(old_path) and os.path.isfile(old_path):
+                try:
+                    os.remove(old_path)
+                except Exception as e:
+                    print(f"Gagal hapus foto lama: {e}")
+
+        # Simpan foto baru dengan nama unik
+        filename = secure_filename(file.filename)
+        unique_filename = f"user_{user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+        
+        file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
+        file.save(file_path)
+
+        # Update database
+        user.photo = unique_filename
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Foto profil berhasil diperbarui!"})
+            
+    return jsonify({"success": False, "message": "Gagal mengunggah foto"})
+
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
 @login_required
 def update_profil_cafe():
@@ -235,34 +318,44 @@ def update_password():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
-
-@owner_bp.route('/api/update-waktu-operasional', methods=['POST'])
+    
+@owner_bp.route('/api/toggle-cafe-status', methods=['POST'])
 @login_required
-def update_waktu_operasional():
+def toggle_cafe_status():
     data = request.json
-    hari = data.get("hari")
-    jenis = data.get("jenis") # Akan berisi 'buka' atau 'tutup'
-    waktu_str = data.get("waktu") # Akan berisi string seperti '09:00'
+    status_baru = data.get("status") # Menangkap nilai True/False
     
-    # Cari jadwal hari tersebut di database
-    jadwal = OperationalHour.query.filter_by(day_of_week=hari).first()
+    # Ambil data pengaturan cafe
+    cafe = CafeSetting.query.first()
     
-    if jadwal and waktu_str:
-        # Konversi string jam 'HH:MM' dari HTML menjadi objek Time Python
-        waktu_obj = datetime.strptime(waktu_str, '%H:%M').time()
-        
-        # Tentukan apakah yang diubah jam buka atau jam tutup
-        if jenis == 'buka':
-            jadwal.open_time = waktu_obj
-        elif jenis == 'tutup':
-            jadwal.close_time = waktu_obj
-            
+    if cafe:
+        cafe.is_open = status_baru
         try:
             db.session.commit()
-            return jsonify({"success": True, "message": "Waktu berhasil diperbarui!"})
+            return jsonify({"success": True, "message": "Status operasional cafe diperbarui!"})
         except Exception as e:
             db.session.rollback()
-            print(f"Error update waktu: {e}")
-            return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
+            return jsonify({"success": False, "message": str(e)})
             
-    return jsonify({"success": False, "message": "Jadwal atau data waktu tidak valid!"})
+    return jsonify({"success": False, "message": "Data cafe tidak ditemukan."})
+
+@owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
+@login_required
+def toggle_jam_operasional():
+    data = request.json
+    hari = data.get("hari")
+    status_buka = data.get("buka") # Menangkap nilai checkbox (True/False)
+    
+    # Cari jadwal berdasarkan nama hari di kolom day_of_week
+    jadwal = OperationalHour.query.filter_by(day_of_week=hari).first()
+    
+    if jadwal:
+        jadwal.is_open = status_buka # Pastikan kolomnya adalah is_open
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Status berhasil diperbarui"})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"success": False, "message": str(e)})
+            
+    return jsonify({"success": False, "message": "Data hari tidak ditemukan"})

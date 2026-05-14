@@ -16,6 +16,7 @@ def run_seeders():
         if not setting_exist:
             new_setting = CafeSetting(
                 cafe_name="Terralog Coffee & Eatery",
+                photo="terralog.jpeg",
                 phone="+62 812-XXXX-XXXX",
                 email="hello@terralog.com",
                 address="Jl. Aman I No.2, Teladan Bar., Kec. Medan Kota, Kota Medan, Sumatera Utara 20216",
