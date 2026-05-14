@@ -4,10 +4,10 @@
 
 {% block content %}
 <!-- Store pre-filled items in window object -->
-<script>
+<!-- <script>
     // noinspection JSUnusedAssignment
     window.preFilledItems = {{ pre_filled_items|tojson if pre_filled_items else '[]' }};
-</script>
+</script> -->
 <div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
     <div class="max-w-5xl">
         <!-- Breadcrumb & Summary Header -->
@@ -45,10 +45,11 @@
                         <div class="text-right">
                             <label class="text-gray-700 text-sm font-semibold block mb-2">Meja</label>
                             <select x-model="meja" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-terralogBlue">
-                                <option value="M-102">M-102</option>
-                                <option value="M-101">M-101</option>
-                                <option value="M-103">M-103</option>
-                                <option value="M-104">M-104</option>
+                                {% for table in tables %}
+                                <option value="{{ table.id }}">
+                                    {{ table.table_number }}
+                                </option>
+                                {% endfor %}
                             </select>
                         </div>
                     </div>
@@ -88,11 +89,11 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-6">Metode Pembayaran</h3>
                     <div class="flex gap-8">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" x-model="paymentMethod" value="tunai" class="w-5 h-5 text-terralogBlue">
+                            <input type="radio" x-model="paymentMethod" value="cash" class="w-5 h-5 text-terralogBlue">
                             <span class="text-gray-800 font-semibold">Tunai</span>
                         </label>
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" x-model="paymentMethod" value="non-tunai" class="w-5 h-5 text-terralogBlue">
+                            <input type="radio" x-model="paymentMethod" value="qris" class="w-5 h-5 text-terralogBlue">
                             <span class="text-gray-800 font-semibold">Non Tunai</span>
                         </label>
                     </div>
@@ -111,147 +112,138 @@
 
 <script>
     function checkoutApp() {
-        // Get pre-filled items from window object
-        const preFilledItems = window.preFilledItems || [];
-        
-        // Load cart from localStorage or use pre-filled items
-        let cartItems;
-        if (preFilledItems && preFilledItems.length > 0) {
-            cartItems = preFilledItems;
-        } else {
-            const savedCart = localStorage.getItem('cart');
-            cartItems = savedCart ? JSON.parse(savedCart) : [
-                { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
-                { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
-            ];
-        }
-        
-        // Transform cart items to include notes
-        const items = cartItems.map(item => ({
-            ...item,
-            note: item.note || ''
-        }));
-        
         return {
-            items: items,
-            meja: 'M-102',
-            nama: 'Matthew Shen',
+            items: [],
+            meja: '',
+            nama: '{{ current_user.name }}',
             editingName: false,
-            paymentMethod: 'tunai',
-            
-            get subtotal() {
-                return this.items.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            paymentMethod: 'cash',
+            async init() {
+                await this.loadCart()
             },
-            
-            get total() {
-                return this.subtotal;
-            },
-            
-            incrementItem(index) {
-                this.items[index].qty += 1;
-            },
-            
-            decrementItem(index) {
-                if (this.items[index].qty > 1) {
-                    this.items[index].qty -= 1;
+            async loadCart() {
+                try {
+                    const response = await fetch('/customer/api/cart')
+                    const data = await response.json()
+                    this.items = data.items || []
+                } catch (error) {
+                    console.error(error)
                 }
             },
-            
-            deleteItem(index) {
-                this.items.splice(index, 1);
+
+            get subtotal() {
+                return this.items.reduce(
+                    (sum, item) => sum + (item.harga * item.qty),
+                    0
+                )
             },
-            
-            updateNote(index, value) {
-                this.items[index].note = value;
+
+            get total() {
+                return this.subtotal
             },
-            
-            submitOrder() {
-                if (this.items.length === 0) {
-                    alert('Pesanan masih kosong!');
+
+            async incrementItem(index) {
+                const item = this.items[index]
+                await fetch('/customer/api/cart/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        item_id: item.id,
+                        qty: item.qty + 1
+                    })
+                })
+                await this.loadCart()
+            },
+
+            async decrementItem(index) {
+                const item = this.items[index]
+                // Jika qty = 1 dan dikurang, jalankan fungsi deleteItem
+                if (item.qty <= 1) {
+                    await this.deleteItem(index);
                     return;
                 }
+                await fetch('/customer/api/cart/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        item_id: item.id,
+                        qty: item.qty - 1
+                    })
+                })
+                await this.loadCart()
+            },
+
+            async deleteItem(index) {
+                const item = this.items[index]
+                await fetch(`/customer/api/cart/remove/${item.id}`, {
+                    method: 'DELETE'
+                })
+                await this.loadCart()
+            },
+
+            async updateNote(index, value) {
+
+                const item = this.items[index]
+                item.note = value
                 
-                if (this.paymentMethod === 'tunai') {
-                    const orderData = {
-                        meja: this.meja,
-                        nama: this.nama,
-                        items: this.items,
-                        paymentMethod: this.paymentMethod,
-                        total: this.total,
-                        subtotal: this.subtotal
-                    };
-                    
-                    // Send order to backend
-                    fetch('/customer/submit-order', {
+                await fetch('/customer/api/cart/note', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        item_id: item.id,
+                        note: value
+                    })
+
+                })
+            },
+
+            async submitOrder() {
+                if(this.items.length === 0){
+                    alert('Keranjang kosong')
+                    return
+                }
+                try {
+                    const response = await fetch('/customer/submit-order', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(orderData)
+                        body: JSON.stringify({
+                            nama: this.nama,
+                            table_id: this.meja,
+                            payment_method: this.paymentMethod,
+                            items: this.items
+                        })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Clear cart from localStorage
-                            localStorage.removeItem('cart');
-                            
-                            // Redirect to pesanan detail with order_id
-                            window.location.href = `/customer/pesanan/${data.order_id}`;
+                    const result = await response.json()
+
+                    if(result.success){
+                        if(this.paymentMethod === 'qris'){
+                            window.location.href =
+                                `/customer/pembayaran-nontunai/${result.order_id}`
                         } else {
-                            alert('Gagal membuat pesanan. Silakan coba lagi.');
+                            window.location.href =
+                                `/customer/pesanan/${result.order_id}`
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Terjadi kesalahan. Silakan coba lagi.');
-                    });
-                } else {
-                    // Non-tunai payment method
-                    const orderData = {
-                        meja: this.meja,
-                        nama: this.nama,
-                        items: this.items,
-                        paymentMethod: this.paymentMethod,
-                        total: this.total,
-                        subtotal: this.subtotal
-                    };
-                    
-                    // Send order to backend
-                    fetch('/customer/submit-order', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(orderData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Store order data in sessionStorage for payment page
-                            const paymentData = {
-                                ...orderData,
-                                order_id: data.order_id
-                            };
-                            sessionStorage.setItem('pendingOrder', JSON.stringify(paymentData));
-                            
-                            // Clear cart from localStorage
-                            localStorage.removeItem('cart');
-                            
-                            // Redirect to non-tunai payment page
-                            window.location.href = `/customer/pembayaran-nontunai/${data.order_id}`;
-                        } else {
-                            alert('Gagal membuat pesanan. Silakan coba lagi.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Terjadi kesalahan. Silakan coba lagi.');
-                    });
+                    } else {
+                        alert(result.message)
+                    }
+
+                } catch(error){
+                    console.error(error)
+                    alert('Terjadi kesalahan')
                 }
             }
         }
     }
-    
+
     lucide.createIcons();
 </script>
 {% endblock %}

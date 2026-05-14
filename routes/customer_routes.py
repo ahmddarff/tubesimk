@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 
 from models import User, Menu, Category, Order, OrderItem, Table, Reservation
 from extensions import db
@@ -139,6 +140,190 @@ def reservasi_history():
 # MANAJEMEN PESANAN & CHECKOUT
 # =========================
 
+@customer_bp.route('/api/cart/add', methods=['POST'])
+@login_required
+def add_to_cart():
+
+    data = request.get_json()
+
+    menu_id = data.get('menu_id')
+    qty = int(data.get('qty', 1))
+
+    menu = Menu.query.get_or_404(menu_id)
+
+    # Cari cart aktif
+    order = Order.query.filter_by(
+        user_id=current_user.id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+    # Jika belum ada cart
+    if not order:
+
+        order_number = 'ORD-' + ''.join(
+            random.choices(string.digits, k=6)
+        )
+
+        order = Order(
+            order_number=order_number,
+            user_id=current_user.id,
+            customer_name=current_user.name,
+            order_type='dine_in',
+            payment_status='unpaid',
+            order_status='pending',
+            total_amount=0
+        )
+
+        db.session.add(order)
+        db.session.flush()
+
+    # Cek item sudah ada atau belum
+    existing_item = OrderItem.query.filter_by(
+        order_id=order.id,
+        menu_id=menu.id
+    ).first()
+
+    if existing_item:
+        existing_item.qty += qty
+
+    else:
+        new_item = OrderItem(
+            order_id=order.id,
+            menu_id=menu.id,
+            qty=qty,
+            price_at_order=menu.price
+        )
+
+        db.session.add(new_item)
+
+    db.session.flush()
+
+    # Update total
+    total = sum(
+        item.qty * item.price_at_order
+        for item in order.items
+    )
+
+    order.total_amount = total
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Item berhasil ditambahkan'
+    })
+
+@customer_bp.route('/api/cart')
+@login_required
+def get_cart():
+
+    order = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.menu)
+    ).filter_by(
+        user_id=current_user.id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+    if not order:
+        return jsonify({
+            'items': [],
+            'subtotal': 0,
+            'total': 0
+        })
+
+    items = []
+
+    for item in order.items:
+
+        items.append({
+            'id': item.id,
+            'menu_id': item.menu_id,
+            'nama': item.menu.name,
+            'harga': item.price_at_order,
+            'qty': item.qty,
+            'img': item.menu.image_url,
+            'subtotal': item.qty * item.price_at_order
+        })
+
+    return jsonify({
+        'order_id': order.id,
+        'items': items,
+        'subtotal': order.total_amount,
+        'total': order.total_amount
+    })
+
+@customer_bp.route('/api/cart/update', methods=['POST'])
+@login_required
+def update_cart():
+
+    data = request.get_json()
+
+    item_id = data.get('item_id')
+    qty = int(data.get('qty'))
+
+    item = OrderItem.query.get_or_404(item_id)
+
+    # Pastikan item milik user
+    if item.order.user_id != current_user.id:
+        return jsonify({
+            'success': False
+        }), 403
+
+    if qty <= 0:
+        db.session.delete(item)
+
+    else:
+        item.qty = qty
+
+    db.session.flush()
+
+    order = item.order
+
+    # Recalculate total
+    total = sum(
+        i.qty * i.price_at_order
+        for i in order.items
+    )
+
+    order.total_amount = total
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'total': total
+    })
+
+@customer_bp.route('/api/cart/remove/<int:item_id>', methods=['DELETE'])
+@login_required
+def remove_cart_item(item_id):
+
+    item = OrderItem.query.get_or_404(item_id)
+
+    if item.order.user_id != current_user.id:
+        return jsonify({
+            'success': False
+        }), 403
+
+    order = item.order
+
+    db.session.delete(item)
+
+    db.session.flush()
+
+    order.total_amount = sum(
+        i.qty * i.price_at_order
+        for i in order.items
+    )
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True
+    })
+
 @customer_bp.route('/pesanan-saya')
 @login_required
 def pesanan_saya():
@@ -146,7 +331,11 @@ def pesanan_saya():
     user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
     
     # Memisahkan pesanan Aktif dan Riwayat
-    active_orders = [o for o in user_orders if o.order_status != 'served' or o.payment_status == 'unpaid']
+    active_orders = [
+        o for o in user_orders
+        if o.order_status in ['pending', 'preparing', 'ready']
+        and o.payment_status != 'cancelled'
+    ]
     history_orders = [o for o in user_orders if (o.order_status == 'served' and o.payment_status == 'paid') or o.payment_status == 'cancelled']
     
     return render_template('customer/pesanan_saya.html', 
@@ -157,74 +346,220 @@ def pesanan_saya():
 
 @customer_bp.route('/pesanan-saya/history')
 def pesanan_history():
-    # Data statis riwayat pesanan
-    history_orders = [
-        {
-            "id": "AB098", "status": "Selesai", "date": "14 Februari 2026", "time": "21:48 WIB",
-            "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}],
-            "total": 38000
-        },
-        {
-            "id": "AB073", "status": "Dibatalkan", "date": "13 Januari 2026", "time": "17:45 WIB",
-            "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 1}],
-            "total": 18000
-        }
-    ]
-    return render_template('customer/pesanan_history.html', segment='pesanan_saya', role='customer', history_orders=history_orders)
+# Ambil pesanan dari database murni yang statusnya sudah disajikan (served)
+    history_orders = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.menu)
+    ).filter(
+        Order.user_id == current_user.id,
+        Order.order_status == 'served'
+    ).order_by(Order.created_at.desc()).all()
+
+    return render_template(
+        'customer/pesanan_history.html', 
+        history_orders=history_orders, 
+        segment='pesanan_saya', 
+        role='customer'
+    )
 
 @customer_bp.route('/checkout')
+@login_required
 def checkout():
-    # Mengambil item yang mungkin sudah diisi sebelumnya (dari fitur pesan-lagi)
-    pre_filled_items = session.get('pre_filled_items', None)
-    session.pop('pre_filled_items', None) 
-    session.modified = True
-    
-    return render_template('customer/checkout.html', segment='checkout', role='customer', pre_filled_items=pre_filled_items)
 
-@customer_bp.route('/pesan-lagi/<order_id>')
+    order = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.menu)
+    ).filter_by(
+        user_id=current_user.id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+    if not order:
+        flash('Keranjang masih kosong', 'warning')
+        return redirect(url_for('customer.daftar_menu'))
+
+    tables = Table.query.filter_by(
+        is_available=True
+    ).all()
+
+    return render_template(
+        'customer/checkout.html',
+        segment='checkout',
+        role='customer',
+        order=order,
+        tables=tables
+    )
+
+@customer_bp.route('/pesan-lagi/<int:order_id>')
+@login_required
 def pesan_lagi(order_id):
-    # Logika sederhana untuk mengambil data pesanan lama dan memasukkannya kembali ke keranjang/checkout
-    history_orders = [
-        {"id": "AB098", "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}]},
-        {"id": "AB073", "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 1}]}
-    ]
-    
-    order = next((o for o in history_orders if o['id'] == order_id), None)
-    if order is None:
-        return redirect(url_for('customer.pesanan_history'))
-    
-    session['pre_filled_items'] = order['products']
-    session.modified = True
+
+    old_order = Order.query.options(
+        joinedload(Order.items)
+    ).filter_by(
+        id=order_id,
+        user_id=current_user.id
+    ).first_or_404()
+
+    # Cari cart aktif
+    active_order = Order.query.filter_by(
+        user_id=current_user.id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+    # Kalau belum ada cart
+    if not active_order:
+
+        active_order = Order(
+            order_number='ORD-' + ''.join(random.choices(string.digits, k=6)),
+            user_id=current_user.id,
+            customer_name=current_user.name,
+            order_type='dine_in',
+            payment_status='unpaid',
+            order_status='pending',
+            total_amount=0
+        )
+
+        db.session.add(active_order)
+        db.session.flush()
+
+    # Copy item
+    for item in old_order.items:
+
+        existing_item = OrderItem.query.filter_by(
+            order_id=active_order.id,
+            menu_id=item.menu_id
+        ).first()
+
+        if existing_item:
+            existing_item.qty += item.qty
+
+        else:
+            new_item = OrderItem(
+                order_id=active_order.id,
+                menu_id=item.menu_id,
+                qty=item.qty,
+                price_at_order=item.price_at_order
+            )
+
+            db.session.add(new_item)
+
+    db.session.flush()
+
+    active_order.total_amount = sum(
+        i.qty * i.price_at_order
+        for i in active_order.items
+    )
+
+    db.session.commit()
+
+    flash('Pesanan berhasil dimasukkan ke cart', 'success')
+
     return redirect(url_for('customer.checkout'))
 
 @customer_bp.route('/submit-order', methods=['POST'])
+@login_required
 def submit_order():
     data = request.get_json()
-    order_id = 'AB' + ''.join(random.choices(string.digits, k=3))
-    
-    # Simpan sementara di session (untuk demo/prototype)
-    if 'orders' not in session:
-        session['orders'] = {}
-    
-    session['orders'][order_id] = {
-        'order_id': order_id,
-        'nama': data.get('nama'),
-        'meja': data.get('meja'),
-        'items': data.get('items'),
-        'paymentMethod': data.get('paymentMethod'),
-        'total': data.get('total'),
-        'subtotal': data.get('subtotal'),
-        'ppn': data.get('ppn'),
-        'created_at': datetime.now().strftime('%d %B %Y %H:%M'),
-        'status': 'Menunggu Pembayaran'
-    }
-    session.modified = True
-    return jsonify({'order_id': order_id, 'success': True})
 
-@customer_bp.route('/pesanan/<order_id>')
+    order = Order.query.filter_by(
+        user_id=current_user.id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+    if not order:
+        return jsonify({
+            'success': False,
+            'message': 'Cart kosong'
+        })
+
+    # Update nama pemesan terbaru dari input checkout
+    nama_pemesan = data.get('nama')
+    if nama_pemesan:
+        order.customer_name = nama_pemesan
+
+    # Ambil table jika dine in
+    table_id = data.get('table_id')
+    if table_id:
+        table = Table.query.get(table_id)
+        if table:
+            order.table_id = table.id
+
+    order.payment_method = data.get('payment_method')
+
+    # Jika QRIS → langsung paid
+    if order.payment_method == 'qris':
+        order.payment_status = 'paid'
+
+    order.order_status = 'preparing'
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'order_id': order.id
+    })
+
+@customer_bp.route('/api/cart/note', methods=['POST'])
+@login_required
+def update_cart_note():
+
+    data = request.get_json()
+
+    item_id = data.get('item_id')
+
+    note = data.get('note')
+
+    item = OrderItem.query.get_or_404(item_id)
+
+    if item.order.user_id != current_user.id:
+        return jsonify({
+            'success': False
+        }), 403
+
+    item.notes = note
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True
+    })
+
+@customer_bp.route('/pesanan/<int:order_id>')
+@login_required
 def pesanan_detail(order_id):
-    order = session.get('orders', {}).get(order_id)
-    return render_template('customer/pesanan_aktif_detail.html', segment='pesanan_saya', role='customer', order=order, order_id=order_id)
+
+    order = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.menu)
+    ).filter_by(
+        id=order_id,
+        user_id=current_user.id
+    ).first_or_404()
+
+    # Konversi objek SQLAlchemy menjadi dictionary murni agar aman di-serialize ke JSON
+    order_dict = {
+        'id': order.id,
+        'order_number': order.order_number,
+        'customer_name': order.customer_name,
+        'payment_method': order.payment_method,
+        'order_status': order.order_status,
+        'total_amount': order.total_amount,
+        'items': [{
+            'nama': item.menu.name,
+            'harga': item.price_at_order,
+            'qty': item.qty,
+            'note': item.notes
+        } for item in order.items]
+    }
+
+    return render_template(
+        'customer/pesanan_aktif_detail.html',
+        segment='pesanan_saya',
+        role='customer',
+        order=order,
+        order_json=order_dict
+    )
 
 @customer_bp.route('/pesanan/<order_id>/selesai')
 def pesanan_selesai(order_id):
@@ -235,9 +570,25 @@ def pesanan_selesai(order_id):
     order = session.get('orders', {}).get(order_id)
     return render_template('customer/pesanan_selesai.html', segment='pesanan_saya', role='customer', order=order, order_id=order_id)
 
-@customer_bp.route('/pembayaran-nontunai/<order_id>')
+@customer_bp.route('/pembayaran-nontunai/<int:order_id>')
+@login_required
 def pembayaran_nontunai(order_id):
-    return render_template('customer/pembayaran_nontunai.html', segment='pembayaran', role='customer', order_id=order_id)
+    # Ambil data order milik user yang sedang login
+    order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
+    
+    # Ambil data penting untuk dikirim ke Alpine.js secara aman
+    order_data = {
+        'order_id': order.id,
+        'customer_name': order.customer_name,
+        'total_amount': order.total_amount
+    }
+    
+    return render_template(
+        'customer/pembayaran_nontunai.html',
+        role='customer',
+        order_id=order_id,
+        order_json=order_data
+    )
 
 
 # =========================

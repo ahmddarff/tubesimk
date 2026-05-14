@@ -1,85 +1,110 @@
-{% extends 'layouts/layout_customer.html' %}
+{% extends "layouts/layout_customer.html" %}
 
 {% block content %}
-<div class="customer-page-shell max-w-full">
+<div class="max-w-full mx-auto">
     <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
         activeCategory: 'semua',
         cart: [],
-        addedItems: new Set(),
-        selectedProduct: null,
-        showModal: false,
-        
-        // Initialize with products
-        init() {
-            // Load products from data attributes
-            document.querySelectorAll('[data-product-id]').forEach(el => {
-                const nama = el.getAttribute('data-product-nama');
-                if (nama && !Array.from(this.addedItems).some(item => item === nama)) {
-                    // Initialize empty for first load
+
+        // Ambil data keranjang dari backend saat halaman dimuat
+        async init() {
+            await this.loadCart();
+        },
+
+        async loadCart() {
+                try {
+                    const response = await fetch('/customer/api/cart');
+                    const data = await response.json();
+                    this.cart = data.items || [];
+                } catch (error) {
+                    console.error('Gagal memuat keranjang:', error);
                 }
-            });
-        },
-        
-        addToCart(product) {
-            const existing = this.cart.find(item => item.nama === product.nama);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                this.cart.push({...product, qty: 1});
-            }
-            this.addedItems.add(product.nama);
-        },
-        
-        incrementQty(productName) {
-            const item = this.cart.find(item => item.nama === productName);
-            if (item) {
-                item.qty += 1;
-            }
-        },
-        
-        decrementQty(productName) {
-            const item = this.cart.find(item => item.nama === productName);
-            if (item && item.qty > 1) {
-                item.qty -= 1;
-            } else if (item && item.qty === 1) {
-                // Remove from cart when qty becomes 0
-                const index = this.cart.indexOf(item);
-                this.cart.splice(index, 1);
-                this.addedItems.delete(productName);
-            }
-        },
+            },
+
+        async addToCart(productId) {
+                try {
+                    const response = await fetch('/customer/api/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ menu_id: productId, qty: 1 })
+                    });
+                    const resData = await response.json();
+                    if (resData.success) {
+                        await this.loadCart();
+                    }
+                } catch (error) {
+                    console.error('Gagal menambahkan item:', error);
+                }
+            },
+
+        async incrementQty(productName) {
+                const item = this.cart.find(i => i.nama === productName);
+                if (!item) return;
+                try {
+                    await fetch('/customer/api/cart/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
+                    });
+                    await this.loadCart();
+                } catch (error) {
+                    console.error(error);
+                }
+            },
+
+        async decrementQty(productName) {
+                const item = this.cart.find(i => i.nama === productName);
+                if (!item) return;
+                try {
+                    await fetch('/customer/api/cart/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
+                    });
+                    await this.loadCart();
+                } catch (error) {
+                    console.error(error);
+                }
+            },
         
         getItemQty(productName) {
-            const item = this.cart.find(item => item.nama === productName);
-            return item ? item.qty : 0;
-        },
-        
+                const item = this.cart.find(i => i.nama === productName);
+                return item ? item.qty : 0;
+            },
+            
         isItemAdded(productName) {
-            return this.addedItems.has(productName);
+            return this.cart.some(i => i.nama === productName);
         },
-        
-        removeItem(index) {
+            
+        async removeItem(index) {
             const item = this.cart[index];
-            // Check if this item still exists in cart after removal
-            if (this.cart.filter(i => i.nama === item.nama).length === 1) {
-                this.addedItems.delete(item.nama);
+            try {
+                const response = await fetch(`/customer/api/cart/remove/${item.id}`, {
+                    method: 'DELETE'
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    await this.loadCart();
+                }
+            } catch (error) {
+                console.error(error);
             }
-            this.cart.splice(index, 1);
         },
-        
+            
         get subtotal() {
-            return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
+            return this.cart.reduce((sum, item) => sum + item.subtotal, 0);
         },
+
         get total() {
             return this.subtotal;
         }
-    }" @mount="init()">
+    }" x-init="init()">
         
         <!-- Product Grid -->
         <div class="col-span-3">
             <div class="space-y-6">
                 <div>
-                    <h2 class="text-3xl font-bold text-terralogBlue mb-6">Daftar Menu</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Menu</h2>
                     
                     <div class="flex gap-3 mb-8 overflow-x-auto pb-2">
                         <button @click="activeCategory = 'semua'" 
@@ -117,7 +142,7 @@
                             
                             {% if product.is_available %}
                             <template x-if="!isItemAdded('{{ product.name }}')">
-                                <button @click.stop="addToCart({id: '{{ product.id }}', nama: '{{ product.name }}', harga: {{ product.price }}, img: 'kopi.png'})" 
+                                <button @click.stop="addToCart('{{ product.id }}')"
                                         class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
                                     +
                                 </button>
