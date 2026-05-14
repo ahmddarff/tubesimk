@@ -64,7 +64,7 @@ def run_seeders():
             hashed_password = generate_password_hash('owner123')
             new_owner = User(
                 name='Oscar Piastri',
-                username='owner_oscar',
+                username='owner',
                 email='oscar.owner@gmail.com',
                 password=hashed_password,
                 phone='0812-xxxx-xxxx',
@@ -86,7 +86,7 @@ def run_seeders():
             hashed_password = generate_password_hash('kasir123') # Password untuk login
             new_kasir = User(
                 name='Zhang Hao',
-                username='kasir_hao',
+                username='kasir',
                 email='hao.kasir@gmail.com',
                 password=hashed_password,
                 phone='0813-xxxx-xxxx',
@@ -108,7 +108,7 @@ def run_seeders():
             hashed_password = generate_password_hash('customer123') # Password untuk login
             new_customer = User(
                 name='Budi Pelanggan',
-                username='customer_budi',
+                username='customer',
                 email='budi.customer@gmail.com',
                 password=hashed_password,
                 phone='0812-9999-8888',

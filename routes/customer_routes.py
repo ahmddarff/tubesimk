@@ -244,10 +244,6 @@ def submit_order():
     
     return jsonify({'order_id': order_id, 'success': True})
 
-@customer_bp.route('/profil')
-def profil():
-    return render_template('customer/profil.html', segment='profil', role='customer')
-
 @customer_bp.route('/api/update-profil', methods=['POST'])
 @login_required
 def update_profil():
