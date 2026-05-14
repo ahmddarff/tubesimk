@@ -1,248 +1,284 @@
 {% extends 'layouts/layout_owner.html' %}
 {% block title %}Manajemen Menu{% endblock %}
-{% block breadcrumb %}Manajemen Menu{% endblock %}
 
 {% block content %}
-
-<!-- Page Header -->
 <div class="flex items-center justify-between mb-6">
     <h2 class="text-xl font-bold text-gray-900">Manajemen Menu & Stok</h2>
-    <button onclick="openModal('modalTambahMenu')"
-            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
-        <i class="fa-solid fa-circle-plus text-base"></i>
-        Tambah Menu Baru
-    </button>
+    <div class="flex gap-3">
+        <button onclick="openModal('modalKelolaKategori')"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 text-sm font-bold hover:bg-gray-50 hover:shadow-md transition-all">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+            Kelola Kategori
+        </button>
+        <button onclick="openModal('modalTambahMenu')"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-terralogBlue bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:border-blue-900 hover:-translate-y-0.5 hover:shadow-lg transition-all">
+            <i data-lucide="circle-plus" class="w-5 h-5"></i>
+            Tambah Menu
+        </button>
+    </div>
 </div>
 
-<!-- Filter Tabs -->
-<div class="flex gap-2 mb-4">
+<div class="flex flex-wrap gap-2 mb-4">
     <button onclick="filterMenu('Semua', this)"
-            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold bg-[#1B2FAA] text-white transition-all">
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold bg-terralogBlue text-white transition-all shadow-sm">
         Semua
     </button>
-    <button onclick="filterMenu('Coffee', this)"
-            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-        Coffee
+    {% for kat in categories %}
+    <button onclick="filterMenu('{{ kat.name }}', this)"
+            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-terralogBlue text-terralogBlue hover:bg-terralogBlue hover:text-white transition-all shadow-sm">
+        {{ kat.name }}
     </button>
-    <button onclick="filterMenu('Non Coffee', this)"
-            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-        Non Coffee
-    </button>
-    <button onclick="filterMenu('Food', this)"
-            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-        Food
-    </button>
-    <button onclick="filterMenu('Snack', this)"
-            class="filter-btn px-6 py-2 rounded-lg text-sm font-bold border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white transition-all">
-        Snack
-    </button>
+    {% endfor %}
 </div>
 
-<!-- Table -->
 <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
     <table class="w-full text-sm border-collapse">
         <thead>
-            <tr class="border-b-2 border-gray-100">
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/4">Nama Menu</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Kategori</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Harga</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/5">Status</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Stok</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-1/6">Aksi</th>
+            <tr class="border-b-2 border-gray-100 bg-gray-50/50">
+                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[10%]">Foto</th>
+                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[20%]">Nama Menu</th>
+                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[15%]">Kategori</th>
+                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[15%]">Harga</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[15%]">Status</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[10%]">Stok</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[15%]">Aksi</th>
             </tr>
         </thead>
         <tbody id="menuTableBody">
             {% for menu in menu_list %}
             <tr class="menu-row border-b border-gray-100 hover:bg-gray-50/50 transition-colors" data-kategori="{{ menu.category.name }}">
-                <td class="px-5 py-4 text-sm font-medium text-gray-800">{{ menu.name }}</td>
-                <td class="px-5 py-4 text-sm text-gray-500">{{ menu.category.name }}</td>
-                <td class="px-5 py-4 text-sm font-bold text-[#1B2FAA]">Rp{{ "{:,.0f}".format(menu.price) }}</td>
-                <td class="px-5 py-4">
+                <td class="px-6 py-4">
+                    <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+                        {% if menu.image_url %}
+                            {% if menu.image_url.startswith('http') %}
+                                <img src="{{ menu.image_url }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{{ url_for('static', filename=menu.image_url) }}" class="w-full h-full object-cover">
+                            {% endif %}
+                        {% else %}
+                            <i data-lucide="image" class="w-5 h-5 text-gray-300"></i>
+                        {% endif %}
+                    </div>
+                </td>
+                <td class="px-6 py-4 font-medium text-gray-800">{{ menu.name }}</td>
+                <td class="px-6 py-4 text-gray-500">{{ menu.category.name }}</td>
+                <td class="px-6 py-4 font-bold text-terralogBlue">Rp{{ "{:,.0f}".format(menu.price) }}</td>
+                <td class="px-6 py-4 text-center">
                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
                         <input type="checkbox" {% if menu.is_available %}checked{% endif %}
-                        onchange="toggleMenuStatus(this, '{{ menu.id }}')">
+                               onchange="toggleMenuStatus(this, '{{ menu.id }}')">
                         <span class="toggle-slider"></span>
                     </label>
                 </td>
-                <td class="px-5 py-4 text-sm font-medium text-gray-800">{{ menu.stock }}</td>
-                <td class="px-5 py-4 text-center">
-                    <button onclick="openEditModal('{{ menu.id }}', '{{ menu.name }}', '{{ menu.category.name }}', '{{ menu.price }}', '{{ menu.stock or '' }}', '{{ menu.description or '' }}', '{{ menu.image_url or '' }}')"
-                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <td class="px-6 py-4 text-center font-medium">
+                    {{ menu.stock if menu.stock is not none else '-' }}
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button type="button" 
+                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            data-id="{{ menu.id }}"
+                            data-nama="{{ menu.name }}"
+                            data-kategori="{{ menu.category.name }}"
+                            data-harga="{{ menu.price }}"
+                            data-stok="{{ menu.stock if menu.stock is not none else '' }}"
+                            data-deskripsi="{{ menu.description or '' }}"
+                            data-img="{{ menu.image_url or '' }}"
+                            data-status="{{ 'true' if menu.is_available else 'false' }}"
+                            onclick="handleEditClick(this)">
                         <i data-lucide="edit-3" class="w-5 h-5"></i>
                     </button>
                 </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4" class="px-5 py-8 text-center text-gray-400">Belum ada data menu.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<div id="modalTambahMenu" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
-    <div class="modal-box w-full max-w-lg bg-white rounded-[2rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
-        
+<!-- Modal Kelola Kategori -->
+<div id="modalKelolaKategori" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-lg bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-black text-gray-800">Tambah Menu Baru</h3>
-            <button onclick="closeModal('modalTambahMenu')" class="w-10 h-10 bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-500 rounded-full flex items-center justify-center transition">
+            <h3 class="text-2xl font-black text-gray-800">Kelola Kategori</h3>
+            <button onclick="closeModal('modalKelolaKategori')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition hover:bg-red-100 hover:text-red-500">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <div class="space-y-5">
-            <div class="mb-4">
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Foto Menu</label>
-                <div class="flex items-center gap-4">
-                    <div id="previewContainer" class="w-20 h-20 bg-gray-100 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                        <i data-lucide="image" class="w-8 h-8 text-gray-300" id="placeholderIcon"></i>
-                        <img id="imagePreview" src="#" alt="Preview" class="hidden w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1">
-                        <input type="file" id="fotoMenu" accept="image/*" class="hidden" onchange="previewImage(this)">
-                        <button onclick="document.getElementById('fotoMenu').click()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-bold transition">
-                            Pilih Gambar
-                        </button>
-                        <p class="text-[10px] text-gray-400 mt-1">Format: JPG, PNG (Maks. 2MB)</p>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Menu</label>
-                <input type="text" id="namaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700" placeholder="Contoh: Caramel Macchiato">
-            </div>
+        <div class="flex gap-2 mb-6">
+            <input type="text" id="inputKategoriBaru" class="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold placeholder-gray-400" placeholder="Ketik nama kategori baru...">
+            <button onclick="tambahKategori()" class="px-6 py-3 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm hover:bg-blue-900 transition">
+                Tambah
+            </button>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Kategori</label>
-                    <select id="kategoriMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 appearance-none">
-                        {% for kat in categories %}
-                            <option value="{{ kat.name }}">{{ kat.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Harga Jual (Rp)</label>
-                    <input type="number" id="hargaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700" placeholder="Contoh: 25000">
-                </div>
-            </div>
-
-            <div class="mb-4" x-data="{ hasStock: false }">
-                <div class="flex items-center justify-between mb-2">
-                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wide">Manajemen Stok</label>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="hasStock" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-terralogBlue"></div>
-                        <span class="ml-2 text-xs font-medium text-gray-600" x-text="hasStock ? 'Stok Terbatas' : 'Selalu Tersedia (Dimasak)'"></span>
-                    </label>
-                </div>
+        <div class="max-h-64 overflow-y-auto pr-2 space-y-3">
+            {% for kat in categories %}
+            <div x-data="{ editing: false, namaEdit: '{{ kat.name }}' }" class="p-4 bg-white border-2 border-gray-100 rounded-xl flex items-center justify-between group hover:border-terralogBlue transition-colors">
                 
-                <div x-show="hasStock" x-transition>
-                    <input type="number" id="stokMenu" placeholder="Jumlah stok awal (contoh: 20)" 
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm">
+                <div x-show="!editing" class="flex items-center justify-between w-full">
+                    <span class="font-bold text-gray-700">{{ kat.name }}</span>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button @click="editing = true" class="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition" title="Edit Nama">
+                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="hapusKategori('{{ kat.id }}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="Hapus Kategori">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
-                <p class="text-[10px] text-gray-400 mt-1" x-show="!hasStock">*Menu akan selalu tersedia selama bahan baku ada.</p>
+
+                <div x-show="editing" x-cloak class="flex items-center gap-2 w-full">
+                    <input type="text" x-model="namaEdit" class="flex-1 px-3 py-2 rounded-lg border-2 border-blue-200 bg-blue-50 outline-none text-sm font-bold text-terralogBlue">
+                    <button @click="simpanEditKategori('{{ kat.id }}', namaEdit)" class="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition shadow-md">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    <button @click="editing = false; namaEdit = '{{ kat.name }}'" class="p-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+            </div>
+            {% else %}
+            <p class="text-center text-sm text-gray-400 py-4 font-medium">Belum ada data kategori.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Tambah Menu -->
+
+<div id="modalTambahMenu" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-lg bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-black text-gray-800">Tambah Menu Baru</h3>
+            <button onclick="closeModal('modalTambahMenu')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div id="previewContainer" class="w-20 h-20 bg-white rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                    <i data-lucide="image" class="w-8 h-8 text-gray-300" id="placeholderIcon"></i>
+                    <img id="imagePreview" src="#" class="hidden w-full h-full object-cover">
+                </div>
+                <div class="flex-1">
+                    <input type="file" id="fotoMenu" accept="image/*" class="hidden" onchange="previewImage(this, 'imagePreview', 'placeholderIcon')">
+                    <button onclick="document.getElementById('fotoMenu').click()" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold shadow-sm">Pilih Gambar</button>
+                </div>
             </div>
 
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Deskripsi (Opsional)</label>
-                <textarea id="deskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700" placeholder="Masukkan komposisi atau deskripsi singkat..."></textarea>
+            <input type="text" id="namaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Nama Menu">
+            
+            <div class="grid grid-cols-2 gap-4">
+                <select id="kategoriMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold appearance-none">
+                    {% for kat in categories %}
+                        <option value="{{ kat.name }}">{{ kat.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" id="hargaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Harga Jual">
             </div>
+
+            <div x-data="{ hasStock: false }">
+                <label class="flex items-center gap-2 mb-2 cursor-pointer w-fit">
+                    <input type="checkbox" id="hasStockTambah" x-model="hasStock" class="w-4 h-4 rounded border-gray-300 text-terralogBlue">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Gunakan Manajemen Stok</span>
+                </label>
+                <div x-show="hasStock" x-transition>
+                    <input type="number" id="stokMenu" placeholder="Jumlah Stok" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold">
+                </div>
+            </div>
+
+            <textarea id="deskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white outline-none text-sm font-bold" placeholder="Deskripsi Singkat"></textarea>
         </div>
 
         <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
-            <button onclick="closeModal('modalTambahMenu')" class="px-6 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 hover:bg-gray-50 transition text-sm">
-                Batal
-            </button>
-            <button onclick="simpanMenu()" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold transition shadow-md hover:shadow-lg active:scale-95 text-sm">
-                Simpan Menu Baru
-            </button>
+            <button onclick="closeModal('modalTambahMenu')" class="px-6 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 text-sm">Batal</button>
+            <button onclick="simpanMenu()" class="px-8 py-3 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm">Simpan Menu</button>
         </div>
-        
     </div>
 </div>
 
 <div id="modalEditMenu" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
-    <div class="modal-box w-full max-w-lg bg-white rounded-[2rem] p-8 shadow-2xl relative">
+    <div class="modal-box w-full max-w-lg bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-2xl font-black text-gray-800">Edit Menu</h3>
-            <button onclick="closeModal('modalEditMenu')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+            <button onclick="closeModal('modalEditMenu')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
         <input type="hidden" id="editMenuId">
-        <div class="space-y-5">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden border-2 border-gray-200">
+        <div class="space-y-4">
+            <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div class="w-20 h-20 bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                     <img id="editImagePreview" src="" class="w-full h-full object-cover">
                 </div>
                 <div class="flex-1">
-                    <input type="file" id="editFotoMenu" accept="image/*" class="hidden" onchange="previewEditImage(this)">
-                    <button type="button" onclick="document.getElementById('editFotoMenu').click()" class="px-4 py-2 bg-gray-100 rounded-xl text-xs font-bold">Ganti Foto</button>
+                    <input type="file" id="editFotoMenu" accept="image/*" class="hidden" onchange="previewImage(this, 'editImagePreview')">
+                    <button onclick="document.getElementById('editFotoMenu').click()" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-xs font-bold shadow-sm">Ganti Foto</button>
                 </div>
             </div>
 
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wide">
-                    Nama Menu <span class="text-[10px] normal-case font-medium">(Tidak dapat diubah)</span>
-                </label>
-                <input type="text" id="editNamaMenu" readonly
-                    class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed outline-none text-sm font-bold shadow-inner">
-            </div>
-
+            <input type="text" id="editNamaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Nama Menu">
+            
             <div class="grid grid-cols-2 gap-4">
-                <select id="editKategoriMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+                <select id="editKategoriMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm font-bold appearance-none">
                     {% for kat in categories %}
                         <option value="{{ kat.name }}">{{ kat.name }}</option>
                     {% endfor %}
                 </select>
-                <input type="number" id="editHargaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Harga">
+                <input type="number" id="editHargaMenu" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm font-bold" placeholder="Harga Jual">
             </div>
 
-            <div class="mb-4" x-data="{ hasStock: false }">
+            <div x-data="{ hasStock: false }" id="editStockWrapper">
                 <label class="flex items-center gap-2 mb-2 cursor-pointer w-fit">
-                    <input type="checkbox" id="hasStockTambah" x-model="hasStock" class="w-4 h-4 rounded border-gray-300 text-terralogBlue focus:ring-terralogBlue">
-                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Gunakan Manajemen Stok</span>
+                    <input type="checkbox" id="editHasStock" x-model="hasStock" class="w-4 h-4 rounded border-gray-300 text-terralogBlue">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Gunakan Manajemen Stok</span>
                 </label>
-                
-                <div x-show="hasStock" x-transition class="mt-2">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase">Jumlah Stok Awal</label>
-                    <input type="number" id="stokMenu" placeholder="Contoh: 50" 
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700">
+                <div x-show="hasStock" x-transition>
+                    <input type="number" id="editStokMenu" placeholder="Jumlah Stok" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-bold">
                 </div>
-                
-                <p class="text-[10px] text-gray-400 mt-1" x-show="!hasStock">
-                    *Menu akan dianggap selalu tersedia (dimasak berdasarkan bahan baku).
-                </p>
             </div>
 
-            <textarea id="editDeskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Deskripsi"></textarea>
+            <div class="flex items-center justify-between p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                <div>
+                    <p class="text-sm font-bold text-gray-800">Menu Tersedia</p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">Matikan jika menu sedang habis</p>
+                </div>
+                <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
+                    <input type="checkbox" id="editStatusMenu">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <textarea id="editDeskripsiMenu" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm font-bold" placeholder="Deskripsi"></textarea>
         </div>
 
         <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-50">
             <button onclick="closeModal('modalEditMenu')" class="px-6 py-3 rounded-xl border border-gray-200 font-bold text-gray-500 text-sm">Batal</button>
-            <button onclick="updateMenu()" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold transition shadow-md text-sm">Simpan Perubahan</button>
+            <button onclick="updateMenu()" class="px-8 py-3 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm">Simpan Perubahan</button>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Filter by category
+// Fungsi Filter Kategori
 function filterMenu(kategori, btn) {
-    // Update button styles
+    // Reset semua warna tombol ke garis luar (outline)
     document.querySelectorAll('.filter-btn').forEach(b => {
-        b.classList.remove('bg-[#1B2FAA]', 'text-white');
-        b.classList.add('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+        b.classList.remove('bg-terralogBlue', 'text-white');
+        b.classList.add('border-2', 'border-terralogBlue', 'text-terralogBlue');
     });
-    btn.classList.add('bg-[#1B2FAA]', 'text-white');
-    btn.classList.remove('border-2', 'border-[#1B2FAA]', 'text-[#1B2FAA]');
+    
+    // Warnai tombol yang sedang diklik menjadi solid
+    btn.classList.add('bg-terralogBlue', 'text-white');
+    btn.classList.remove('border-2', 'border-terralogBlue', 'text-terralogBlue');
 
-    // Filter rows
+    // Sembunyikan atau tampilkan baris tabel
     document.querySelectorAll('.menu-row').forEach(row => {
         const rowKat = row.dataset.kategori;
         if (kategori === 'Semua' || rowKat === kategori) {
@@ -253,105 +289,103 @@ function filterMenu(kategori, btn) {
     });
 }
 
-// Toggle status (on/off)
-function toggleMenuStatus(checkbox, menuId) {
-    fetch(`/owner/api/toggle-menu-status/${menuId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: checkbox.checked })
-    }).then(r => r.json()).then(data => {
-        if (data.success) {
-            showToast('Status menu diperbarui!');
-        } else {
-            alert(data.message || 'Terjadi kesalahan.');
-            checkbox.checked = !checkbox.checked; // Kembalikan posisi toggle jika gagal
-        }
-    }).catch(err => {
-        alert("Gagal terhubung ke server.");
-        checkbox.checked = !checkbox.checked;
-    });
-}
+// --- JAVASCRIPT KELOLA KATEGORI ---
 
-function simpanMenu() {
-    const nama = document.getElementById('namaMenu').value.trim();
-    const kategori = document.getElementById('kategoriMenu').value;
-    const harga = document.getElementById('hargaMenu').value;
-    const deskripsi = document.getElementById('deskripsiMenu').value;
-    const foto = document.getElementById('fotoMenu').files[0];
-    
-    // Cek apakah checkbox stok dicentang
-    const hasStock = document.getElementById('hasStockTambah').checked;
-    const stokValue = document.getElementById('stokMenu').value;
-    const stok = hasStock ? stokValue : ""; // Kirim kosong jika tidak pakai manajemen stok
-
-    if (!nama || !harga) { 
-        alert('Nama dan Harga wajib diisi!'); 
-        return; 
-    }
+function tambahKategori() {
+    const nama = document.getElementById('inputKategoriBaru').value.trim();
+    if (!nama) return alert('Nama kategori tidak boleh kosong!');
 
     const formData = new FormData();
     formData.append('nama', nama);
-    formData.append('kategori', kategori);
-    formData.append('harga', harga);
-    formData.append('stok', stok); // Backend akan menerima "" sebagai None/NULL
-    formData.append('deskripsi', deskripsi);
-    if (foto) {
-        formData.append('foto', foto);
-    }
 
-    fetch('/owner/api/tambah-menu', {
-        method: 'POST',
-        body: formData 
-    })
+    fetch('/owner/api/tambah-kategori', { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Menu berhasil ditambahkan!');
+            showToast(data.message);
             setTimeout(() => location.reload(), 1000);
-        } else {
-            alert(data.message);
+        } else { alert(data.message); }
+    });
+}
+
+// Fungsi ini dipanggil dari dalam Alpine.js
+function simpanEditKategori(id, namaBaru) {
+    if (!namaBaru.trim()) return alert('Nama kategori tidak boleh kosong!');
+    
+    const formData = new FormData();
+    formData.append('nama', namaBaru);
+
+    fetch(`/owner/api/edit-kategori/${id}`, { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else { alert(data.message); }
+    });
+}
+
+function hapusKategori(id) {
+    if (!confirm('Yakin ingin menghapus kategori ini? Pastikan tidak ada menu yang menggunakannya.')) return;
+    
+    fetch(`/owner/api/hapus-kategori/${id}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            setTimeout(() => location.reload(), 1000);
+        } else { 
+            // Memunculkan alert error yang ramah (misal karena masih dipakai menu)
+            alert(data.message); 
         }
     });
 }
 
-// Fungsi untuk melihat preview gambar sebelum diupload
-function previewImage(input) {
-    const preview = document.getElementById('imagePreview');
-    const icon = document.getElementById('placeholderIcon');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
-            icon.classList.add('hidden');
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
+// Handler klik edit (Anti VSCode Error)
+function handleEditClick(btn) {
+    const data = {
+        id: btn.getAttribute('data-id'),
+        nama: btn.getAttribute('data-nama'),
+        kategori: btn.getAttribute('data-kategori'),
+        harga: btn.getAttribute('data-harga'),
+        stok: btn.getAttribute('data-stok'),
+        deskripsi: btn.getAttribute('data-deskripsi'),
+        img: btn.getAttribute('data-img'),
+        status: btn.getAttribute('data-status') === 'true'
+    };
+    openEditModal(data);
 }
 
-// edit menu
-function openEditModal(id, nama, kategori, harga, stok, deskripsi, imgUrl) {
-    document.getElementById('editMenuId').value = id;
-    document.getElementById('editNamaMenu').value = nama;
-    document.getElementById('editKategoriMenu').value = kategori;
-    document.getElementById('editHargaMenu').value = harga;
-    document.getElementById('editDeskripsiMenu').value = deskripsi;
-    
-    const stokInput = document.getElementById('editStokMenu');
+function openEditModal(data) {
+    document.getElementById('editMenuId').value = data.id;
+    document.getElementById('editNamaMenu').value = data.nama;
+    document.getElementById('editKategoriMenu').value = data.kategori;
+    document.getElementById('editHargaMenu').value = data.harga;
+    document.getElementById('editDeskripsiMenu').value = data.deskripsi;
+    document.getElementById('editStatusMenu').checked = data.status;
+
+    // Reset Alpine data untuk stok via JS manual atau ID
     const hasStockCheck = document.getElementById('editHasStock');
+    const stokInput = document.getElementById('editStokMenu');
     
-    if (stok && stok !== 'None' && stok !== '') {
+    if (data.stok && data.stok !== '') {
         hasStockCheck.checked = true;
-        stokInput.value = stok;
-        // Trigger Alpine.js jika perlu, atau gunakan JS manual untuk show/hide
+        stokInput.value = data.stok;
+        // Trigger event change agar Alpine.js menyadari perubahan
+        hasStockCheck.dispatchEvent(new Event('change'));
     } else {
         hasStockCheck.checked = false;
         stokInput.value = '';
+        hasStockCheck.dispatchEvent(new Event('change'));
     }
 
+    // Logic Gambar Seeder vs Upload
     const preview = document.getElementById('editImagePreview');
-    preview.src = imgUrl ? `/static/${imgUrl}` : '/static/uploads/menu/default.png';
+    if (data.img) {
+        preview.src = data.img.startsWith('http') ? data.img : `/static/${data.img}`;
+    } else {
+        preview.src = '/static/uploads/menu/default.png';
+    }
 
     openModal('modalEditMenu');
 }
@@ -363,6 +397,7 @@ function updateMenu() {
     formData.append('kategori', document.getElementById('editKategoriMenu').value);
     formData.append('harga', document.getElementById('editHargaMenu').value);
     formData.append('deskripsi', document.getElementById('editDeskripsiMenu').value);
+    formData.append('status', document.getElementById('editStatusMenu').checked);
     
     const hasStock = document.getElementById('editHasStock').checked;
     formData.append('stok', hasStock ? document.getElementById('editStokMenu').value : "");
@@ -370,27 +405,61 @@ function updateMenu() {
     const foto = document.getElementById('editFotoMenu').files[0];
     if (foto) formData.append('foto', foto);
 
-    fetch(`/owner/api/edit-menu/${id}`, {
-        method: 'POST',
-        body: formData
-    })
+    fetch(`/owner/api/edit-menu/${id}`, { method: 'POST', body: formData })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast('Menu berhasil diperbarui!');
+            showToast('Menu diperbarui!');
             setTimeout(() => location.reload(), 1000);
-        } else {
-            alert(data.message);
-        }
+        } else { alert(data.message); }
     });
 }
 
-function previewEditImage(input) {
+function simpanMenu() {
+    const formData = new FormData();
+    formData.append('nama', document.getElementById('namaMenu').value);
+    formData.append('kategori', document.getElementById('kategoriMenu').value);
+    formData.append('harga', document.getElementById('hargaMenu').value);
+    formData.append('deskripsi', document.getElementById('deskripsiMenu').value);
+    
+    const hasStock = document.getElementById('hasStockTambah').checked;
+    formData.append('stok', hasStock ? document.getElementById('stokMenu').value : "");
+    
+    const foto = document.getElementById('fotoMenu').files[0];
+    if (foto) formData.append('foto', foto);
+
+    fetch('/owner/api/tambah-menu', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Menu baru ditambahkan!');
+            setTimeout(() => location.reload(), 1000);
+        } else { alert(data.message); }
+    });
+}
+
+function previewImage(input, previewId, iconId) {
+    const preview = document.getElementById(previewId);
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = (e) => { document.getElementById('editImagePreview').src = e.target.result; };
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            if (iconId) document.getElementById(iconId).classList.add('hidden');
+        };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+function toggleMenuStatus(checkbox, menuId) {
+    fetch(`/owner/api/toggle-menu-status/${menuId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: checkbox.checked })
+    }).then(r => r.json()).then(data => {
+        if (data.success) showToast('Status diperbarui!');
+        else { checkbox.checked = !checkbox.checked; alert(data.message); }
+    });
 }
 </script>
 {% endblock %}

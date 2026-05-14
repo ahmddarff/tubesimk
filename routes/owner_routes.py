@@ -92,6 +92,73 @@ def pengaturan():
     )
 
 # ── Menu APIs ─────────────────────────────────────────
+@owner_bp.route('/api/tambah-kategori', methods=['POST'])
+@login_required
+def tambah_kategori():
+    nama = request.form.get('nama')
+    if not nama:
+        return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
+    
+    # Cek apakah nama kategori sudah ada agar tidak dobel
+    exist = Category.query.filter_by(name=nama).first()
+    if exist:
+        return jsonify({"success": False, "message": "Kategori tersebut sudah ada."})
+    
+    new_cat = Category(name=nama)
+    try:
+        db.session.add(new_cat)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kategori baru berhasil ditambahkan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@owner_bp.route('/api/edit-kategori/<int:id>', methods=['POST'])
+@login_required
+def edit_kategori(id):
+    cat = db.session.get(Category, id)
+    if not cat:
+        return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
+    
+    nama_baru = request.form.get('nama')
+    if not nama_baru:
+         return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
+         
+    # Cek duplikat dengan nama lain yang sudah ada
+    exist = Category.query.filter(Category.name == nama_baru, Category.id != id).first()
+    if exist:
+        return jsonify({"success": False, "message": "Nama kategori ini sudah digunakan."})
+        
+    try:
+        cat.name = nama_baru
+        db.session.commit()
+        return jsonify({"success": True, "message": "Nama kategori berhasil diubah!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@owner_bp.route('/api/hapus-kategori/<int:id>', methods=['POST'])
+@login_required
+def hapus_kategori(id):
+    cat = db.session.get(Category, id)
+    if not cat:
+        return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
+        
+    # VALIDASI PENTING: Cek apakah ada menu yang masih pakai kategori ini
+    if cat.menus:
+        return jsonify({
+            "success": False, 
+            "message": f"Gagal! Kategori ini sedang digunakan oleh {len(cat.menus)} menu. Pindahkan menu terlebih dahulu."
+        })
+        
+    try:
+        db.session.delete(cat)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kategori berhasil dihapus!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    
 # Pastikan folder upload ada
 UPLOAD_FOLDER = 'static/uploads/menu'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -171,37 +238,47 @@ def toggle_menu_status(menu_id):
 @login_required
 def edit_menu(menu_id):
     try:
-        menu = db.session.get(Menu, menu_id) # Menggunakan get yang aman
+        # Menggunakan get yang aman untuk mengambil data menu
+        menu = db.session.get(Menu, menu_id)
         if not menu:
             return jsonify({"success": False, "message": "Menu tidak ditemukan."})
 
-        # --- NAMA MENU DIKUNCI (TIDAK DIUPDATE) ---
-        
-        # Update Harga, Deskripsi, dan Stok
+        # Update data dasar
+        menu.name = request.form.get('nama')
         menu.price = int(request.form.get('harga') or 0)
         menu.description = request.form.get('deskripsi')
         
-        # Logika Stok NULL untuk nasi goreng tetap terjaga
+        # Tangkap status ketersediaan (konversi string 'true'/'false' dari JS ke Boolean)
+        status_str = request.form.get('status')
+        menu.is_available = True if status_str == 'true' else False
+        
+        # Logika Manajemen Stok (NULL untuk menu yang dimasak/made-to-order)
         stok_raw = request.form.get('stok')
         menu.stock = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
 
-        # Update Kategori
+        # Update Kategori berdasarkan nama yang dipilih
         kategori_nama = request.form.get('kategori')
         category = Category.query.filter_by(name=kategori_nama).first()
         if category:
             menu.category_id = category.id
 
-        # Update Foto (Jika ada yang baru)
+        # Update Foto jika ada file baru yang diunggah
         if 'foto' in request.files:
             foto = request.files['foto']
             if foto and foto.filename != '':
                 filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{foto.filename}")
                 upload_path = os.path.join(current_app.root_path, 'static/uploads/menu')
+                
+                # Pastikan folder tujuan ada
+                if not os.path.exists(upload_path):
+                    os.makedirs(upload_path)
+                
                 foto.save(os.path.join(upload_path, filename))
                 menu.image_url = f"uploads/menu/{filename}"
 
         db.session.commit()
         return jsonify({"success": True, "message": "Perubahan berhasil disimpan!"})
+    
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})
