@@ -207,7 +207,51 @@ def pesanan_history():
 
 @customer_bp.route('/checkout')
 def checkout():
-    return render_template('customer/checkout.html', segment='checkout', role='customer')
+    # Check if there are pre-filled items from pesan-lagi
+    pre_filled_items = session.get('pre_filled_items', None)
+    session.pop('pre_filled_items', None)  # Clear after retrieving
+    session.modified = True
+    
+    return render_template('customer/checkout.html', segment='checkout', role='customer', pre_filled_items=pre_filled_items)
+
+@customer_bp.route('/pesan-lagi/<order_id>')
+def pesan_lagi(order_id):
+    # Get all history orders
+    history_orders = [
+        {
+            "id": "AB098",
+            "status": "Selesai",
+            "date": "14 Februari 2026",
+            "time": "21:48 WIB",
+            "products": [
+                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}
+            ],
+            "total": 38000
+        },
+        {
+            "id": "AB073",
+            "status": "Dibatalkan",
+            "date": "13 Januari 2026",
+            "time": "17:45 WIB",
+            "products": [
+                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 1}
+            ],
+            "total": 18000
+        }
+    ]
+    
+    # Find the order
+    order = next((o for o in history_orders if o['id'] == order_id), None)
+    
+    if order is None:
+        return redirect(url_for('customer.pesanan_history'))
+    
+    # Store pre-filled items in session
+    pre_filled_items = order['products']
+    session['pre_filled_items'] = pre_filled_items
+    session.modified = True
+    
+    return redirect(url_for('customer.checkout'))
 
 @customer_bp.route('/pembayaran-nontunai/<order_id>')
 def pembayaran_nontunai(order_id):

@@ -3,6 +3,11 @@
 {% block title %}Checkout - Terralog{% endblock %}
 
 {% block content %}
+<!-- Store pre-filled items in window object -->
+<script>
+    // noinspection JSUnusedAssignment
+    window.preFilledItems = {{ pre_filled_items|tojson if pre_filled_items else '[]' }};
+</script>
 <div class="flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
     <div class="max-w-5xl mx-auto">
         <!-- Breadcrumb & Summary Header -->
@@ -106,12 +111,20 @@
 
 <script>
     function checkoutApp() {
-        // Load cart from localStorage
-        const savedCart = localStorage.getItem('cart');
-        const cartItems = savedCart ? JSON.parse(savedCart) : [
-            { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
-            { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
-        ];
+        // Get pre-filled items from window object
+        const preFilledItems = window.preFilledItems || [];
+        
+        // Load cart from localStorage or use pre-filled items
+        let cartItems;
+        if (preFilledItems && preFilledItems.length > 0) {
+            cartItems = preFilledItems;
+        } else {
+            const savedCart = localStorage.getItem('cart');
+            cartItems = savedCart ? JSON.parse(savedCart) : [
+                { nama: 'Terralog Kopi', harga: 18000, qty: 1, note: '' },
+                { nama: 'Tagalog Fried Rice', harga: 25000, qty: 1, note: '' }
+            ];
+        }
         
         // Transform cart items to include notes
         const items = cartItems.map(item => ({
