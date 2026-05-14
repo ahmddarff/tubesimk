@@ -69,6 +69,13 @@
                 <i data-lucide="settings" class="w-6 h-6 opacity-80 group-hover:opacity-100"></i>
                 <span class="font-medium text-lg">Pengaturan</span>
             </a>
+
+            <a href="{{ url_for('auth.logout') }}" 
+            onclick="return confirm('Apakah Anda yakin ingin keluar dari sistem?')"
+            class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 text-blue-100 hover:bg-white/10 group">
+                <i data-lucide="log-out" class="w-6 h-6 opacity-80 group-hover:opacity-100"></i>
+                <span class="font-medium text-lg">Logout</span>
+            </a>        
         
         {% endif %}
         
