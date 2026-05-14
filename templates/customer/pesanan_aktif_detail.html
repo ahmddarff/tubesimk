@@ -5,25 +5,22 @@
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="pesananAktifApp()" @load="$watch('items', () => lucide.createIcons())">
     <div class="max-w-5xl">
-        <!-- Breadcrumb -->
         <div class="mb-8 flex items-center gap-2 text-gray-600">
             <a href="/customer/pesanan-saya" class="hover:text-terralogBlue font-semibold">Pesanan Saya</a>
             <span class="text-gray-400">›</span>
             <span class="text-gray-800 font-semibold">Pesanan Aktif</span>
         </div>
 
-        <!-- Main Content Grid -->
         <div class="grid grid-cols-3 gap-6 mb-8">
-            <!-- Left: Customer Info -->
             <div class="bg-white rounded-2xl p-6 shadow-sm">
                 <div class="space-y-4">
                     <div>
                         <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">Nama Pemesan</p>
-                        <p class="text-gray-800 text-lg font-bold" x-text="order.nama">Matthew Shen</p>
+                        <p class="text-gray-800 text-lg font-bold" x-text="order.customer_name">Matthew Shen</p>
                     </div>
                     <div>
                         <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">No. Pesanan</p>
-                        <p class="text-gray-800 text-lg font-bold" x-text="`AB${order.order_id || '1023'}`">AB1023</p>
+                        <p class="text-gray-800 text-lg font-bold" x-text="order.order_number || 'AB1023'">AB1023</p>
                     </div>
                     <div>
                         <p class="text-gray-600 text-xs font-semibold mb-1 uppercase">Pembayaran</p>
@@ -32,7 +29,6 @@
                 </div>
             </div>
 
-            <!-- Center: Status -->
             <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center">
                 <div class="text-center">
                     <div class="mb-4">
@@ -41,52 +37,47 @@
                             <path d="M8 12H10M14 12H16M12 8V10M12 14V16" stroke="#1E40AF" stroke-width="2" stroke-linecap="round"/>
                         </svg>
                     </div>
-                    <h3 class="text-gray-800 font-bold text-base mb-2">Menunggu Konfirmasi Kasir</h3>
+                    <h3 class="text-gray-800 font-bold text-base mb-2 uppercase" x-text="order.order_status">Menunggu Konfirmasi Kasir</h3>
                     <p class="text-gray-600 text-xs">Yuk selesaikan pembayaranmu, tunggu pesanan anda siap</p>
                 </div>
             </div>
 
-            <!-- Right: Payment Method -->
             <div class="bg-white rounded-2xl p-6 shadow-sm">
                 <p class="text-gray-600 text-xs font-semibold mb-3 uppercase">Metode Pembayaran</p>
-                <p class="text-gray-800 font-bold text-base mb-4">Non Tunai</p>
+                <p class="text-gray-800 font-bold text-base mb-4" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai')">Non Tunai</p>
                 <p class="text-gray-600 text-xs">Total Pembayaran</p>
                 <p class="text-terralogBlue font-bold text-2xl" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 43.000</p>
             </div>
         </div>
 
-        <!-- Order Items Section -->
         <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
             <h3 class="text-lg font-bold text-gray-800 mb-6">Pesanan Anda</h3>
 
             <template x-for="(item, index) in items" :key="index">
-                <div class="rounded-xl p-4 mb-4 border-2 flex gap-4 items-start" :class="index === 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'">
-                    <!-- Product Image Icon -->
+                <div class="rounded-xl p-4 mb-4 border-2 flex gap-4 items-start" :class="index % 2 === 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'">
                     <div class="w-20 h-20 bg-white rounded-lg flex items-center justify-center flex-shrink-0 border border-gray-200">
-                        <i :data-lucide="index === 0 ? 'coffee' : 'utensils'" class="w-10 h-10" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'"></i>
+                        <i :data-lucide="index % 2 === 0 ? 'coffee' : 'utensils'" class="w-10 h-10" :class="index % 2 === 0 ? 'text-terralogBlue' : 'text-terralogOrange'"></i>
                     </div>
 
-                    <!-- Product Info -->
                     <div class="flex-1">
                         <div class="flex items-start justify-between mb-2">
                             <div>
                                 <h4 class="font-bold text-gray-800" x-text="item.nama"></h4>
-                                <p class="font-semibold text-sm" :class="index === 0 ? 'text-terralogBlue' : 'text-terralogOrange'" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                <p class="font-semibold text-sm" :class="index % 2 === 0 ? 'text-terralogBlue' : 'text-terralogOrange'" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
                             </div>
                             <span class="bg-yellow-400 text-white font-bold px-2 py-1 rounded text-sm" x-text="`x${item.qty}`"></span>
                         </div>
-                        <p class="text-gray-600 text-xs" x-show="item.note" x-text="item.note">Masakan 2x gula</p>
+                        <p class="text-gray-600 text-xs bg-white p-1 px-2 rounded border border-gray-100 inline-block" x-show="item.note" x-text="`Catatan: ${item.note}`">Masakan 2x gula</p>
                     </div>
                 </div>
             </template>
         </div>
 
-        <!-- Payment Section -->
         <div class="bg-white rounded-2xl p-6 mb-8 shadow-sm">
             <div class="flex justify-between items-center">
                 <div>
                     <p class="text-gray-600 text-sm font-semibold mb-2">Metode Pembayaran</p>
-                    <p class="text-gray-800 font-bold" x-text="paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai'">Non Tunai</p>
+                    <p class="text-gray-800 font-bold" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai')">Non Tunai</p>
                 </div>
                 <div class="text-right">
                     <p class="text-gray-600 text-sm font-semibold mb-2">Total Pembayaran</p>
@@ -99,16 +90,8 @@
 
 <script>
     function pesananAktifApp() {
-        // Get order data from sessionStorage or server
-        let orderData = null;
-        const sessionOrder = sessionStorage.getItem('pendingOrder');
-        
-        if (sessionOrder) {
-            orderData = JSON.parse(sessionOrder);
-        } else {
-            // Fallback to template data
-            orderData = {{ order|tojson if order else 'null' }};
-        }
+        // Mengambil data ter-serialize aman dari backend Flask
+        let orderData = {{ order_json|tojson if order_json else 'null' }};
         
         let items = [];
         let paymentMethod = 'tunai';
@@ -116,8 +99,8 @@
         
         if (orderData) {
             items = orderData.items || [];
-            paymentMethod = orderData.paymentMethod || 'tunai';
-            total = orderData.total || 0;
+            paymentMethod = orderData.payment_method || 'tunai';
+            total = orderData.total_amount || 0;
         }
         
         return {
@@ -127,11 +110,8 @@
             order: orderData || {},
             
             submitPembayaran() {
-                const orderNumber = orderData ? orderData.order_id : 'AB123';
-                
-                // Redirect to completion page
-                if (orderData && orderData.order_id) {
-                    window.location.href = `/customer/pesanan/${orderData.order_id}/selesai`;
+                if (this.order && this.order.id) {
+                    window.location.href = `/customer/pesanan/${this.order.id}/selesai`;
                 } else {
                     window.location.href = '/customer/pesanan-saya';
                 }
@@ -139,6 +119,10 @@
         }
     }
 
-    lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}
