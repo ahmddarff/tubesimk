@@ -38,9 +38,9 @@ def menu_detail(menu_id):
     menu = Menu.query.get_or_404(menu_id)
     
     return render_template('customer/menu_detail.html', 
-             menu=menu, 
-             segment='daftar_menu', 
-             role='customer')
+            menu=menu, 
+            segment='daftar_menu', 
+            role='customer')
 
 
 # =========================
