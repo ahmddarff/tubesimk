@@ -43,7 +43,11 @@
                 <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
             </button>
             <div x-show="showProfile" @click.away="showProfile = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                
+                <div class="px-4 py-3 border-b border-gray-50 mb-1">
+                    <p class="text-sm font-extrabold text-gray-800">{{ current_user.name }}</p>
+                    <p class="text-xs font-medium text-gray-400 capitalize">{{ current_user.role }}</p>
+                </div>
+
                 {% if current_user.role == 'customer' %}
                     <a href="{{ url_for('customer.profil') }}" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
                 {% else %}
