@@ -1,4 +1,4 @@
-{% extends 'layouts/layout_customer.html' %} {% block content %}
+{% extends 'layout.html' %} {% block content %}
 <div 
     x-data="{
         activeTab: 'akun',
@@ -12,7 +12,6 @@
             if (this.newPassword.length < 8) { alert('Kata sandi baru minimal 8 karakter!'); return; }
             if (this.newPassword !== this.confirmPassword) { alert('Konfirmasi kata sandi tidak cocok!'); return; }
 
-            // Lakukan request ke Backend Flask
             fetch(endpointUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -25,12 +24,11 @@
             .then(data => {
                 if (data.success) {
                     alert(data.message);
-                    // Kosongkan form jika berhasil
                     this.currentPassword = '';
                     this.newPassword = '';
                     this.confirmPassword = '';
                 } else {
-                    alert(data.message); // Tampilkan pesan error (misal: password salah)
+                    alert(data.message); 
                 }
             })
             .catch(err => {
@@ -64,19 +62,32 @@
     <div class="bg-white rounded-[1.8rem] shadow-sm border border-gray-100 p-6">
 
         <div x-show="activeTab === 'akun'" x-transition>
-            <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
-                <div class="relative">
-                    <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase">
-                        {{ user.name[:2] }}
+            
+            <form action="{{ url_for('customer.pengaturan') }}" method="POST" enctype="multipart/form-data">
+                <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
+                    <div class="relative">
+                        <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
+                            <img id="userPhotoPreview" 
+                                 src="{% if user.photo %}{{ url_for('static', filename='images/' + user.photo) }}{% endif %}" 
+                                 class="w-full h-full object-cover {% if not user.photo %}hidden{% endif %}"
+                                 onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
+                            
+                            <span id="userInitial" class="{% if user.photo %}hidden{% endif %}">{{ user.name[:2] }}</span>
+                        </div>
+
+                        <input type="file" name="foto" id="inputFotoAkun" class="hidden" accept="image/*" onchange="previewFotoAkun(this)">
+
+                        <button type="button" onclick="document.getElementById('inputFotoAkun').click()"
+                            class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800">{{ user.name }}</h2>
+                        <p class="text-gray-400 font-medium mt-1 text-sm capitalize">{{ user.role }}</p>
                     </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">{{ user.name }}</h2>
-                    <p class="text-gray-400 font-medium mt-1 text-sm capitalize">{{ user.role }}</p>
-                </div>
-            </div>
 
-            <form action="{{ url_for('customer.pengaturan') }}" method="POST">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
                     <div>
                         <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Lengkap</label>
@@ -132,11 +143,11 @@
                         </div>
                     </div>
 
-                    <p class="text-xs text-gray-400">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
+                    <p class="text-xs text-gray-400 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
 
-                    <div class="flex justify-end mt-1">
+                    <div class="flex mt-2">
                         <button @click="savePassword('{{ url_for(role ~ '.update_password') }}')"
-                                class="px-6 py-2.5 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md">
+                                class="w-full py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-[0.98]">
                             Perbarui Kata Sandi
                         </button>
                     </div>
@@ -147,6 +158,20 @@
 </div>
 
 <script>
+    function previewFotoAkun(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('userPhotoPreview');
+                const initial = document.getElementById('userInitial');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                initial.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     document.addEventListener('alpine:init', () => {
         lucide.createIcons();
     });

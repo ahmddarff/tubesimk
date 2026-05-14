@@ -3,6 +3,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 from extensions import db, login_manager
 from models import User
 from dotenv import load_dotenv
+from sqlalchemy.exc import OperationalError
 
 # load_dotenv() 
 
@@ -10,6 +11,18 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 app = Flask(__name__)
+
+@app.errorhandler(OperationalError)
+def handle_db_error(e):
+    # Logika: Jika error mengandung indikasi gagal koneksi ke MySQL
+    return """
+    <div style="text-align: center; padding: 50px; font-family: sans-serif;">
+        <h1 style="color: #e74c3c;">Database Belum Aktif!</h1>
+        <p>Sepertinya <strong>Laragon/XAMPP</strong> belum dinyalakan atau MySQL mati.</p>
+        <p>Pastikan modul MySQL di control panel sudah berwarna hijau (Running).</p>
+        <button onclick="location.reload()">Refresh Halaman</button>
+    </div>
+    """, 503
 
 # ==========================================
 # KONFIGURASI DATABASE

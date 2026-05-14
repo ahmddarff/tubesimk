@@ -1,8 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+import os
+from datetime import datetime
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from models import Menu
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 kasir_bp = Blueprint('kasir', __name__)
 
@@ -139,17 +142,37 @@ def riwayat_transaksi():
 @login_required
 def pengaturan():
     if request.method == 'POST':
-        # Mengambil data dari formulir
+        # Mengambil data dari formulir teks
         name = request.form.get('name')
         username = request.form.get('username')
         email = request.form.get('email')
         phone = request.form.get('phone')
 
-        # Memperbarui data pengguna yang sedang login
+        # Memperbarui data pengguna
         current_user.name = name
         current_user.username = username
         current_user.email = email
         current_user.phone = phone
+
+        # --- LOGIKA UPLOAD FOTO ---
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '':
+                # Hapus foto lama jika bukan null
+                if current_user.photo:
+                    old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                    if os.path.exists(old_path) and os.path.isfile(old_path):
+                        try: os.remove(old_path)
+                        except: pass
+                
+                # Simpan foto baru
+                filename = secure_filename(file.filename)
+                unique_filename = f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
+                file.save(file_path)
+                
+                # Update ke database
+                current_user.photo = unique_filename
 
         try:
             db.session.commit()

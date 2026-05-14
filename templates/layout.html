@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %} - Terralog</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        terralogBlue: '#0022AA',
+                        terralogGold: '#F2C94C',
+                        terralogOrange: '#E99817',
+                        terralogPeach: '#F7E190',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Inter', sans-serif; }
+
+        /* ── ANIMASI MODAL & TOAST (Global) ── */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
+        .modal-overlay.active .modal-box { animation: slideUp 0.25s ease; }
+
+        @keyframes toastIn  { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-80px); opacity: 0; } }
+        .toast.show { animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .toast.hide { animation: toastOut 0.3s ease forwards; }
+
+        /* ── TOGGLE SWITCH CSS (Digunakan di Pengaturan) ── */
+        .toggle-switch input { display: none; }
+        .toggle-slider { position: absolute; inset: 0; background: #CBD5E0; border-radius: 50px; transition: 0.3s; }
+        .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+        .toggle-switch input:checked + .toggle-slider { background: #0022AA; }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
+
+        /* ── PRINT CSS (Khusus Struk Kasir) ── */
+        #receipt-print { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print {
+                display: block !important;
+                position: absolute;
+                left: 0; top: 0;
+                width: 80mm;
+                padding: 4mm;
+                background: white;
+                color: black !important;
+                font-size: 10pt;
+                line-height: 1.4;
+            }
+            @page { size: 80mm auto; margin: 0; }
+            html, body { margin: 0; padding: 0; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-[#F5F7FF] font-sans text-gray-800">
+
+    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 border-green-500 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all">
+        <i class="fa-solid fa-circle-check text-green-500 text-base"></i>
+        <span id="toast-message">Berhasil!</span>
+    </div>
+
+    <div class="min-h-screen flex">
+        
+        <aside class="fixed left-0 top-0 w-72 h-screen z-40 shadow-sm border-r border-gray-100">
+            {% include 'includes/sidebar.html' %}
+        </aside>
+
+        <div class="flex-1 ml-72 flex flex-col min-h-screen">
+            
+            <header class="sticky top-0 z-30 bg-white shadow-sm">
+                {% include 'includes/navbar.html' %}
+            </header>
+
+            <main class="flex-1 p-8 overflow-x-hidden">
+                {% block content %}{% endblock %}
+            </main>
+            
+        </div>
+    </div>
+
+    <script>
+        // Inisialisasi ikon secara global
+        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+        document.addEventListener('alpine:navigated', () => { lucide.createIcons(); });
+        
+        // Fungsi Modal Global
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if(el) { el.classList.remove('hidden'); el.classList.add('active'); }
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if(el) { el.classList.add('hidden'); el.classList.remove('active'); }
+        }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+        });
+
+        // Fungsi Toast Global
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msg   = document.getElementById('toast-message');
+            msg.textContent = message;
+            toast.classList.remove('hide');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); toast.classList.add('hide'); }, 3500);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

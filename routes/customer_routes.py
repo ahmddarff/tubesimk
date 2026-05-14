@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
+import os
+from werkzeug.utils import secure_filename
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from datetime import datetime
 from flask_login import login_required, current_user
 from models import User, Menu, Category
@@ -344,6 +346,26 @@ def pengaturan():
         current_user.username = username
         current_user.email = email
         current_user.phone = phone
+
+        # --- LOGIKA UPLOAD FOTO ---
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '':
+                # Hapus foto lama jika ada
+                if current_user.photo:
+                    old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                    if os.path.exists(old_path) and os.path.isfile(old_path):
+                        try: os.remove(old_path)
+                        except: pass
+                
+                # Simpan foto baru
+                filename = secure_filename(file.filename)
+                unique_filename = f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
+                file.save(file_path)
+                
+                # Update ke database
+                current_user.photo = unique_filename
 
         try:
             db.session.commit()
