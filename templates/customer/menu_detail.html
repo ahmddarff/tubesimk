@@ -7,7 +7,7 @@
         <div class="flex items-center gap-2 text-gray-600 text-sm">
             <a href="/customer/daftar-menu" class="hover:text-terralogBlue transition">Daftar Menu</a>
             <span>›</span>
-            <span class="text-gray-800 font-semibold">{{ menu.nama }}</span>
+            <span class="text-gray-800 font-semibold">{{ menu.name }}</span>
         </div>
         
         <!-- Cart Badge -->
@@ -24,7 +24,7 @@
         <div>
             <div class="bg-terralogBlue rounded-3xl overflow-hidden shadow-lg">
                 <img src="https://via.placeholder.com/400x350/1F3A93/FFFFFF?text=Terralog+Kopi" 
-                     alt="{{ menu.nama }}" 
+                     alt="{{ menu.name }}" 
                      class="w-full h-80 object-cover">
             </div>
         </div>
@@ -33,13 +33,13 @@
         <div class="space-y-6">
             <!-- Product Name -->
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ menu.nama }}</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ menu.name }}</h1>
             </div>
 
             <!-- Price -->
             <div class="bg-terralogGold/10 border-2 border-terralogGold rounded-2xl p-4">
                 <p class="text-gray-600 text-sm mb-1">Harga</p>
-                <p class="text-3xl font-bold text-terralogBlue">Rp {{ "{:,}".format(menu.harga).replace(',', '.') }}</p>
+                <p class="text-3xl font-bold text-terralogBlue">Rp {{ "{:,}".format(menu.price).replace(',', '.') }}</p>
             </div>
 
             <!-- Sold Info -->
@@ -48,7 +48,7 @@
             <!-- Deskripsi -->
             <div>
                 <h3 class="text-sm font-bold text-gray-800 mb-2">Deskripsi</h3>
-                <p class="text-gray-700 leading-relaxed text-sm">{{ menu.deskripsi }}</p>
+                <p class="text-gray-700 leading-relaxed text-sm">{{ menu.description }}</p>
             </div>
 
             <!-- Quantity Selector -->
@@ -135,8 +135,8 @@
             addToCart() {
                 // Add item to cart
                 this.cart.push({
-                    nama: '{{ menu.nama }}',
-                    harga: '{{ menu.harga }}',
+                    nama: '{{ menu.name }}',
+                    harga: '{{ menu.price }}',
                     qty: this.qty
                 });
                 

@@ -81,102 +81,64 @@
                 <div>
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Daftar Menu</h2>
                     
-                    <!-- Category Filter -->
                     <div class="flex gap-3 mb-8 overflow-x-auto pb-2">
                         <button @click="activeCategory = 'semua'" 
                                 :class="activeCategory === 'semua' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
                                 class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
                             Semua
                         </button>
-                        <button @click="activeCategory = 'coffee'" 
-                                :class="activeCategory === 'coffee' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
-                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
-                            Coffee
+                        
+                        {% for category in categories %}
+                        <button @click="activeCategory = '{{ category.name }}'" 
+                                :class="activeCategory === '{{ category.name }}' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition capitalize">
+                            {{ category.name }}
                         </button>
-                        <button @click="activeCategory = 'noncoffee'" 
-                                :class="activeCategory === 'noncoffee' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
-                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
-                            Non Coffee
-                        </button>
-                        <button @click="activeCategory = 'food'" 
-                                :class="activeCategory === 'food' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
-                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
-                            Food
-                        </button>
-                        <button @click="activeCategory = 'snack'" 
-                                :class="activeCategory === 'snack' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
-                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
-                            Snack
-                        </button>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <!-- Product Cards Grid -->
                 <div class="grid grid-cols-3 gap-6">
                     {% for product in menu %}
-                    <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.kategori }}'" 
-                         data-product-id="{{ product.id }}"
-                         data-product-nama="{{ product.nama }}"
-                         data-product-harga="{{ product.harga }}"
-                         data-product-kategori="{{ product.kategori }}"
-                         data-product-status="{{ product.status }}"
-                         data-product-rating="{{ product.rating }}"
-                         class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group">
+                    <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.category.name }}'" 
+                        @click="window.location.href='/customer/menu/{{ product.id }}'"
+                        class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group cursor-pointer">
                         
-                        <!-- Image Container with Rating Badge and Add Button -->
                         <div class="relative h-48 overflow-hidden bg-gray-100">
-                            <img src="https://via.placeholder.com/300x250/E8D5C4/8B7355?text={{ product.nama }}" 
-                                 alt="{{ product.nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <img src="https://via.placeholder.com/300x250/E8D5C4/8B7355?text={{ product.name }}" 
+                                alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                             
-                            <!-- Rating Badge -->
-                            <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 flex items-center gap-2 shadow-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FFD700" class="w-4 h-4">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                </svg>
-                                <span class="text-sm font-bold text-gray-800">{{ product.rating }}</span>
-                            </div>
-                            
-                            <!-- Button Control (Top Right) -->
-                            {% if product.status == 'tersedia' %}
-                            <template x-if="!isItemAdded('{{ product.nama }}')">
-                                <!-- Add Button -->
-                                <button @click.stop="addToCart({id: '{{ product.id }}', nama: '{{ product.nama }}', harga: {{ product.harga }}, img: '{{ product.img }}'})" 
+                            {% if product.is_available %}
+                            <template x-if="!isItemAdded('{{ product.name }}')">
+                                <button @click.stop="addToCart({id: '{{ product.id }}', nama: '{{ product.name }}', harga: {{ product.price }}, img: 'kopi.png'})" 
                                         class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
                                     +
                                 </button>
                             </template>
-                            <template x-if="isItemAdded('{{ product.nama }}')">
-                                <!-- Quantity Control -->
-                                <div class="absolute top-4 right-4 flex gap-2 items-center bg-terralogGold rounded-full px-2 py-2 shadow-lg">
-                                    <button @click.stop="decrementQty('{{ product.nama }}')" 
+                            <template x-if="isItemAdded('{{ product.name }}')">
+                                <div class="absolute top-4 right-4 flex gap-2 items-center bg-terralogGold rounded-full px-2 py-2 shadow-lg" @click.stop>
+                                    <button @click.stop="decrementQty('{{ product.name }}')" 
                                             class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
                                         −
                                     </button>
-                                    <span class="w-6 text-center font-bold text-white text-sm" x-text="getItemQty('{{ product.nama }}')">1</span>
-                                    <button @click.stop="incrementQty('{{ product.nama }}')" 
+                                    <span class="w-6 text-center font-bold text-white text-sm" x-text="getItemQty('{{ product.name }}')"></span>
+                                    <button @click.stop="incrementQty('{{ product.name }}')" 
                                             class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
                                         +
                                     </button>
                                 </div>
                             </template>
-                            {% endif %}
-                            
-                            <!-- Out of Stock Overlay -->
-                            {% if product.status == 'habis' %}
+                            {% else %}
                             <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
                                 <span class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold text-lg shadow-lg">HABIS</span>
                             </div>
                             {% endif %}
                         </div>
 
-                        <!-- Product Info -->
                         <div class="p-5 flex-1 flex flex-col">
-                            <h3 class="font-bold text-gray-800 text-base mb-2 line-clamp-2">{{ product.nama }}</h3>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">Premium quality coffee brewed with passion</p>
-                            
-                            <!-- Price -->
-                            <p class="text-2xl font-bold text-terralogBlue mb-1">Rp {{ "{:,}".format(product.harga).replace(',', '.') }}</p>
-                            <p class="text-gray-500 text-xs">128B+ Terjual</p>
+                            <h3 class="font-bold text-gray-800 text-base mb-2 line-clamp-2">{{ product.name }}</h3>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ product.description }}</p>
+                            <p class="text-2xl font-bold text-terralogBlue mb-1">Rp {{ "{:,}".format(product.price).replace(',', '.') }}</p>
                         </div>
                     </div>
                     {% endfor %}
