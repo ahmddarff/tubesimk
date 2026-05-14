@@ -101,34 +101,48 @@ if not os.path.exists(UPLOAD_FOLDER):
 @login_required
 def tambah_menu():
     try:
-        # Karena mengirim file (FormData), gunakan request.form bukan request.json
+        # Mengambil data dari FormData
         nama = request.form.get('nama')
-        kategori_name = request.form.get('kategori')
+        kategori_nama = request.form.get('kategori') # Nama kategori dari dropdown
         harga = request.form.get('harga')
+        stok_raw = request.form.get('stok')
         deskripsi = request.form.get('deskripsi')
+
+        stok = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
         
-        # Ambil file foto
+        # 1. Cari objek kategori berdasarkan nama untuk mendapatkan ID-nya
+        category = Category.query.filter_by(name=kategori_nama).first()
+        if not category:
+            return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
+
+        # 2. Proses upload foto
         foto = request.files.get('foto')
         filename = None
 
         if foto and foto.filename != '':
             filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{foto.filename}")
-            foto.save(os.path.join(UPLOAD_FOLDER, filename))
+            # Pastikan folder static/uploads/menu sudah dibuat
+            upload_path = os.path.join(current_app.root_path, 'static/uploads/menu')
+            if not os.path.exists(upload_path):
+                os.makedirs(upload_path)
+            
+            foto.save(os.path.join(upload_path, filename))
             img_path = f"uploads/menu/{filename}"
         else:
-            img_path = "uploads/menu/default.png" # Path foto default jika tidak upload
+            img_path = None # Atau path foto default
 
-        # Simpan ke Database
-        menu_baru = Menu(
+        # 3. Simpan ke Database menggunakan category_id (BUKAN category_name)
+        new_menu = Menu(
             name=nama,
-            category_name=kategori_name,
-            price=harga,
+            category_id=category.id, # Menggunakan ID hasil pencarian di atas
+            price=int(harga or 0),
+            stock=stok,
             description=deskripsi,
-            image_url=img_path, # Simpan path-nya
+            image_url=img_path,
             is_available=True
         )
         
-        db.session.add(menu_baru)
+        db.session.add(new_menu)
         db.session.commit()
         
         return jsonify({"success": True, "message": "Menu berhasil ditambahkan!"})
@@ -152,6 +166,45 @@ def toggle_menu_status(menu_id):
             db.session.rollback()
             return jsonify({"success": False, "message": "Gagal memperbarui status."})
     return jsonify({"success": False, "message": "Menu tidak ditemukan."})
+
+@owner_bp.route('/api/edit-menu/<int:menu_id>', methods=['POST'])
+@login_required
+def edit_menu(menu_id):
+    try:
+        menu = db.session.get(Menu, menu_id) # Menggunakan get yang aman
+        if not menu:
+            return jsonify({"success": False, "message": "Menu tidak ditemukan."})
+
+        # --- NAMA MENU DIKUNCI (TIDAK DIUPDATE) ---
+        
+        # Update Harga, Deskripsi, dan Stok
+        menu.price = int(request.form.get('harga') or 0)
+        menu.description = request.form.get('deskripsi')
+        
+        # Logika Stok NULL untuk nasi goreng tetap terjaga
+        stok_raw = request.form.get('stok')
+        menu.stock = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
+
+        # Update Kategori
+        kategori_nama = request.form.get('kategori')
+        category = Category.query.filter_by(name=kategori_nama).first()
+        if category:
+            menu.category_id = category.id
+
+        # Update Foto (Jika ada yang baru)
+        if 'foto' in request.files:
+            foto = request.files['foto']
+            if foto and foto.filename != '':
+                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{foto.filename}")
+                upload_path = os.path.join(current_app.root_path, 'static/uploads/menu')
+                foto.save(os.path.join(upload_path, filename))
+                menu.image_url = f"uploads/menu/{filename}"
+
+        db.session.commit()
+        return jsonify({"success": True, "message": "Perubahan berhasil disimpan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
 
 # ── Kasir APIs ────────────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
