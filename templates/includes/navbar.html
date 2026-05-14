@@ -24,6 +24,7 @@
 
         <div class="relative">
             <button @click="showProfile = !showProfile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition">
+                {% if current_user.is_authenticated %}
                 <div class="text-right hidden md:block">
                     <p class="text-sm font-bold text-gray-800">{{ current_user.name }}</p>
                     <p class="text-[10px] text-gray-500 uppercase tracking-wider">{{ current_user.role }}</p>
@@ -39,10 +40,16 @@
                         <span class="uppercase">{{ current_user.name[:2] }}</span>
                     {% endif %}
                 </div>
+                {% else %}
+                <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold border-2 border-gray-400">
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </div>
+                {% endif %}
                 
                 <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
             </button>
             <div x-show="showProfile" @click.away="showProfile = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                {% if current_user.is_authenticated %}
                 <div class="px-4 py-3 border-b border-gray-50 mb-1">
                     <p class="text-sm font-extrabold text-gray-800">{{ current_user.name }}</p>
                     <p class="text-xs font-medium text-gray-400 capitalize">{{ current_user.role }}</p>
@@ -55,12 +62,17 @@
                 {% endif %}
                 
                 <a href="{{ url_for('auth.logout') }}" class="block px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-terralogBlue">Register</a>
+                {% endif %}
             </div>
         </div>
     </div>
 
     <div x-show="showProfileModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showProfileModal = false"></div>
+        {% if current_user.is_authenticated %}
         <div class="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8" x-transition>
             <div class="text-center mb-6">
                 <div class="w-24 h-24 bg-terralogBlue rounded-full mx-auto mb-4 border-4 border-emerald-100 flex items-center justify-center text-3xl text-white font-black uppercase">
@@ -85,6 +97,7 @@
                 Tutup
             </button>
         </div>
+        {% endif %}
     </div>
 
     <div x-show="showSettingsModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left">

@@ -1,0 +1,83 @@
+{% extends 'layouts/layout_customer.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Breadcrumb & Cart Badge -->
+    <div class="mb-8 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-gray-600 text-sm">
+            <a href="/customer/daftar-menu" class="hover:text-terralogBlue transition">Daftar Menu</a>
+            <span>›</span>
+            <a href="/customer/menu/{{ menu.id }}" class="hover:text-terralogBlue transition">{{ menu.name }}</a>
+            <span>›</span>
+            <span class="text-gray-800 font-semibold">Ulasan</span>
+        </div>
+        
+        <!-- Cart Badge -->
+        <button @click="goToCheckout()" class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm hover:bg-yellow-500 transition" :disabled="cart.length === 0">
+            <span x-text="cart.length">0</span>
+            <span>item dipilih</span>
+            <span x-text="(cart.reduce((sum, item) => sum + (item.harga * item.qty), 0)).toLocaleString('id-ID')">0</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- Reviews Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-4 mb-6">
+            <div class="inline-flex items-center gap-1 bg-terralogBlue text-white px-3 py-2 rounded-lg font-bold text-sm">
+                <span>★ {{ menu.rating }}</span>
+            </div>
+            <span class="text-gray-700 text-sm font-semibold">Ulasan ({{ menu.review_count }}rb ulasan)</span>
+        </div>
+
+        <!-- Reviews List -->
+        {% if menu.reviews %}
+            <div class="space-y-4">
+                {% for review in menu.reviews %}
+                    <div class="bg-blue-50 rounded-lg p-5 border border-blue-100 hover:shadow-md transition">
+                        <div class="flex gap-4">
+                            <!-- Avatar -->
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-bold text-white text-lg flex-shrink-0">
+                                {{ review.nama[0].upper() }}
+                            </div>
+                            
+                            <div class="flex-1 min-w-0">
+                                <!-- Name and Date -->
+                                <div class="flex items-center gap-2 mb-2">
+                                    <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
+                                    <span class="text-gray-500 text-xs">{{ review.date }}</span>
+                                </div>
+                                
+                                <!-- Rating Stars -->
+                                <div class="flex gap-0.5 mb-3">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <span class="text-yellow-400 text-base">★</span>
+                                        {% else %}
+                                            <span class="text-gray-300 text-base">★</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Review Text -->
+                                <p class="text-gray-700 text-sm leading-relaxed">{{ review.text }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                    <i data-lucide="message-square" class="w-12 h-12 mx-auto"></i>
+                </div>
+                <p class="text-gray-500 font-semibold">Belum ada ulasan untuk menu ini</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+</script>
+{% endblock %}
