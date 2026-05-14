@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
 from datetime import datetime
 from flask_login import login_required, current_user
 from models import User
@@ -373,3 +373,35 @@ def reservasi_history():
         }
     ]
     return render_template('customer/reservasi_history.html', segment='buat_reservasi', role='customer', history_reservations=history_reservations)
+
+@customer_bp.route('/pengaturan', methods=['GET', 'POST'])
+@login_required
+def pengaturan():
+    if request.method == 'POST':
+        # Mengambil data dari formulir
+        name = request.form.get('name')
+        username = request.form.get('username')
+        email = request.form.get('email')
+        phone = request.form.get('phone')
+
+        # Memperbarui data pengguna yang sedang login
+        current_user.name = name
+        current_user.username = username
+        current_user.email = email
+        current_user.phone = phone
+
+        try:
+            db.session.commit()
+            flash('Profil berhasil diperbarui!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Gagal memperbarui profil. Username atau email mungkin sudah digunakan.', 'danger')
+        
+        return redirect(url_for('customer.pengaturan'))
+
+    return render_template(
+        'customer/pengaturan.html',
+        segment='pengaturan',
+        role='customer',
+        user=current_user
+    )

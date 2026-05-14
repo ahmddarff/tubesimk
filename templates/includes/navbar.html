@@ -40,7 +40,6 @@
                     <button @click="showProfile = false; showProfileModal = true" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</button>
                 {% endif %}
                 
-                <button @click="showProfile = false; showSettingsModal = true" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Pengaturan</button>
                 <a href="{{ url_for('auth.logout') }}" class="block px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</a>
             </div>
         </div>

@@ -53,6 +53,16 @@
                 <i data-lucide="calendar" class="w-6 h-6"></i>
                 <span class="font-semibold text-lg">Buat Reservasi</span>
             </a>
+
+            <a href="{{ url_for('customer.pengaturan') }}" class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                 {% if segment == 'pengaturan' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Pengaturan</span>
+            </a>
             
         {% elif role == 'kasir' %}
             <a href="{{ url_for('kasir.dashboard') }}" 
