@@ -3,10 +3,13 @@
 
 {% block content %}
 <div class="flex items-center justify-between mb-6">
-    <h2 class="text-xl font-bold text-gray-900">Manajemen Meja</h2>
+    <div>
+        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Manajemen Meja</h1>
+        <p class="text-gray-500 mt-1 text-sm">Atur daftar meja fisik dan kapasitas daya tampung kafe Anda</p>
+    </div>
     <button onclick="openModal('modalTambahMeja')"
-            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-terralogBlue bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:border-blue-900 hover:-translate-y-0.5 hover:shadow-lg transition-all">
-        <i data-lucide="circle-plus" class="w-5 h-5"></i>
+            class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
         Tambah Meja
     </button>
 </div>
