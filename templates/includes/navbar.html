@@ -1,11 +1,12 @@
-<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end z-20 {% if current_user.role == 'customer' %}fixed top-0 left-72 right-0{% else %}sticky top-0{% endif %}" 
-     x-data="{ showNotif: false, showProfile: false, showProfileModal: false, showSettingsModal: false, showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '' }">
+<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end z-20" 
+    x-data="{ showNotif: false, showProfile: false, showProfileModal: false, showSettingsModal: false, showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '' }">
     
     <div class="flex items-center gap-6">
         <div class="relative">
             <button @click="showNotif = !showNotif" class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
                 <i data-lucide="bell" class="w-6 h-6"></i>
                 <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                
             </button>
             <div x-show="showNotif" @click.away="showNotif = false" x-transition x-cloak class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                 <div class="p-4 border-b border-gray-200">
@@ -41,7 +42,16 @@
                 
                 <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
             </button>
-            
+            <div x-show="showProfile" @click.away="showProfile = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                
+                {% if current_user.role == 'customer' %}
+                    <a href="{{ url_for('customer.profil') }}" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
+                {% else %}
+                    <button @click="showProfile = false; showProfileModal = true" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</button>
+                {% endif %}
+                
+                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</a>
+            </div>
         </div>
     </div>
 
