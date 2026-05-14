@@ -1,7 +1,7 @@
 from datetime import time
 from werkzeug.security import generate_password_hash
 from app import app, db
-from models import User, CafeSetting, OperationalHour, Category, Menu
+from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table
 
 def run_seeders():
     # Gunakan app_context agar SQLAlchemy tahu database mana yang dipakai
@@ -169,6 +169,149 @@ def run_seeders():
         
         db.session.commit()
         print("✅ Berhasil: Data Menu ditambahkan!")
+
+        # ==========================================
+        # 8. SEEDER MEJA (TABLE) 
+        # ==========================================
+        data_meja = [
+            {"nomor": "01", "kapasitas": 4, "tersedia": False}, # Sedang dipakai
+            {"nomor": "02", "kapasitas": 2, "tersedia": False}, # Sedang dipakai
+            {"nomor": "03", "kapasitas": 4, "tersedia": True},  # Kosong
+            {"nomor": "04", "kapasitas": 6, "tersedia": False}, # Sedang dipakai
+            {"nomor": "05", "kapasitas": 2, "tersedia": True}   # Kosong
+        ]
+        
+        # Dictionary untuk menyimpan ID meja yang baru dibuat agar mudah dipanggil oleh Order
+        meja_db = {}
+        for meja in data_meja:
+            m = Table.query.filter_by(table_number=meja["nomor"]).first()
+            if not m:
+                m = Table(
+                    table_number=meja["nomor"],
+                    capacity=meja["kapasitas"],
+                    is_available=meja["tersedia"]
+                )
+                db.session.add(m)
+                db.session.commit()
+            meja_db[meja["nomor"]] = m.id
+            
+        print("✅ Berhasil: 5 Data Meja ditambahkan!")
+
+        # ==========================================
+        # 9. SEEDER ORDER & ORDER ITEMS 
+        # ==========================================
+        # Mengambil referensi pelanggan dan menu dari basis data
+        customer = User.query.filter_by(role='customer').first()
+        customer_id = customer.id if customer else 1
+        
+        # Mengambil menu_id untuk mengisi order item
+        menu_ayam = Menu.query.filter_by(name="Ayam Geprek").first()
+        menu_kentang = Menu.query.filter_by(name="Kentang Goreng").first()
+        menu_indomie = Menu.query.filter_by(name="Indomie Kuah").first()
+        menu_avocado = Menu.query.filter_by(name="Avocado Juice").first()
+        menu_dimsum = Menu.query.filter_by(name="Dimsum").first()
+        menu_americano = Menu.query.filter_by(name="Americano").first()
+        
+        # Fallback ID (Cadangan) jika menu di atas terhapus
+        fallback_id = Menu.query.first().id if Menu.query.first() else 1
+
+        # Daftar 4 Pesanan beserta 7 Item di dalamnya
+        data_orders = [
+            {
+                "order_number": "ORD-20260514-001",
+                "user_id": customer_id,
+                "customer_name": None,
+                "table_id": meja_db.get("01"),
+                "order_type": "dine_in",
+                "order_status": "served",
+                "payment_method": "cash",
+                "payment_status": "paid",
+                "total_amount": 50000,
+                "items": [
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served"},
+                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served"}
+                ]
+            },
+            {
+                "order_number": "ORD-20260514-002",
+                "user_id": None,
+                "customer_name": "Tamu Anonim",
+                "table_id": meja_db.get("02"),
+                "order_type": "dine_in",
+                "order_status": "preparing",
+                "payment_method": "qris",
+                "payment_status": "paid",
+                "total_amount": 29000,
+                "items": [
+                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "preparing"},
+                    {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "pending"}
+                ]
+            },
+            {
+                "order_number": "ORD-20260514-003",
+                "user_id": customer_id,
+                "customer_name": None,
+                "table_id": meja_db.get("04"),
+                "order_type": "dine_in",
+                "order_status": "pending",
+                "payment_method": "cash",
+                "payment_status": "unpaid",
+                "total_amount": 45000,
+                "items": [
+                    {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus dimsum banyak", "status": "pending"}
+                ]
+            },
+            {
+                "order_number": "ORD-20260514-004",
+                "user_id": None,
+                "customer_name": "Ojol Grab",
+                "table_id": None, # Null karena ini pesanan bawa pulang (Take Away)
+                "order_type": "take_away",
+                "order_status": "ready",
+                "payment_method": "cash",
+                "payment_status": "unpaid",
+                "total_amount": 30000,
+                "items": [
+                    {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "ready"},
+                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "ready"}
+                ]
+            }
+        ]
+
+        # Proses memasukkan (insert) data Order dan OrderItem ke basis data
+        for data in data_orders:
+            order_exist = Order.query.filter_by(order_number=data["order_number"]).first()
+            if not order_exist:
+                # Membuat Pesanan (Order)
+                pesanan_baru = Order(
+                    order_number=data["order_number"],
+                    user_id=data["user_id"],
+                    customer_name=data["customer_name"],
+                    table_id=data["table_id"],
+                    order_type=data["order_type"],
+                    order_status=data["order_status"],
+                    payment_method=data["payment_method"],
+                    payment_status=data["payment_status"],
+                    total_amount=data["total_amount"]
+                )
+                db.session.add(pesanan_baru)
+                db.session.commit() # Disimpan agar pesanan_baru.id terbentuk
+                
+                # Membuat Detail Item Pesanan (OrderItem)
+                for item in data["items"]:
+                    item_baru = OrderItem(
+                        order_id=pesanan_baru.id,
+                        menu_id=item["menu_id"],
+                        qty=item["qty"],
+                        price_at_order=item["price"],
+                        notes=item["notes"],
+                        item_status=item["status"]
+                    )
+                    db.session.add(item_baru)
+                    
+                db.session.commit()
+                
+        print("✅ Berhasil: 4 Data Order dan 7 Data Order Item ditambahkan!")
         
         print("--- SEEDER SELESAI ---\n")
 
