@@ -96,7 +96,8 @@ class Reservation(db.Model):
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name       = db.Column(db.String(100), nullable=True)
     phone               = db.Column(db.String(20), nullable=False)
-    table_id            = db.Column(db.Integer, db.ForeignKey('tables.id'), nullable=False)
+    table_id            = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True)
+    table_number_snapshot = db.Column(db.String(20), nullable=True)
     notes               = db.Column(db.Text, nullable=True) # Catatan khusus saat booking (Opsional)
     cancellation_reason = db.Column(db.Text, nullable=True) # Alasan jika dibatalkan (Opsional)
     reservation_date    = db.Column(db.Date, nullable=False)
@@ -120,7 +121,8 @@ class Order(db.Model):
     order_number    = db.Column(db.String(50), unique=True, nullable=False)
     user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name   = db.Column(db.String(100), nullable=True)
-    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id'), nullable=True) # Nullable untuk Take Away
+    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) # Nullable untuk Take Away
+    table_number_snapshot = db.Column(db.String(20), nullable=True) # Snapshot nomor meja saat order dibuat (untuk histori)
     order_type      = db.Column(db.Enum('dine_in', 'take_away', name='order_type'), nullable=False)
     order_status    = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='order_status'), default='pending')
     payment_method  = db.Column(db.Enum('cash', 'qris', name='payment_method'), nullable=True)

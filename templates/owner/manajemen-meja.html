@@ -1,0 +1,203 @@
+{% extends 'layouts/layout_owner.html' %}
+{% block title %}Manajemen Meja{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-xl font-bold text-gray-900">Manajemen Meja</h2>
+    <button onclick="openModal('modalTambahMeja')"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-terralogBlue bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:border-blue-900 hover:-translate-y-0.5 hover:shadow-lg transition-all">
+        <i data-lucide="circle-plus" class="w-5 h-5"></i>
+        Tambah Meja
+    </button>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm border-collapse">
+        <thead>
+            <tr class="border-b-2 border-gray-100 bg-gray-50/50">
+                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[40%]">Nomor / ID Meja</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[30%]">Kapasitas</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[30%]">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for table in tables %}
+            <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-terralogBlue font-black border border-blue-100">
+                            {{ table.table_number }}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-center text-sm font-bold text-gray-700">
+                    <i data-lucide="users" class="w-4 h-4 inline-block mr-1 text-gray-400"></i> {{ table.capacity }} Orang
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <button type="button" 
+                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            data-id="{{ table.id }}"
+                            data-nomor="{{ table.table_number }}"
+                            data-kapasitas="{{ table.capacity }}"
+                            onclick="handleEditClick(this)">
+                        <i data-lucide="edit-3" class="w-5 h-5"></i>
+                    </button>
+                    <button type="button" 
+                            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                            onclick="hapusMeja('{{ table.id }}', '{{ table.table_number }}')">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="px-6 py-8 text-center text-gray-400 font-medium">Belum ada data meja.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="modalTambahMeja" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-black text-gray-800">Tambah Meja</h3>
+            <button onclick="closeModal('modalTambahMeja')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition hover:bg-red-50 hover:text-red-500">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nomor Meja</label>
+                <input type="text" id="tambahNomor" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold uppercase" placeholder="Contoh: A1, B2, 01">
+            </div>
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kapasitas (Orang)</label>
+                <input type="number" id="tambahKapasitas" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Contoh: 4">
+            </div>
+        </div>
+
+        <button onclick="simpanMeja()" class="w-full mt-8 py-3.5 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm hover:bg-blue-900 transition">
+            Simpan Meja Baru
+        </button>
+    </div>
+</div>
+
+<div id="modalEditMeja" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-black text-gray-800">Edit Meja</h3>
+            <button onclick="closeModal('modalEditMeja')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition hover:bg-red-50 hover:text-red-500">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <input type="hidden" id="editMejaId">
+        <div class="space-y-4">
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nomor Meja</label>
+                <input type="text" id="editNomor" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold uppercase">
+            </div>
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kapasitas (Orang)</label>
+                <input type="number" id="editKapasitas" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+            </div>
+        </div>
+
+        <button onclick="updateMeja()" class="w-full mt-8 py-3.5 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm hover:bg-blue-900 transition">
+            Simpan Perubahan
+        </button>
+    </div>
+</div>
+
+<div id="modalConfirm" class="modal-overlay hidden fixed inset-0 z-[200] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
+    <div class="modal-box w-full max-w-sm bg-white rounded-[2rem] p-6 text-center shadow-2xl relative" onclick="event.stopPropagation()">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 border-4 border-white shadow-sm">
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+        </div>
+        <h3 class="text-2xl font-black text-gray-800 mb-2">Hapus Meja</h3>
+        <p id="confirmMessage" class="text-sm font-medium text-gray-500 mb-8 px-4">Apakah Anda yakin?</p>
+        
+        <div class="flex gap-3">
+            <button onclick="closeModal('modalConfirm')" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition text-sm">
+                Batal
+            </button>
+            <button id="confirmActionBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition shadow-md text-sm">
+                Ya, Hapus
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function simpanMeja() {
+        const nomor = document.getElementById('tambahNomor').value.trim();
+        const kapasitas = document.getElementById('tambahKapasitas').value;
+
+        if (!nomor || !kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+
+        const formData = new FormData();
+        formData.append('nomor', nomor.toUpperCase());
+        formData.append('kapasitas', kapasitas);
+
+        fetch('/owner/api/tambah-meja', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else { showToast(data.message, 'error'); }
+        }).catch(() => showToast('Gagal menghubungi server', 'error'));
+    }
+
+    function handleEditClick(btn) {
+        document.getElementById('editMejaId').value = btn.getAttribute('data-id');
+        document.getElementById('editNomor').value = btn.getAttribute('data-nomor');
+        document.getElementById('editKapasitas').value = btn.getAttribute('data-kapasitas');
+        openModal('modalEditMeja');
+    }
+
+    function updateMeja() {
+        const id = document.getElementById('editMejaId').value;
+        const nomor = document.getElementById('editNomor').value.trim();
+        const kapasitas = document.getElementById('editKapasitas').value;
+
+        if (!nomor || !kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+
+        const formData = new FormData();
+        formData.append('nomor', nomor.toUpperCase());
+        formData.append('kapasitas', kapasitas);
+
+        fetch(`/owner/api/edit-meja/${id}`, { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else { showToast(data.message, 'error'); }
+        }).catch(() => showToast('Gagal menghubungi server', 'error'));
+    }
+
+    function hapusMeja(id, nomor) {
+        document.getElementById('confirmMessage').innerText = `Yakin ingin menghapus meja ${nomor}? Aksi ini tidak dapat dibatalkan.`;
+        const btn = document.getElementById('confirmActionBtn');
+        
+        btn.onclick = function() {
+            closeModal('modalConfirm');
+            
+            fetch(`/owner/api/hapus-meja/${id}`, { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else { showToast(data.message, 'error'); }
+            }).catch(() => showToast('Gagal menghubungi server', 'error'));
+        };
+        openModal('modalConfirm');
+    }
+</script>
+{% endblock %}

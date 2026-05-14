@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user 
-from models import User, CafeSetting, OperationalHour, Menu, Category
+from models import User, CafeSetting, OperationalHour, Menu, Category, Table
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -57,6 +57,13 @@ def manajemen_menu():
     return render_template('owner/manajemen-menu.html',
                            menu_list=menus, 
                            categories=categories)
+
+@owner_bp.route('/manajemen-meja')
+@login_required
+def manajemen_meja():
+    # Ambil semua data meja, urutkan berdasarkan nomor meja
+    tables = Table.query.order_by(Table.table_number).all()
+    return render_template('owner/manajemen-meja.html', tables=tables)
 
 @owner_bp.route('/manajemen-kasir')
 @login_required
@@ -158,11 +165,6 @@ def hapus_kategori(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})
-    
-# Pastikan folder upload ada
-UPLOAD_FOLDER = 'static/uploads/menu'
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
 
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
 @login_required
@@ -282,6 +284,66 @@ def edit_menu(menu_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})
+
+# ── Meja APIS ─────────────────────────────────────────
+@owner_bp.route('/api/tambah-meja', methods=['POST'])
+@login_required
+def tambah_meja():
+    nomor = request.form.get('nomor')
+    kapasitas = request.form.get('kapasitas')
+
+    if not nomor or not kapasitas:
+        return jsonify({"success": False, "message": "Nomor dan kapasitas wajib diisi!"})
+    
+    # Cek apakah nomor meja sudah ada
+    if Table.query.filter_by(table_number=nomor).first():
+        return jsonify({"success": False, "message": "Nomor meja ini sudah terdaftar."})
+
+    try:
+        new_table = Table(table_number=nomor, capacity=int(kapasitas), is_available=True)
+        db.session.add(new_table)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Meja berhasil ditambahkan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@owner_bp.route('/api/edit-meja/<int:id>', methods=['POST'])
+@login_required
+def edit_meja(id):
+    table = db.session.get(Table, id)
+    if not table:
+        return jsonify({"success": False, "message": "Meja tidak ditemukan."})
+
+    nomor_baru = request.form.get('nomor')
+    kapasitas_baru = request.form.get('kapasitas')
+    
+    # Cek duplikat jika nomor meja diganti
+    if nomor_baru != table.table_number:
+        if Table.query.filter_by(table_number=nomor_baru).first():
+            return jsonify({"success": False, "message": "Nomor meja tersebut sudah digunakan."})
+
+    try:
+        table.table_number = nomor_baru
+        table.capacity = int(kapasitas_baru)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Data meja berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@owner_bp.route('/api/hapus-meja/<int:id>', methods=['POST'])
+@login_required
+def hapus_meja(id):
+    table = Table.query.get_or_404(id)
+    
+    try:
+        db.session.delete(table)
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Meja {table.table_number} berhasil dihapus!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menghapus meja."})
 
 # ── Kasir APIs ────────────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
