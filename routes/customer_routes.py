@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from flask_login import login_required, current_user
 
-from models import User, Menu, Category, Order, OrderItem, Table
+from models import User, Menu, Category, Order, OrderItem, Table, Reservation
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
@@ -56,31 +56,23 @@ def menu_reviews(menu_id):
                            role='customer')
 
 @customer_bp.route('/buat-reservasi')
+@login_required
 def buat_reservasi():
-    # Data statis untuk tampilan (dapat diganti query database nantinya)
-    active_reservations = [
-        {
-            "id": "AB123", "status": "Menunggu", "date": "06 April 2026",
-            "time": "15:15 WIB", "duration": "2 Jam", "guests": "21"
-        }
-    ]
+    # Mengambil semua reservasi milik pengguna yang sedang masuk (login)
+    user_reservations = Reservation.query.filter_by(user_id=current_user.id)\
+        .order_by(Reservation.reservation_date.desc(), Reservation.reservation_time.desc()).all()
     
-    history_reservations = [
-        {
-            "id": "AB650", "status": "Selesai", "date": "05 April 2026",
-            "time": "16:00 WIB", "duration": "1 Jam", "guests": "2"
-        },
-        {
-            "id": "AC780", "status": "Dibatalkan", "date": "06 Desember 2025",
-            "time": "08:00 WIB", "duration": "2+ Jam", "guests": "134"
-        }
-    ]
+    # Memisahkan reservasi aktif (pending, confirmed)
+    active_reservations = [r for r in user_reservations if r.status in ['pending', 'confirmed']]
+    
+    # Memisahkan riwayat reservasi (completed, cancelled)
+    history_reservations = [r for r in user_reservations if r.status in ['completed', 'cancelled']]
     
     return render_template('customer/buat_reservasi.html', 
-                 segment='buat_reservasi', 
-                 role='customer', 
-                 active_reservations=active_reservations, 
-                 history_reservations=history_reservations)
+                           segment='buat_reservasi', 
+                           role='customer', 
+                           active_reservations=active_reservations, 
+                           history_reservations=history_reservations)
 
 @customer_bp.route('/buat-reservasi/submit', methods=['POST'])
 def submit_buat_reservasi():

@@ -2,117 +2,134 @@
 
 {% block content %}
 <div class="customer-page-shell w-full">
-    <div class="max-w-5xl">
+    <div class="max-w-5xl mx-auto">
         
-        <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-terralogBlue mb-2">Reservasi Saya</h1>
                 <p class="text-gray-600">Kelola dan pantau reservasi Anda</p>
             </div>
-            <a href="/customer/reservasi/new" class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition inline-flex">
+            <a href="/customer/reservasi/new" class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition inline-flex shadow-md">
                 <i data-lucide="plus" class="w-5 h-5"></i>
                 Buat Reservasi Baru
             </a>
         </div>
 
-        <!-- Reservasi Aktif Section -->
-        <div class="mb-8">
+        <div class="mb-10">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Reservasi Aktif</h2>
             
-            <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-6">
                 {% for reservation in active_reservations %}
-                <div class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
-                    <div class="grid grid-cols-4 gap-6">
-                        <!-- Left: ID & Status -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
+                    
+                    <div class="flex justify-between items-start mb-6">
                         <div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-3">#{{ reservation.id }}</h3>
-                            <div class="inline-block bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg font-semibold text-sm">
-                                {{ reservation.status }}
-                            </div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">No Reservasi</p>
+                            <h3 class="text-lg font-bold text-gray-900">#{{ reservation.reservation_number }}</h3>
                         </div>
-
-                        <!-- Middle: Date & Time -->
                         <div>
-                            <p class="text-gray-600 text-sm mb-1">Tanggal</p>
-                            <p class="text-gray-800 font-semibold mb-3">{{ reservation.date }}</p>
-                            <p class="text-gray-600 text-sm">{{ reservation.time }}</p>
+                            {% if reservation.status == 'pending' %}
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Menunggu</span>
+                            {% elif reservation.status == 'confirmed' %}
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Dikonfirmasi</span>
+                            {% endif %}
                         </div>
+                    </div>
 
-                        <!-- Middle-Right: Duration -->
+                    <div class="flex gap-8 mb-6 pb-6 border-b border-gray-100">
                         <div>
-                            <p class="text-gray-600 text-sm mb-1">Durasi</p>
-                            <p class="text-gray-800 font-semibold">{{ reservation.duration }}</p>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Tanggal</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.reservation_date.strftime('%d %B %Y') }}</p>
                         </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Waktu</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.reservation_time.strftime('%H:%M') }} WIB</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Jumlah Tamu</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.capacity }} Orang</p>
+                        </div>
+                    </div>
 
-                        <!-- Right: Guests & Action -->
-                        <div class="flex flex-col items-end justify-between">
-                            <div class="text-right">
-                                <p class="text-gray-600 text-sm mb-1">Jumlah Tamu</p>
-                                <p class="text-2xl font-bold text-gray-800">{{ reservation.guests }}</p>
-                            </div>
-                            <a href="/customer/reservasi/{{ reservation.id }}" class="bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition inline-block">
-                                Lihat Detail
-                            </a>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Meja</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.table_number }}</p>
                         </div>
+                        <a href="/customer/reservasi/{{ reservation.id }}" class="px-6 py-2 border-2 border-terralogBlue text-terralogBlue hover:bg-blue-50 font-bold rounded-lg transition text-sm">
+                            Lihat Detail
+                        </a>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
             {% if active_reservations|length == 0 %}
-            <div class="bg-white rounded-2xl shadow-sm p-12 text-center">
+            <div class="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
                 <i data-lucide="calendar" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                <p class="text-gray-600">Anda tidak memiliki reservasi aktif</p>
+                <p class="text-gray-500 font-medium">Anda tidak memiliki reservasi aktif</p>
             </div>
             {% endif %}
         </div>
 
-        <!-- Riwayat Section -->
         <div>
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-2xl font-bold text-gray-800">Riwayat</h2>
-                <a href="/customer/reservasi/history" class="text-terralogBlue hover:text-terralogBlue/80 font-semibold transition">
-                    Lihat Semua Riwayat →
+                <a href="/customer/reservasi/history" class="text-terralogBlue hover:text-blue-800 font-semibold transition text-sm">
+                    Lihat Semua Riwayat &rarr;
                 </a>
             </div>
 
             <div class="grid grid-cols-2 gap-6">
                 {% for reservation in history_reservations %}
-                <div class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
-                    <div class="mb-4">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">#{{ reservation.id }}</h3>
-                        <div class="inline-block {% if reservation.status == 'Selesai' %}bg-green-100 text-green-800{% elif reservation.status == 'Dibatalkan' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-2 rounded-lg font-semibold text-sm">
-                            {{ reservation.status }}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all">
+                    
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">ID Reservasi</p>
+                            <h3 class="text-lg font-bold text-gray-900">#RES-{{ reservation.id }}</h3>
+                        </div>
+                        <div>
+                            {% if reservation.status == 'completed' %}
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Selesai</span>
+                            {% elif reservation.status == 'cancelled' %}
+                                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Dibatalkan</span>
+                            {% endif %}
                         </div>
                     </div>
 
-                    <div class="space-y-3 mb-6">
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>Tanggal</span>
-                            <span class="text-gray-800 font-semibold">{{ reservation.date }}</span>
+                    <div class="flex gap-8 mb-6 pb-6 border-b border-gray-100">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Tanggal</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.reservation_date.strftime('%d %B %Y') }}</p>
                         </div>
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>Durasi</span>
-                            <span class="text-gray-800 font-semibold">{{ reservation.duration }}</span>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Waktu</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.reservation_time.strftime('%H:%M') }} WIB</p>
                         </div>
-                        <div class="flex justify-between text-sm text-gray-600">
-                            <span>Jumlah Tamu</span>
-                            <span class="text-gray-800 font-semibold">{{ reservation.guests }}</span>
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Jumlah Tamu</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.capacity }} Orang</p>
                         </div>
                     </div>
 
-                    <a href="/customer/reservasi/{{ reservation.id }}" class="w-full border border-terralogBlue text-terralogBlue hover:bg-terralogBlue/5 font-bold py-2 rounded-lg transition inline-block text-center">
-                        Lihat Detail
-                    </a>
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">Meja</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.table_number }}</p>
+                        </div>
+                        <a href="/customer/reservasi/{{ reservation.id }}" class="px-6 py-2 border-2 border-terralogBlue text-terralogBlue hover:bg-blue-50 font-bold rounded-lg transition text-sm">
+                            Lihat Detail
+                        </a>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
 
             {% if history_reservations|length == 0 %}
-            <div class="bg-white rounded-2xl shadow-sm p-12 text-center">
+            <div class="bg-white rounded-2xl shadow-sm p-12 text-center border border-gray-100">
                 <i data-lucide="history" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                <p class="text-gray-600">Tidak ada riwayat reservasi</p>
+                <p class="text-gray-500 font-medium">Tidak ada riwayat reservasi</p>
             </div>
             {% endif %}
         </div>

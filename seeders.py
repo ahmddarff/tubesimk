@@ -328,6 +328,7 @@ def run_seeders():
         data_reservasi = [
             {
                 "user_id": customer_id,
+                "reservation_number": "RES-20260515-001",
                 "customer_name": None, # Kosong karena user_id terisi
                 "phone": customer_phone, 
                 "table_id": meja_db.get("02", fallback_table),
@@ -339,6 +340,7 @@ def run_seeders():
             },
             {
                 "user_id": customer_id,
+                "reservation_number": "RES-20260515-002",
                 "customer_name": None,
                 "phone": customer_phone,
                 "table_id": meja_db.get("01", fallback_table),
@@ -350,6 +352,7 @@ def run_seeders():
             },
             {
                 "user_id": None, # Reservasi tanpa akun (Tamu)
+                "reservation_number": "RES-20260514-003",
                 "customer_name": "Ibu Ratna",
                 "phone": "081999888777",
                 "table_id": meja_db.get("03", fallback_table),
@@ -361,6 +364,7 @@ def run_seeders():
             },
             {
                 "user_id": customer_id,
+                "reservation_number": "RES-20260513-004",
                 "customer_name": None,
                 "phone": customer_phone,
                 "table_id": meja_db.get("04", fallback_table),
@@ -372,6 +376,7 @@ def run_seeders():
             },
             {
                 "user_id": None,
+                "reservation_number": "RES-20260517-005",
                 "customer_name": "Bapak Andi",
                 "phone": "081555444333",
                 "table_id": meja_db.get("05", fallback_table),
@@ -394,6 +399,7 @@ def run_seeders():
             if not reservasi_exist:
                 reservasi_baru = Reservation(
                     user_id=data["user_id"],
+                    reservation_number=data["reservation_number"],
                     customer_name=data["customer_name"],
                     phone=data["phone"],
                     table_id=data["table_id"],
