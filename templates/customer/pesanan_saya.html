@@ -5,7 +5,6 @@
 {% block content %}
 <div class="max-w-6xl mx-auto">
     
-    <!-- Header Section -->
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-3xl font-bold text-gray-800 mb-1">Pesanan Saya</h1>
@@ -17,7 +16,6 @@
         </a>
     </div>
 
-    <!-- Pesanan Aktif Section -->
     <div class="mb-12">
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Pesanan Aktif</h2>
         
@@ -26,55 +24,61 @@
                 {% for order in active_orders %}
                 <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
                     
-                    <!-- Header Row -->
                     <div class="flex justify-between items-start mb-4">
                         <div class="flex-1">
                             <div class="flex items-center gap-3 mb-2">
-                                <h3 class="text-lg font-bold text-gray-800">#{{ order.id }}</h3>
-                                {% if order.status == 'Hidangkan' %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">{{ order.status }}</span>
-                                {% elif order.status == 'Diproses' %}
-                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">{{ order.status }}</span>
-                                {% elif order.status == 'Dibatalkan' %}
-                                    <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">{{ order.status }}</span>
-                                {% else %}
-                                    <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full">{{ order.status }}</span>
+                                <h3 class="text-lg font-bold text-gray-800">{{ order.order_number }}</h3>
+                                
+                                {% if order.payment_status == 'cancelled' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Dibatalkan</span>
+                                {% elif order.order_status == 'pending' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Menunggu</span>
+                                {% elif order.order_status == 'preparing' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Diproses</span>
+                                {% elif order.order_status == 'ready' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Siap Dihidangkan</span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-gray-500">{{ order.date }}</p>
+                            <p class="text-sm text-gray-500">{{ order.created_at.strftime('%d %B %Y') }}</p>
                         </div>
-                        <p class="text-sm text-gray-500 text-right">{{ order.time }}</p>
+                        <p class="text-sm text-gray-500 text-right">{{ order.created_at.strftime('%H:%M') }} WIB</p>
                     </div>
 
-                    <!-- Items List -->
                     <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                        {% for item in order.products %}
+                        {% for item in order.items %}
                         <div class="flex items-center gap-4 mb-3 pb-3 {% if not loop.last %}border-b border-gray-200{% endif %}">
-                            <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-12 h-12 rounded-lg object-cover">
+                            
+                            {% if item.menu.image_url and item.menu.image_url.startswith('http') %}
+                                <img src="{{ item.menu.image_url }}" class="w-12 h-12 rounded-lg object-cover">
+                            {% elif item.menu.image_url %}
+                                <img src="{{ url_for('static', filename='images/' + item.menu.image_url) }}" class="w-12 h-12 rounded-lg object-cover">
+                            {% else %}
+                                <img src="https://via.placeholder.com/150x150/E8D5C4/8B7355?text={{ item.menu.name }}" class="w-12 h-12 rounded-lg object-cover">
+                            {% endif %}
+                            
                             <div class="flex-1">
-                                <p class="font-semibold text-gray-800 text-sm">{{ item.nama }}</p>
+                                <p class="font-semibold text-gray-800 text-sm">{{ item.menu.name }}</p>
                                 <p class="text-xs text-gray-500">Qty: {{ item.qty }}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-gray-800">Rp {{ "{:,.0f}".format(item.harga) }}</p>
+                                <p class="font-bold text-gray-800">Rp {{ "{:,.0f}".format(item.price_at_order).replace(',', '.') }}</p>
                                 <span class="inline-block px-2 py-1 bg-terralogOrange text-white text-xs font-bold rounded mt-1">{{ item.qty }}</span>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
 
-                    <!-- Footer Row -->
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="text-xs text-gray-500 mb-1">Total Harga</p>
-                            <p class="text-xl font-black text-gray-800">Rp {{ "{:,.0f}".format(order.total) }}</p>
+                            <p class="text-xl font-black text-gray-800">Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
                         </div>
                         <div class="flex gap-3">
                             <a href="/customer/pesanan/{{ order.id }}" class="px-6 py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition inline-block">
                                 Lihat Detail
                             </a>
-                            {% if order.status == 'Diproses' %}
-                            <button onclick="if(confirm('Batalkan pesanan #{{ order.id }}?')) { window.location.href='/customer/pesanan/{{ order.id }}/cancel'; }" class="px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg font-bold text-sm hover:bg-red-50 transition">
+                            {% if order.order_status == 'pending' %}
+                            <button onclick="if(confirm('Batalkan pesanan {{ order.order_number }}?')) { window.location.href='/customer/pesanan/{{ order.id }}/cancel'; }" class="px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg font-bold text-sm hover:bg-red-50 transition">
                                 Batalkan
                             </button>
                             {% endif %}
@@ -84,7 +88,6 @@
                 {% endfor %}
             </div>
 
-            <!-- View All History Button -->
             <a href="/customer/pesanan-saya/history" class="w-full mt-6 py-3 bg-terralogBlue text-white rounded-lg font-bold hover:bg-blue-900 transition inline-block text-center">
                 Lihat Semua Riwayat
             </a>
@@ -92,14 +95,13 @@
             <div class="text-center py-16 bg-gray-50 rounded-xl">
                 <i data-lucide="shopping-cart" class="w-16 h-16 mx-auto text-gray-300 mb-4"></i>
                 <p class="text-gray-500 font-medium mb-4">Tidak ada pesanan aktif</p>
-                <a href="/customer" class="inline-block px-6 py-2 bg-terralogOrange text-white rounded-lg font-bold hover:bg-orange-500 transition">
+                <a href="/customer/daftar-menu" class="inline-block px-6 py-2 bg-terralogOrange text-white rounded-lg font-bold hover:bg-orange-500 transition">
                     Mulai Pesan
                 </a>
             </div>
         {% endif %}
     </div>
 
-    <!-- Riwayat Section -->
     <div>
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Riwayat</h2>
         
@@ -108,37 +110,42 @@
                 {% for order in history_orders %}
                 <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
                     
-                    <!-- Header -->
                     <div class="mb-4">
                         <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-lg font-bold text-gray-800">#{{ order.id }}</h3>
-                            {% if order.status == 'Selesai' %}
-                                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full">{{ order.status }}</span>
-                            {% elif order.status == 'Dibatalkan' %}
-                                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">{{ order.status }}</span>
+                            <h3 class="text-lg font-bold text-gray-800">{{ order.order_number }}</h3>
+                            {% if order.payment_status == 'cancelled' %}
+                                <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Dibatalkan</span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-full">Selesai</span>
                             {% endif %}
                         </div>
-                        <p class="text-sm text-gray-500">{{ order.date }}</p>
+                        <p class="text-sm text-gray-500">{{ order.created_at.strftime('%d %B %Y | %H:%M') }} WIB</p>
                     </div>
 
-                    <!-- Items -->
                     <div class="bg-gray-50 rounded-lg p-3 mb-4">
-                        {% for item in order.products %}
+                        {% for item in order.items %}
                         <div class="flex items-center gap-3 mb-2 pb-2 {% if not loop.last %}border-b border-gray-200{% endif %}">
-                            <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-10 h-10 rounded-lg object-cover">
+                            
+                            {% if item.menu.image_url and item.menu.image_url.startswith('http') %}
+                                <img src="{{ item.menu.image_url }}" class="w-10 h-10 rounded-lg object-cover">
+                            {% elif item.menu.image_url %}
+                                <img src="{{ url_for('static', filename='images/' + item.menu.image_url) }}" class="w-10 h-10 rounded-lg object-cover">
+                            {% else %}
+                                <img src="https://via.placeholder.com/150x150/E8D5C4/8B7355?text={{ item.menu.name }}" class="w-10 h-10 rounded-lg object-cover">
+                            {% endif %}
+
                             <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-gray-800 text-sm truncate">{{ item.nama }}</p>
-                                <p class="text-xs text-gray-500">Rp {{ "{:,.0f}".format(item.harga) }}</p>
+                                <p class="font-semibold text-gray-800 text-sm truncate">{{ item.menu.name }}</p>
+                                <p class="text-xs text-gray-500">Rp {{ "{:,.0f}".format(item.price_at_order).replace(',', '.') }}</p>
                             </div>
                             <span class="inline-block px-2 py-1 bg-terralogOrange text-white text-xs font-bold rounded flex-shrink-0">{{ item.qty }}</span>
                         </div>
                         {% endfor %}
                     </div>
 
-                    <!-- Total & Action -->
                     <div class="border-t border-gray-200 pt-3 mb-4">
                         <p class="text-xs text-gray-500 mb-1">Total Harga</p>
-                        <p class="text-lg font-black text-gray-800 mb-3">Rp {{ "{:,.0f}".format(order.total) }}</p>
+                        <p class="text-lg font-black text-gray-800 mb-3">Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
                     </div>
 
                     <a href="/customer/pesan-lagi/{{ order.id }}" class="w-full py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition inline-block text-center">
