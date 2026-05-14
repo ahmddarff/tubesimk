@@ -23,9 +23,15 @@
         <!-- Left: Image -->
         <div>
             <div class="bg-terralogBlue rounded-3xl overflow-hidden shadow-lg">
-                <img src="https://via.placeholder.com/400x350/1F3A93/FFFFFF?text=Terralog+Kopi" 
-                     alt="{{ menu.name }}" 
-                     class="w-full h-80 object-cover">
+                {% if menu.image_url %}
+                    <img src="{{ menu.image_url }}" 
+                         alt="{{ menu.name }}" 
+                         class="w-full h-80 object-cover">
+                {% else %}
+                    <img src="https://via.placeholder.com/400x350/1F3A93/FFFFFF?text={{ menu.name }}" 
+                         alt="{{ menu.name }}" 
+                         class="w-full h-80 object-cover">
+                {% endif %}
             </div>
         </div>
 
