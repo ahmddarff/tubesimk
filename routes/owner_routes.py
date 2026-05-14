@@ -166,132 +166,85 @@ def edit_kasir(kasir_id):
     return jsonify({"success": True, "message": "Profil staf berhasil diedit!"})
 
 # ── Pengaturan APIs ───────────────────────────────────
-@owner_bp.route('/api/update-logo-cafe', methods=['POST'])
-@login_required
-def update_logo_cafe():
-    if 'logo' not in request.files:
-        return jsonify({"success": False, "message": "Tidak ada file yang diunggah"})
-    
-    file = request.files['logo']
-    if file.filename == '':
-        return jsonify({"success": False, "message": "Nama file kosong"})
-
-    if file:
-        cafe = CafeSetting.query.first()
-        if not cafe:
-            return jsonify({"success": False, "message": "Data cafe tidak ditemukan"})
-
-        # 1. Hapus foto lama jika ada
-        if cafe.logo:
-            old_path = os.path.join(current_app.root_path, 'static/images', cafe.logo)
-            if os.path.exists(old_path):
-                try:
-                    os.remove(old_path)
-                except Exception as e:
-                    print(f"Gagal menghapus foto lama: {e}")
-
-        # 2. Simpan foto baru
-        filename = secure_filename(file.filename)
-        # Opsional: tambahkan timestamp agar nama unik dan menghindari cache browser
-        unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-        
-        file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
-        file.save(file_path)
-
-        # 3. Update database
-        cafe.logo = unique_filename
-        db.session.commit()
-        
-        return jsonify({
-            "success": True, 
-            "message": "Logo berhasil diperbarui!", 
-            "filename": unique_filename
-        })
-            
-    return jsonify({"success": False, "message": "Gagal mengunggah logo"})
-
-@owner_bp.route('/api/update-foto-akun', methods=['POST'])
-@login_required
-def update_foto_akun():
-    if 'foto' not in request.files:
-        return jsonify({"success": False, "message": "Tidak ada file yang diunggah"})
-    
-    file = request.files['foto']
-    if file.filename == '':
-        return jsonify({"success": False, "message": "Nama file kosong"})
-
-    if file:
-        user = User.query.get(current_user.id)
-        
-        # Hapus foto lama jika ada dan bukan foto default
-        if user.photo:
-            old_path = os.path.join(current_app.root_path, 'static/images', user.photo)
-            if os.path.exists(old_path) and os.path.isfile(old_path):
-                try:
-                    os.remove(old_path)
-                except Exception as e:
-                    print(f"Gagal hapus foto lama: {e}")
-
-        # Simpan foto baru dengan nama unik
-        filename = secure_filename(file.filename)
-        unique_filename = f"user_{user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-        
-        file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
-        file.save(file_path)
-
-        # Update database
-        user.photo = unique_filename
-        db.session.commit()
-        
-        return jsonify({"success": True, "message": "Foto profil berhasil diperbarui!"})
-            
-    return jsonify({"success": False, "message": "Gagal mengunggah foto"})
-
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
 @login_required
 def update_profil_cafe():
-    data = request.json
+    # Mengambil data dari FormData (request.form) bukan request.json
+    nama = request.form.get("nama")
+    telp = request.form.get("telp")
+    alamat = request.form.get("alamat")
+    email = request.form.get("email")
     
-    # Ambil baris pertama dari tabel pengaturan cafe
     cafe_info = CafeSetting.query.first()
     
     if cafe_info:
-        # Timpa data lama dengan data baru dari form frontend
-        cafe_info.cafe_name = data.get("nama", cafe_info.cafe_name)
-        cafe_info.phone = data.get("telp", cafe_info.phone)
-        cafe_info.address = data.get("alamat", cafe_info.address)
-        cafe_info.email = data.get("email", cafe_info.email)
+        cafe_info.cafe_name = nama or cafe_info.cafe_name
+        cafe_info.phone = telp or cafe_info.phone
+        cafe_info.address = alamat or cafe_info.address
+        cafe_info.email = email or cafe_info.email
         
+        # Cek apakah ada file logo yang dikirim
+        if 'logo' in request.files:
+            file = request.files['logo']
+            if file and file.filename != '':
+                # Hapus logo lama
+                if cafe_info.logo:
+                    old_path = os.path.join(current_app.root_path, 'static/images', cafe_info.logo)
+                    if os.path.exists(old_path) and os.path.isfile(old_path):
+                        try: os.remove(old_path)
+                        except: pass
+                # Simpan logo baru
+                filename = secure_filename(file.filename)
+                unique_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file.save(os.path.join(current_app.root_path, 'static/images', unique_filename))
+                cafe_info.logo = unique_filename
+
         try:
             db.session.commit()
-            return jsonify({"success": True, "message": "Profil cafe berhasil diperbarui di database!"})
+            return jsonify({"success": True, "message": "Profil cafe beserta logo berhasil disimpan!"})
         except Exception as e:
             db.session.rollback()
-            print(f"Error update cafe: {e}")
             return jsonify({"success": False, "message": "Gagal menyimpan ke database."})
             
-    return jsonify({"success": False, "message": "Data pengaturan cafe tidak ditemukan di sistem."})
+    return jsonify({"success": False, "message": "Data pengaturan cafe tidak ditemukan."})
 
 @owner_bp.route('/api/update-akun', methods=['POST'])
 @login_required
 def update_akun():
-    data = request.json
+    nama = request.form.get("nama")
+    username = request.form.get("username")
+    email = request.form.get("email")
+    no_hp = request.form.get("no_hp")
     
-    # Ambil user dari database berdasarkan ID current_user
     user = User.query.get(current_user.id)
     
     if user:
-        user.name = data.get("nama", user.name)
-        user.username = data.get("username", user.username) # Pastikan field ini ada di form
-        user.email = data.get("email", user.email)
-        user.phone = data.get("no_hp", user.phone)
+        user.name = nama or user.name
+        user.username = username or user.username
+        user.email = email or user.email
+        user.phone = no_hp or user.phone
         
+        # Cek apakah ada file foto yang dikirim
+        if 'foto' in request.files:
+            file = request.files['foto']
+            if file and file.filename != '':
+                # Hapus foto lama
+                if user.photo:
+                    old_path = os.path.join(current_app.root_path, 'static/images', user.photo)
+                    if os.path.exists(old_path) and os.path.isfile(old_path):
+                        try: os.remove(old_path)
+                        except: pass
+                # Simpan foto baru
+                filename = secure_filename(file.filename)
+                unique_filename = f"user_{user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file.save(os.path.join(current_app.root_path, 'static/images', unique_filename))
+                user.photo = unique_filename
+
         try:
             db.session.commit()
-            return jsonify({"success": True, "message": "Akun berhasil diperbarui di database!"})
+            return jsonify({"success": True, "message": "Akun dan foto profil berhasil diperbarui!"})
         except Exception as e:
             db.session.rollback()
-            print(f"Error updating user: {e}")
             return jsonify({"success": False, "message": "Gagal memperbarui database."})
             
     return jsonify({"success": False, "message": "Pengguna tidak ditemukan."})

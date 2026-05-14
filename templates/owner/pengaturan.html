@@ -66,16 +66,17 @@
     </div>
 
     <div class="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-8">
+
         <div x-show="activeTab === 'profil-cafe'" x-transition x-cloak>
+            
             <div class="flex flex-col md:flex-row md:items-center gap-8 mb-10 pb-8 border-b border-gray-50">
                 <div class="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-50 bg-white flex items-center justify-center relative group flex-none shadow-sm">
-                    {% if cafe_info and cafe_info.logo %}
-                        <img id="logoPreview" src="{{ url_for('static', filename='images/' + cafe_info.logo) }}" class="w-full h-full object-cover">
-                    {% else %}
-                        <div id="logoPlaceholder" class="w-full h-full flex items-center justify-center bg-blue-50 text-terralogBlue font-black text-xs">LOGO</div>
-                    {% endif %}
+                    <img id="logoPreview" src="{% if cafe_info.logo % Fitz %}{{ url_for('static', filename='images/' + cafe_info.logo) }}{% endif %}" 
+                         class="w-full h-full object-cover {% if not cafe_info.logo %}hidden{% endif %}">
                     
-                    <input type="file" id="inputLogo" class="hidden" accept="image/*" onchange="uploadLogo(this)">
+                    <div id="logoPlaceholder" class="w-full h-full flex items-center justify-center bg-blue-50 text-terralogBlue font-black text-xs {% if cafe_info.logo %}hidden{% endif %}">LOGO</div>
+                    
+                    <input type="file" id="inputLogo" class="hidden" accept="image/*" onchange="previewLogo(this)">
                     
                     <div onclick="document.getElementById('inputLogo').click()" 
                         class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer">
@@ -117,7 +118,8 @@
                     <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Email Bisnis</label>
                     <input id="editEmailCafe" type="email" value="{{ cafe_info.email if cafe_info else '' }}" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">
                 </div>
-                <div> <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</label>
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Alamat Lengkap</label>
                     <textarea id="editAlamat" rows="1" class="w-full px-5 py-3.5 rounded-2xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm font-bold text-gray-700 shadow-sm">{{ cafe_info.address if cafe_info else '' }}</textarea>
                 </div>
             </div>
@@ -142,7 +144,7 @@
                         </thead>
                         <tbody>
                             {% for hari in jam_operasional %}
-                            <tr class="border-b border-gray-50 last:border-0">
+                            <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition">
                                 <td class="py-4 font-bold text-gray-700">{{ hari.day_of_week }}</td>
                                 <td class="py-4">
                                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
@@ -168,24 +170,27 @@
             <div class="flex flex-col md:flex-row md:items-center gap-6 pb-8 border-b border-gray-100 mb-8">
                 <div class="relative group">
                     <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-xl uppercase border-4 border-blue-50 overflow-hidden">
-                        {% if current_user.photo %}
-                            <img id="userPhotoPreview" src="{{ url_for('static', filename='images/' + current_user.photo) }}" class="w-full h-full object-cover">
-                        {% else %}
-                            <span id="userInitial">{{ current_user.name[:2] }}</span>
-                        {% endif %}
+                        <img id="userPhotoPreview" 
+                            src="{% if current_user.photo %}{{ url_for('static', filename='images/' + current_user.photo) }}{% endif %}" 
+                            class="w-full h-full object-cover {% if not current_user.photo %}hidden{% endif %}"
+                            onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
+                        
+                        <span id="userInitial" class="{% if current_user.photo %}hidden{% endif %}">{{ current_user.name[:2] }}</span>
                     </div>
                     
-                    <input type="file" id="inputFotoAkun" class="hidden" accept="image/*" onchange="uploadFotoAkun(this)">
+                    <input type="file" id="inputFotoAkun" class="hidden" accept="image/*" onchange="previewFotoAkun(this)">
                     
-                    <button onclick="document.getElementById('inputFotoAkun').click()" 
-                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300">
+                    <button type="button" onclick="document.getElementById('inputFotoAkun').click()" 
+                            class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center transition-all duration-300 w-full h-full border-0 outline-none">
                         <i data-lucide="camera" class="w-6 h-6 text-white"></i>
                     </button>
                 </div>
                 
                 <div>
                     <h2 class="text-2xl font-black text-gray-800">{{ current_user.name }}</h2>
-                    <p class="text-terralogBlue font-bold text-sm tracking-widest uppercase mt-1">Pemilik Utama (Owner)</p>
+                    <p class="text-gray-400 font-medium mt-1 text-sm capitalize">
+                        {{ current_user.role }} 
+                    </p>
                 </div>
             </div>
 
@@ -251,58 +256,62 @@
 
 {% block extra_js %}
 <script>
-// ── Fungsi Profil Cafe ────────────────────────────────────────
-function uploadLogo(input) {
-    if (!input.files || !input.files[0]) return;
-
-    const formData = new FormData();
-    formData.append('logo', input.files[0]);
-
-    fetch('/owner/api/update-logo-cafe', {
-        method: 'POST',
-        body: formData // Gunakan FormData untuk mengirim file
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message);
-            // Update preview gambar secara instan tanpa reload
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('logoPreview');
-                if (img) {
-                    img.src = e.target.result;
-                } else {
-                    // Jika sebelumnya cuma placeholder, ganti jadi tag img
-                    location.reload(); 
-                }
-            };
-            reader.readAsDataURL(input.files[0]);
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alert('Terjadi kesalahan saat mengunggah logo');
-    });
+// ── Fungsi Preview Gambar (Client-side Only) ──────────────────
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('logoPreview');
+            const placeholder = document.getElementById('logoPlaceholder');
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
+function previewFotoAkun(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('userPhotoPreview');
+            const initial = document.getElementById('userInitial');
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+            initial.classList.add('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// ── Fungsi Simpan (Mengirim Teks + File) ─────────────────────
 function simpanProfilCafe() {
     const nama   = document.getElementById('editNamaCafe').value.trim();
     const telp   = document.getElementById('editNoTelp').value.trim();
     const alamat = document.getElementById('editAlamat').value.trim();
     const email  = document.getElementById('editEmailCafe').value.trim();
+    const logoInput = document.getElementById('inputLogo');
 
     if (!nama) { alert('Nama cafe wajib diisi!'); return; }
 
+    const formData = new FormData();
+    formData.append('nama', nama);
+    formData.append('telp', telp);
+    formData.append('alamat', alamat);
+    formData.append('email', email);
+    
+    if (logoInput.files && logoInput.files[0]) {
+        formData.append('logo', logoInput.files[0]);
+    }
+
     fetch('/owner/api/update-profil-cafe', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama, telp, alamat, email })
+        body: formData
     }).then(r => r.json()).then(data => {
         if (data.success) {
-            showToast('Profil cafe berhasil diperbarui!');
+            showToast(data.message);
+            setTimeout(() => { location.reload(); }, 1000);
         } else {
             alert(data.message || 'Gagal menyimpan profil cafe.');
         }
@@ -321,39 +330,8 @@ function updateStatusCafe(checkbox) {
             showToast(data.message);
         } else {
             alert(data.message || 'Gagal memperbarui status.');
-            checkbox.checked = !checkbox.checked; // Kembalikan posisi jika gagal
+            checkbox.checked = !checkbox.checked;
         }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        checkbox.checked = !checkbox.checked;
-    });
-}
-
-// ── Fungsi Akun Saya ─────────────────────────────────────────
-function uploadFotoAkun(input) {
-    if (!input.files || !input.files[0]) return;
-
-    const formData = new FormData();
-    formData.append('foto', input.files[0]);
-
-    fetch('/owner/api/update-foto-akun', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast(data.message);
-            // Reload halaman untuk memperbarui foto di navbar juga
-            setTimeout(() => { location.reload(); }, 1000);
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        alert('Terjadi kesalahan saat mengunggah foto profil');
     });
 }
 
@@ -362,17 +340,27 @@ function simpanAkunSaya() {
     const username = document.getElementById('editNamaPanggilan').value.trim();
     const email    = document.getElementById('editEmailPribadi').value.trim();
     const noHp     = document.getElementById('editNoHpAkun').value.trim();
+    const fotoInput = document.getElementById('inputFotoAkun');
 
     if (!nama) { alert('Nama lengkap wajib diisi!'); return; }
     if (!username) { alert('Username wajib diisi!'); return; }
 
+    const formData = new FormData();
+    formData.append('nama', nama);
+    formData.append('username', username);
+    formData.append('email', email);
+    formData.append('no_hp', noHp);
+
+    if (fotoInput.files && fotoInput.files[0]) {
+        formData.append('foto', fotoInput.files[0]);
+    }
+
     fetch('/owner/api/update-akun', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nama: nama, username: username, email: email, no_hp: noHp })
+        body: formData
     }).then(r => r.json()).then(data => {
         if (data.success) {
-            showToast('Informasi akun berhasil diperbarui!');
+            showToast(data.message);
             setTimeout(() => { location.reload(); }, 1000);
         } else {
             alert(data.message || 'Gagal memperbarui akun.');
@@ -380,31 +368,21 @@ function simpanAkunSaya() {
     });
 }
 
-// ── Fungsi Operasional ────────────────────────────────────
+// ── Fungsi Operasional (Real-time) ──────────────────────────
 function toggleHari(checkbox, namaHari) {
-    // Mengirim data ke route /owner/api/toggle-jam-operasional
     fetch('/owner/api/toggle-jam-operasional', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            hari: namaHari, 
-            buka: checkbox.checked // Nilai True jika dicentang, False jika tidak
-        })
+        body: JSON.stringify({ hari: namaHari, buka: checkbox.checked })
     })
     .then(r => r.json())
     .then(data => {
         if (data.success) {
-            showToast(`Jadwal hari ${namaHari} berhasil diperbarui!`);
+            showToast(`Jadwal hari ${namaHari} diperbarui!`);
         } else {
-            alert(data.message || 'Gagal memperbarui status hari.');
-            // Kembalikan posisi checkbox jika gagal
+            alert(data.message);
             checkbox.checked = !checkbox.checked;
         }
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        alert('Terjadi kesalahan koneksi.');
-        checkbox.checked = !checkbox.checked;
     });
 }
 
