@@ -1,0 +1,129 @@
+<nav class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-end z-20 {% if current_user.role == 'customer' %}fixed top-0 left-72 right-0{% else %}sticky top-0{% endif %}" 
+     x-data="{ showNotif: false, showProfile: false, showProfileModal: false, showSettingsModal: false, showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '' }">
+    
+    <div class="flex items-center gap-6">
+        <div class="relative">
+            <button @click="showNotif = !showNotif" class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
+                <i data-lucide="bell" class="w-6 h-6"></i>
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <div x-show="showNotif" @click.away="showNotif = false" x-transition x-cloak class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div class="p-4 border-b border-gray-200">
+                    <p class="text-sm font-bold text-gray-800">Notifikasi</p>
+                </div>
+                <div class="max-h-80 overflow-y-auto">
+                    <a href="#" class="block p-3 hover:bg-gray-50 border-b border-gray-100 text-sm">
+                        <p class="font-semibold text-gray-800">Belum ada notifikasi baru</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-8 w-[1px] bg-gray-200"></div>
+
+        <div class="relative">
+            <button @click="showProfile = !showProfile" class="flex items-center gap-3 hover:bg-gray-50 p-2 rounded-lg transition">
+                <div class="text-right">
+                    <p class="text-sm font-bold text-gray-800">{{ current_user.name }}</p>
+                    <p class="text-[10px] text-gray-500 uppercase tracking-wider">{{ current_user.role }}</p>
+                </div>
+                <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach uppercase">
+                    {{ current_user.name[0:2] }}
+                </div>
+                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+            </button>
+            <div x-show="showProfile" @click.away="showProfile = false" x-transition x-cloak class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                
+                {% if current_user.role == 'customer' %}
+                    <a href="{{ url_for('customer.profil') }}" class="block px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</a>
+                {% else %}
+                    <button @click="showProfile = false; showProfileModal = true" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Profil</button>
+                {% endif %}
+                
+                <button @click="showProfile = false; showSettingsModal = true" class="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm font-semibold text-gray-800 border-b border-gray-100">Pengaturan</button>
+                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-3 hover:bg-red-50 text-sm font-semibold text-red-600">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="showProfileModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showProfileModal = false"></div>
+        <div class="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8" x-transition>
+            <div class="text-center mb-6">
+                <div class="w-24 h-24 bg-terralogBlue rounded-full mx-auto mb-4 border-4 border-emerald-100 flex items-center justify-center text-3xl text-white font-black uppercase">
+                    {{ current_user.name[0:2] }}
+                </div>
+                <h3 class="text-xl font-black text-gray-800">{{ current_user.name }}</h3>
+                <p class="text-gray-400 text-sm font-bold uppercase tracking-widest">
+                    {{ current_user.role }} Terralog
+                </p>
+            </div>
+            <div class="space-y-4 mb-8">
+                <div class="bg-gray-50 p-4 rounded-2xl">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Email Aktif</p>
+                    <p class="text-sm font-bold text-gray-800">{{ current_user.email or '-' }}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-2xl">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-1">Username / ID</p>
+                    <p class="text-sm font-bold text-gray-800">{{ current_user.username }}</p>
+                </div>
+            </div>
+            <button @click="showProfileModal = false" class="w-full py-4 bg-terralogBlue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <div x-show="showSettingsModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-md" @click="showSettingsModal = false"></div>
+        <div class="relative bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-8" x-transition>
+            <div class="flex items-center gap-4 mb-8">
+                <div class="p-3 bg-blue-50 rounded-2xl text-terralogBlue">
+                    <i data-lucide="settings" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xl font-black text-gray-800">Pengaturan Akun</h3>
+            </div>
+            <div class="space-y-3 mb-8">
+                <button @click="showSettingsModal = false; showPasswordModal = true;" class="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition border border-transparent hover:border-gray-100">
+                    <span class="text-sm font-bold text-gray-700">Ubah Kata Sandi</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300"></i>
+                </button>
+                <button class="w-full flex items-center justify-between p-4 hover:bg-gray-50 rounded-2xl transition border border-transparent hover:border-gray-100">
+                    <span class="text-sm font-bold text-gray-700">Bahasa</span>
+                    <span class="text-xs font-bold text-terralogBlue uppercase">Indonesia</span>
+                </button>
+            </div>
+            <button @click="showSettingsModal = false" class="w-full py-4 bg-gray-100 text-gray-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition">
+                Kembali
+            </button>
+        </div>
+    </div>
+
+    <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
+        <div @click.away="showPasswordModal = false" class="bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-black text-gray-800">Ganti Password</h2>
+                <button @click="showPasswordModal = false" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition">✕</button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">Password Lama</label>
+                    <input type="password" x-model="currentPassword" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition">
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">Password Baru</label>
+                    <input type="password" x-model="newPassword" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition">
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm font-bold text-gray-500">Konfirmasi Password</label>
+                    <input type="password" x-model="confirmPassword" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button @click="showPasswordModal = false" class="px-5 py-2.5 rounded-xl border border-gray-200 font-semibold hover:bg-gray-50 transition text-sm">Batal</button>
+                <button @click="alert('Fitur ganti password via API menyusul!')" class="px-5 py-2.5 bg-terralogBlue text-white rounded-xl font-semibold hover:bg-blue-900 transition text-sm">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+</nav>

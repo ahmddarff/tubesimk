@@ -3,14 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}{% endblock %} - Terralog</title>
-
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Alpine -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Font -->
@@ -95,7 +89,7 @@
 
         <!-- SIDEBAR -->
         <aside class="fixed left-0 top-0 w-72 h-screen z-40">
-            {% include 'includes/sidebar_kasir.html' %}
+            {% include 'includes/sidebar.html' %}
         </aside>
 
         <!-- CONTENT -->
@@ -103,7 +97,7 @@
 
             <!-- NAVBAR -->
             <header class="sticky top-0 z-30 bg-white shadow-sm">
-                {% include 'includes/navbar_kasir.html' %}
+                {% include 'includes/navbar.html' %}
             </header>
 
             <!-- MAIN -->

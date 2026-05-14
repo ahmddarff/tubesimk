@@ -1,0 +1,181 @@
+<aside class="w-72 bg-terralogBlue text-white flex flex-col min-h-screen p-6 overflow-hidden flex-none relative">
+    
+    <div class="mb-8 px-2 flex justify-center">
+        <a href="{% if role == 'kasir' %}{{ url_for('kasir.dashboard') }}{% else %}{{ url_for('customer.beranda') }}{% endif %}">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                 alt="Logo Terralog" 
+                 class="h-20 w-auto object-contain">
+        </a>
+    </div>
+
+    <nav class="space-y-2 relative z-10">
+        
+        {% if role == 'customer' %}
+            <a href="/customer" 
+               class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+               {% if segment == 'customer' or segment == 'home' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+               {% else %} 
+                    text-blue-100 hover:bg-white/10 
+               {% endif %}">
+                <i data-lucide="home" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Beranda</span>
+            </a>
+
+            <a href="/customer/daftar-menu" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if segment == 'daftar_menu' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="utensils" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Daftar Menu</span>
+            </a>
+
+            <a href="/customer/pesanan-saya" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if segment == 'pesanan_saya' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %} group">
+                <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Pesanan Saya</span>
+            </a>
+
+            <a href="/customer/buat-reservasi" class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                 {% if segment == 'buat_reservasi' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="calendar" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Buat Reservasi</span>
+            </a>
+            
+        {% elif role == 'kasir' %}
+            <a href="{{ url_for('kasir.dashboard') }}" 
+               class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+               {% if segment == 'dashboard' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+               {% else %} 
+                    text-blue-100 hover:bg-white/10 
+               {% endif %}">
+                <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('kasir.pesanan_aktif') }}" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if segment == 'pesanan_aktif' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Pesanan Aktif</span>
+            </a>
+
+            <a href="{{ url_for('kasir.reservasi') }}" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if segment == 'reservasi' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %} group">
+                <i data-lucide="calendar" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Reservasi</span>
+            </a>
+
+            <a href="{{ url_for('kasir.riwayat_transaksi') }}"  class="flex items-center gap-4 py-3.5 px-3 rounded-xl transition-all duration-200 
+                 {% if segment == 'riwayat_transaksi' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="history" class="w-6 h-6"></i>
+                <span class="font-medium text-lg">Riwayat Transaksi</span>
+            </a>
+
+            <a href="{{ url_for('kasir.pengaturan') }}" class="flex items-center gap-4 py-3.5 px-3 rounded-xl transition-all duration-200 
+                 {% if segment == 'pengaturan' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+                <span class="font-medium text-lg">Pengaturan</span>
+            </a>
+
+        {% elif current_user.role == 'owner' %}
+            <a href="{{ url_for('owner.dashboard') }}" 
+               class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+               {% if request.endpoint == 'owner.dashboard' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+               {% else %} 
+                    text-blue-100 hover:bg-white/10 
+               {% endif %}">
+                <i data-lucide="layout-grid" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('owner.manajemen_menu') }}" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if request.endpoint == 'owner.manajemen_menu' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="utensils-crossed" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Manajemen Menu</span>
+            </a>
+
+            <a href="{{ url_for('owner.manajemen_kasir') }}" 
+                class="flex items-center gap-4 py-3.5 px-5 rounded-xl transition-all duration-200 
+                {% if request.endpoint == 'owner.manajemen_kasir' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %} group">
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span class="font-semibold text-lg">Manajemen Kasir</span>
+            </a>
+
+            <a href="{{ url_for('owner.laporan_penjualan') }}"  class="flex items-center gap-4 py-3.5 px-3 rounded-xl transition-all duration-200 
+                 {% if request.endpoint == 'owner.laporan_penjualan' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="trending-up" class="w-6 h-6"></i>
+                <span class="font-medium text-lg">Laporan Penjualan</span>
+            </a>
+
+            <a href="{{ url_for('owner.pengaturan') }}" class="flex items-center gap-4 py-3.5 px-3 rounded-xl transition-all duration-200 
+                 {% if request.endpoint == 'owner.pengaturan' %} 
+                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                {% else %} 
+                    text-blue-100 hover:bg-white/10 
+                {% endif %}">
+                <i data-lucide="settings" class="w-6 h-6"></i>
+                <span class="font-medium text-lg">Pengaturan</span>
+            </a>
+        {% endif %}
+        
+    </nav>
+
+    <div class="absolute bottom-0 left-0 w-full pointer-events-none z-0">
+        <img src="{{ url_for('static', filename='images/gambar.png') }}" 
+             alt="" 
+             class="w-full h-auto object-contain opacity-90">
+    </div>
+
+</aside>
+
+<script>
+    // Memastikan script Lucide berjalan tanpa error
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
