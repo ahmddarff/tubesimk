@@ -74,7 +74,7 @@ printReceipt() {
     <input type="text" 
            placeholder="Cari menu atau no. meja..." 
            class="w-full pl-10 pr-4 py-2 mb-10 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-terralogBlue transition">
-</div>
+    </div>
 
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-terralogBlue">Katalog Menu</h2>
@@ -89,7 +89,11 @@ printReceipt() {
             <div {% if item.status == 'tersedia' %}
                 @click="activeCard = '{{ item.nama }}'; 
                     openModal = true; 
-                    selectedItem = { nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; 
+                    selectedItem = { 
+                        nama: '{{ item.nama }}', 
+                        harga: {{ item.harga }}, 
+                        img: '{{ item.img }}' 
+                    }; 
                     qty = 1"
                 class="cursor-pointer bg-white rounded-xl shadow-sm border-2 transition-all hover:shadow-md overflow-hidden flex flex-col relative"
                 :class="activeCard === '{{ item.nama }}' ? 'border-terralogBlue ring-2 ring-blue-100' : 'border-gray-100'"
@@ -109,7 +113,12 @@ printReceipt() {
                 </div>
 
                 <div class="relative h-32 overflow-hidden bg-gray-100">
-                    <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-full h-full object-cover">
+                    {% if item.img.startswith('http') %}
+                        <img src="{{ item.img }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/' + item.img) }}" class="w-full h-full object-cover">
+                    {% endif %}
+                    
                     {% if item.status == 'habis' %}
                     <div class="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                         <span class="text-white font-bold text-sm tracking-widest italic">HABIS</span>
@@ -119,7 +128,7 @@ printReceipt() {
 
                 <div class="p-3 flex-1 flex flex-col">
                     <h3 class="font-bold text-gray-800 text-sm leading-tight mb-1">{{ item.nama }}</h3>
-                    <p class="text-terralogBlue font-extrabold text-sm mb-3 font-['Inter']">Rp {{ "{:,.0f}".format(item.harga) }}</p>
+                    <p class="text-terralogBlue font-extrabold text-sm mb-3 font-['Inter']">Rp {{ "{:,.0f}".format(item.harga).replace(',', '.') }}</p>
                     <div class="mt-auto">
                         {% if item.status == 'tersedia' %}
                         <button class="w-full py-2 bg-[#E99817] text-white rounded-lg font-bold text-[9px] flex items-center justify-center gap-1">
@@ -215,7 +224,9 @@ printReceipt() {
                 <button @click="openModal = false"><i data-lucide="x" class="w-6 h-6 text-gray-400"></i></button>
             </div>
             <div class="flex gap-5 mb-8 border-b pb-6">
-                <img :src="'/static/images/' + selectedItem.img" class="w-24 h-24 object-cover rounded-2xl shadow-sm">
+                <img :src="selectedItem.img && selectedItem.img.startsWith('http') ? selectedItem.img : '/static/images/' + selectedItem.img" 
+                     class="w-24 h-24 object-cover rounded-2xl shadow-sm">
+                
                 <div class="flex flex-col justify-center">
                     <h3 class="text-xl font-bold text-gray-800 mb-1" x-text="selectedItem.nama"></h3>
                     <p class="text-terralogBlue font-black text-lg font-['Inter']" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
