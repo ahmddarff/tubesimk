@@ -10,10 +10,6 @@ from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
 
-@customer_bp.route('/profil')
-def profil():
-    return render_template('customer/profil.html', segment='profil', role='customer')
-
 # =========================
 # BERANDA & MENU
 # =========================
