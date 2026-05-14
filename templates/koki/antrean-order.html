@@ -1,0 +1,71 @@
+{% extends "layouts/layout-koki.html" %}
+{% block title %}Antrean Order{% endblock %}
+{% block page_title %}Antrean Order{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes timerPulse { 0%,100%{color:#EF4444;} 50%{color:#FCA5A5;} }
+    .timer-urgent { animation: timerPulse 1s ease-in-out infinite; }
+    .kanban-col   { min-height: calc(100vh - 280px); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="bg-white rounded-xl p-4 border-2 border-red-200 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500 mb-1">Menunggu</p>
+        <p class="text-3xl font-extrabold text-gray-900" id="count-pending">0</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 border-2 border-yellow-200 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500 mb-1">Diproses</p>
+        <p class="text-3xl font-extrabold text-gray-900" id="count-preparing">0</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 border-2 border-green-200 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500 mb-1">Siap</p>
+        <p class="text-3xl font-extrabold text-gray-900" id="count-ready">0</p>
+    </div>
+    <div class="bg-white rounded-xl p-4 border-2 border-gray-200 shadow-sm">
+        <p class="text-sm font-semibold text-gray-500 mb-1">Total</p>
+        <p class="text-3xl font-extrabold text-gray-900" id="count-total">0</p>
+    </div>
+</div>
+
+<!-- Kanban Board -->
+<div class="grid grid-cols-3 gap-4">
+
+    <!-- COL 1: PENDING -->
+    <div class="bg-red-50 rounded-2xl p-4">
+        <h3 class="text-center text-xs font-extrabold text-red-500 tracking-widest uppercase mb-4">
+            Antrean Masuk (Pending)
+        </h3>
+        <div id="col-pending" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- COL 2: PREPARING -->
+    <div class="bg-yellow-50 rounded-2xl p-4">
+        <h3 class="text-center text-xs font-extrabold text-yellow-600 tracking-widest uppercase mb-4">
+            Sedang Diproses (Preparing)
+        </h3>
+        <div id="col-preparing" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1"></div>
+    </div>
+
+    <!-- COL 3: READY -->
+    <div class="bg-green-50 rounded-2xl p-4">
+        <h3 class="text-center text-xs font-extrabold text-green-600 tracking-widest uppercase mb-4">
+            Siap (Ready)
+        </h3>
+        <div id="col-ready" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Inject data dari Flask ke JS -->
+<script>
+    const ordersData = {{ orders | tojson }};
+</script>
+<script src="{{ url_for('static', filename='static/koki/js/antrian.js') }}"></script>
+{% endblock %}

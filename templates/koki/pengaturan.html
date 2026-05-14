@@ -1,0 +1,91 @@
+{% extends "layouts/layout-koki.html" %}
+{% block title %}Pengaturan{% endblock %}
+{% block page_title %}Pengaturan{% endblock %}
+
+{% block content %}
+
+<div class="max-w-sm">
+    <h3 class="text-base font-bold text-[#1B2FAA] mb-5">Ubah Kata Sandi</h3>
+
+    <div class="flex flex-col gap-4">
+        <!-- Kata Sandi Saat Ini -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-gray-800">Kata Sandi Saat Ini</label>
+            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
+                <input type="password" id="passSaatIni" placeholder="Masukkan kata sandi"
+                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                <button type="button" onclick="togglePwd('passSaatIni', this)"
+                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Kata Sandi Baru -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-gray-800">Kata Sandi Baru</label>
+            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
+                <input type="password" id="passBaru" placeholder="Masukkan kata sandi"
+                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                <button type="button" onclick="togglePwd('passBaru', this)"
+                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Konfirmasi -->
+        <div class="flex flex-col gap-1">
+            <label class="text-sm font-semibold text-gray-800">Konfirmasi Kata Sandi Baru</label>
+            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
+                <input type="password" id="passKonfirmasi" placeholder="Masukkan kata sandi"
+                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                <button type="button" onclick="togglePwd('passKonfirmasi', this)"
+                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
+                    <i class="fa-regular fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <p class="text-xs text-gray-400">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
+
+        <div class="flex justify-end">
+            <button onclick="perbaruiPassword()"
+                    class="px-6 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold
+                           hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
+                Perbarui Kata Sandi
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function perbaruiPassword() {
+    const lama    = document.getElementById('passSaatIni').value;
+    const baru    = document.getElementById('passBaru').value;
+    const konfirm = document.getElementById('passKonfirmasi').value;
+
+    if (!lama)            { alert('Kata sandi saat ini wajib diisi!'); return; }
+    if (baru.length < 8)  { alert('Kata sandi baru minimal 8 karakter!'); return; }
+    if (baru !== konfirm) { alert('Konfirmasi kata sandi tidak cocok!'); return; }
+
+    fetch('/api/update-password', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ password_lama: lama, password_baru: baru })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            ['passSaatIni','passBaru','passKonfirmasi'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            showToast('Kata sandi berhasil diperbarui!');
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "layouts/layout-koki.html" %}
+{% block title %}Stok Menu{% endblock %}
+{% block page_title %}Stok Menu{% endblock %}
+
+{% block content %}
+
+<!-- Search + Filter -->
+<div class="flex items-center gap-3 mb-5 flex-wrap">
+    <div class="relative">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-sm"></i>
+        <input type="text" id="searchMenu" placeholder="Cari nama menu..."
+               oninput="filterStokSearch()"
+               class="pl-9 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm
+                      outline-none focus:border-[#1B2FAA] transition-colors w-56">
+    </div>
+
+    <div class="flex gap-2 flex-wrap">
+        {% for kat in ['Semua', 'Coffee', 'Non Coffee', 'Food', 'Snack'] %}
+        <button onclick="filterStokKat('{{ kat }}', this)"
+                class="stok-kat-btn px-4 py-2 rounded-lg text-xs font-bold transition-all
+                       {% if kat == 'Semua' %}bg-[#1B2FAA] text-white{% else %}border-2 border-[#1B2FAA] text-[#1B2FAA] hover:bg-[#1B2FAA] hover:text-white{% endif %}">
+            {{ kat }}
+        </button>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Stok Table -->
+<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm border-collapse">
+        <thead>
+            <tr class="bg-gray-50 border-b-2 border-gray-100">
+                <th class="px-6 py-4 text-left font-bold text-gray-700">Nama Menu</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-700">Kategori</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-700">Stok Saat Ini</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-700">Update Stok</th>
+                <th class="px-6 py-4 text-center font-bold text-gray-700">Tersedia</th>
+            </tr>
+        </thead>
+        <tbody id="stokTableBody">
+            <!-- filled by stok.js -->
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Inject data dari Flask ke JS -->
+<script>
+    const menuData = {{ menu_list | tojson }};
+</script>
+<script src="{{ url_for('static', filename='static/koki/js/stok.js') }}"></script>
+{% endblock %}

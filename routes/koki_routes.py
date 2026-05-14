@@ -65,12 +65,30 @@ orders_data = [
 # (data lainnya seperti sebelumnya — menu_data, kasir_data, dll.)
 
 # ── Koki Routes ───────────────────────────────────────
-@koki_bp.route('/dashboard')
-def koki_dashboard():
-    return render_template('koki/koki_dashboard.html',
-        username="Budi",
+@koki_bp.route('/antrean-order')
+def koki_antrian():
+    pending_count = sum(1 for o in orders_data if o['status'] == 'pending')
+    return render_template('koki/antrean-order.html',
+        username='Budi',
         orders=orders_data,
-        menu_list=menu_data
+        pending_count=pending_count
+    )
+
+@koki_bp.route('/stok-menu')
+def koki_stok():
+    pending_count = sum(1 for o in orders_data if o['status'] == 'pending')
+    return render_template('koki/stok-menu.html',
+        username='Budi',
+        menu_list=menu_data,
+        pending_count=pending_count
+    )
+
+@koki_bp.route('/pengaturan')
+def koki_pengaturan():
+    pending_count = sum(1 for o in orders_data if o['status'] == 'pending')
+    return render_template('koki/pengaturan.html',
+        username='Budi',
+        pending_count=pending_count
     )
 
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
