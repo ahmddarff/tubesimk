@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from datetime import datetime
 from flask_login import login_required, current_user
-from models import User, Menu, Category
+from models import User, Menu, Category, Order, OrderItem, Table
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
@@ -113,31 +113,24 @@ def submit_buat_reservasi():
                          role='customer')
 
 @customer_bp.route('/pesanan-saya')
+@login_required
 def pesanan_saya():
-    active_orders = [{"id": "AB123", "status": "Hidangkan", "date": "06 April 2026", "time": "15:15 WIB", "products": [{"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}], "total": 43000}]
-    history_orders = [
-        {
-            "id": "AB098",
-            "status": "Selesai",
-            "date": "14 Februari 2026",
-            "time": "21:48 WIB",
-            "products": [
-                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 2}
-            ],
-            "total": 38000
-        },
-        {
-            "id": "AB073",
-            "status": "Dibatalkan",
-            "date": "13 Januari 2026",
-            "time": "17:45 WIB",
-            "products": [
-                {"nama": "Terralog Kopi", "harga": 18000, "img": "kopi.png", "qty": 1}
-            ],
-            "total": 18000
-        }
-    ]
-    return render_template('customer/pesanan_saya.html', segment='pesanan_saya', role='customer', active_orders=active_orders, history_orders=history_orders)
+    # Mengambil semua pesanan milik user yang sedang login, diurutkan dari yang terbaru
+    user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    
+    # Memisahkan pesanan berdasarkan statusnya
+    # Pesanan Aktif: Status selain 'served' (jika diasumsikan 'served' adalah tahap akhir pelayanan)
+    # atau status pembayaran yang masih 'unpaid'
+    active_orders = [o for o in user_orders if o.order_status != 'served' or o.payment_status == 'unpaid']
+    
+    # Riwayat Pesanan: Pesanan yang sudah dilayani dan sudah dibayar, atau yang dibatalkan
+    history_orders = [o for o in user_orders if o.order_status == 'served' and o.payment_status == 'paid' or o.payment_status == 'cancelled']
+    
+    return render_template('customer/pesanan_saya.html', 
+                           segment='pesanan_saya', 
+                           role='customer', 
+                           active_orders=active_orders, 
+                           history_orders=history_orders)
 
 @customer_bp.route('/pesanan-saya/history')
 def pesanan_history():
