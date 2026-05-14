@@ -1,7 +1,7 @@
-from datetime import time
+from datetime import time, date
 from werkzeug.security import generate_password_hash
 from app import app, db
-from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table
+from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table, Reservation
 
 def run_seeders():
     # Gunakan app_context agar SQLAlchemy tahu database mana yang dipakai
@@ -310,8 +310,103 @@ def run_seeders():
                     db.session.add(item_baru)
                     
                 db.session.commit()
-                
         print("✅ Berhasil: 4 Data Order dan 7 Data Order Item ditambahkan!")
+
+        # ==========================================
+        # 10. SEEDER RESERVASI
+        # ==========================================
+        # Mengambil data pelanggan untuk pesanan yang terhubung dengan akun
+        customer = User.query.filter_by(role='customer').first()
+        customer_id = customer.id if customer else 1
+        # Mengambil nomor telepon dari tabel pengguna agar kolom 'phone' tidak kosong (NULL)
+        customer_phone = customer.phone if customer and customer.phone else "081299998888"
+
+        # Memetakan ID meja agar dinamis
+        meja_db = {m.table_number: m.id for m in Table.query.all()}
+        fallback_table = list(meja_db.values())[0] if meja_db else 1
+
+        data_reservasi = [
+            {
+                "user_id": customer_id,
+                "customer_name": None, # Kosong karena user_id terisi
+                "phone": customer_phone, 
+                "table_id": meja_db.get("02", fallback_table),
+                "notes": None,
+                "cancellation_reason": None,
+                "reservation_date": date(2026, 5, 15),
+                "reservation_time": time(19, 0), # Jam 19:00
+                "status": "pending"
+            },
+            {
+                "user_id": customer_id,
+                "customer_name": None,
+                "phone": customer_phone,
+                "table_id": meja_db.get("01", fallback_table),
+                "notes": "Tolong siapkan kursi tinggi untuk balita.",
+                "cancellation_reason": None,
+                "reservation_date": date(2026, 5, 16),
+                "reservation_time": time(20, 0),
+                "status": "confirmed"
+            },
+            {
+                "user_id": None, # Reservasi tanpa akun (Tamu)
+                "customer_name": "Ibu Ratna",
+                "phone": "081999888777",
+                "table_id": meja_db.get("03", fallback_table),
+                "notes": None,
+                "cancellation_reason": None,
+                "reservation_date": date(2026, 5, 14),
+                "reservation_time": time(12, 30),
+                "status": "completed"
+            },
+            {
+                "user_id": customer_id,
+                "customer_name": None,
+                "phone": customer_phone,
+                "table_id": meja_db.get("04", fallback_table),
+                "notes": None,
+                "cancellation_reason": "Berhalangan hadir karena ada urusan keluarga mendadak.",
+                "reservation_date": date(2026, 5, 13),
+                "reservation_time": time(18, 0),
+                "status": "cancelled"
+            },
+            {
+                "user_id": None,
+                "customer_name": "Bapak Andi",
+                "phone": "081555444333",
+                "table_id": meja_db.get("05", fallback_table),
+                "notes": "Acara ulang tahun, tolong mejanya digabungkan jika memungkinkan.",
+                "cancellation_reason": None,
+                "reservation_date": date(2026, 5, 17),
+                "reservation_time": time(15, 0),
+                "status": "pending"
+            }
+        ]
+
+        for data in data_reservasi:
+            # Memeriksa apakah data reservasi pada tanggal, jam, dan meja yang sama sudah ada
+            reservasi_exist = Reservation.query.filter_by(
+                table_id=data["table_id"],
+                reservation_date=data["reservation_date"],
+                reservation_time=data["reservation_time"]
+            ).first()
+
+            if not reservasi_exist:
+                reservasi_baru = Reservation(
+                    user_id=data["user_id"],
+                    customer_name=data["customer_name"],
+                    phone=data["phone"],
+                    table_id=data["table_id"],
+                    notes=data["notes"],
+                    cancellation_reason=data["cancellation_reason"],
+                    reservation_date=data["reservation_date"],
+                    reservation_time=data["reservation_time"],
+                    status=data["status"]
+                )
+                db.session.add(reservasi_baru)
+        
+        db.session.commit()
+        print("✅ Berhasil: 5 Data Reservasi ditambahkan!")
         
         print("--- SEEDER SELESAI ---\n")
 
