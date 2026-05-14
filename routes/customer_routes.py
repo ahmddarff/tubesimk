@@ -1,5 +1,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from datetime import datetime
+from flask_login import login_required, current_user
+from models import User
+from extensions import db
 import random
 import string
 
@@ -287,6 +290,30 @@ def submit_order():
 @customer_bp.route('/profil')
 def profil():
     return render_template('customer/profil.html', segment='profil', role='customer')
+
+@customer_bp.route('/api/update-profil', methods=['POST'])
+@login_required
+def update_profil():
+    data = request.json
+    
+    # Mengambil objek pengguna berdasarkan ID dari sesi yang sedang aktif
+    user = User.query.get(current_user.id)
+    
+    if user:
+        try:
+            # Memperbarui informasi pengguna
+            user.username = data.get("username", user.username)
+            user.name = data.get("nama_lengkap", user.name)
+            user.email = data.get("email", user.email)
+            user.phone = data.get("nomor_handphone", user.phone)
+            
+            db.session.commit()
+            return jsonify({"success": True, "message": "Profil Anda berhasil diperbarui."})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Terjadi kesalahan saat menyimpan data."})
+            
+    return jsonify({"success": False, "message": "Data pengguna tidak ditemukan."})
 
 @customer_bp.route('/pesanan/<order_id>')
 def pesanan_detail(order_id):

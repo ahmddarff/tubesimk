@@ -72,31 +72,49 @@
     function profilApp() {
         return {
             isEditing: false,
+            // Mengambil data langsung dari sesi pengguna yang sedang masuk
             formData: {
-                username: 'Matthew Shen',
-                nama_lengkap: 'Matthew Shen',
-                email: 'matthewmoo67@gmail.com',
-                nomor_handphone: ''
+                username: '{{ current_user.username }}',
+                nama_lengkap: '{{ current_user.name }}', 
+                email: '{{ current_user.email }}',
+                nomor_handphone: '{{ current_user.phone or "" }}'
             },
             originalData: {
-                username: 'Matthew Shen',
-                nama_lengkap: 'Matthew Shen',
-                email: 'matthewmoo67@gmail.com',
-                nomor_handphone: ''
+                username: '{{ current_user.username }}',
+                nama_lengkap: '{{ current_user.name }}',
+                email: '{{ current_user.email }}',
+                nomor_handphone: '{{ current_user.phone or "" }}'
             },
 
             cancelEdit() {
-                // Reset form data to original values
+                // Mengembalikan data ke kondisi semula
                 this.formData = { ...this.originalData };
                 this.isEditing = false;
             },
 
             saveChanges() {
-                // Save the changes (could send to server)
-                this.originalData = { ...this.formData };
-                this.isEditing = false;
-                // Optional: Show success message
-                // alert('Profil berhasil diperbarui!');
+                // Mengirimkan pembaruan data ke peladen menggunakan Fetch API
+                fetch('/customer/api/update-profil', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify(this.formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.originalData = { ...this.formData };
+                        this.isEditing = false;
+                        alert('Profil Anda berhasil diperbarui.');
+                    } else {
+                        alert('Pembaruan gagal: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan pada sistem saat menyimpan data.');
+                });
             }
         };
     }
