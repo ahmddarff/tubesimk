@@ -1,8 +1,8 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Menu
+from models import Menu, Reservation
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -73,18 +73,47 @@ def pesanan_aktif():
 # RESERVASI
 # =========================
 @kasir_bp.route('/reservasi')
+@login_required
 def reservasi():
-    data_reservasi = [
-        {
-            'id': '01',
-            'nama': 'Richard Lim',
-            'tanggal': '06/04/2024',
-            'tamu': 2,
-            'telepon': '0812345678',
-            'waktu': '19.00',
-            'status': 'Menunggu'
-        },
-    ]
+    reservations_db = Reservation.query.all()
+    data_reservasi = []
+
+    for res in reservations_db:
+        status_mapping = {
+            'pending': 'Menunggu',
+            'confirmed': 'Dikonfirmasi',
+            'completed': 'Selesai',
+            'cancelled': 'Dibatalkan'
+        }
+
+        # Menentukan nama pelanggan
+        nama_pelanggan = res.customer_name or (res.user.name if res.user else "Tanpa Nama")
+
+        # Mengambil semua nomor meja dari tabel relasi
+        meja_list = [rt.table_number_snapshot for rt in res.reserved_tables]
+        meja_str = ", ".join(meja_list) if meja_list else "-"
+
+        # Menghitung jam selesai berdasarkan durasi
+        jam_mulai_str = ""
+        jam_selesai_str = ""
+        if res.reservation_time:
+            jam_mulai_str = res.reservation_time.strftime('%H:%M')
+            if res.duration:
+                mulai_dt = datetime.combine(datetime.today(), res.reservation_time)
+                selesai_dt = mulai_dt + timedelta(minutes=res.duration)
+                jam_selesai_str = selesai_dt.strftime('%H:%M')
+
+        data_reservasi.append({
+            'id': str(res.id).zfill(2),
+            'nama': nama_pelanggan,
+            'tanggal': res.reservation_date.strftime('%Y-%m-%d') if res.reservation_date else '',
+            'tamu': res.guest_qty, # Menggunakan kolom baru
+            'telepon': res.phone,
+            'jam_mulai': jam_mulai_str,
+            'jam_selesai': jam_selesai_str, # Terhitung otomatis
+            'status': status_mapping.get(res.status, 'Menunggu'),
+            'meja': meja_str # Sekarang bisa menampilkan lebih dari 1 meja (contoh: "03, 04")
+        })
 
     return render_template(
         'kasir/reservasi.html',

@@ -1,104 +1,7 @@
 {% extends 'layouts/layout_kasir.html' %}
 
 {% block content %}
-<div x-data="{ 
-    searchQuery: '',
-    selectedTable: '',
-    showAddModal: false, 
-    showEditModal: false,
-    showDeleteModal: false,
-    showSaveSuccess: false,
-    toastTime: '',
-    deleteId: null,
-
-    // Data Form untuk Edit
-    formRes: { id: '', nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', jamSelesai: '', tamu: '', status: '' },
-
-    // Data Form untuk Tambah Baru
-    newRes: { nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', jamSelesai: '', tamu: '' },
-
-    get today() {
-        return new Date().toISOString().split('T')[0];
-    },
-
-    // DATABASE SIMULASI
-    reservations: [
-        { id: '01', nama: 'Richard Lim', tanggal: '2024-04-06', tamu: 2, telepon: '0812345678', jam_mulai: '19:00', jam_selesai: '21:00', status: 'Menunggu', meja: '11' },
-        { id: '02', nama: 'Arialdi Manday', tanggal: '2024-04-06', tamu: 4, telepon: '0812345672', jam_mulai: '20:00', jam_selesai: '22:00', status: 'Dikonfirmasi', meja: '12' },
-        { id: '03', nama: 'Chaterine Jelek', tanggal: '2024-04-06', tamu: 5, telepon: '0812345673', jam_mulai: '20:30', jam_selesai: '22:30', status: 'Dikonfirmasi', meja: '08' }
-    ],
-
-    // FUNGSI SIMPAN RESERVASI BARU
-    saveReservation() {
-        const newId = (this.reservations.length + 1).toString().padStart(2, '0');
-        this.reservations.push({
-            id: newId,
-            nama: this.newRes.nama,
-            tanggal: this.newRes.tanggal,
-            tamu: this.newRes.tamu,
-            telepon: this.newRes.telepon,
-            jam_mulai: this.newRes.jamMulai,
-            jam_selesai: this.newRes.jamSelesai,
-            meja: this.newRes.meja,
-            status: 'Menunggu'
-        });
-
-        this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        this.showAddModal = false;
-        
-        setTimeout(() => {
-            this.showSaveSuccess = true;
-            setTimeout(() => { this.showSaveSuccess = false; }, 5000);
-        }, 300);
-
-        this.newRes = { nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', jamSelesai: '', tamu: '' };
-    },
-
-    openEdit(res) {
-        this.formRes = { 
-            id: res.id, 
-            nama: res.nama, 
-            telepon: res.telepon, 
-            meja: res.meja || '01', 
-            tanggal: res.tanggal, 
-            jamMulai: res.jam_mulai, 
-            jamSelesai: res.jam_selesai, 
-            tamu: res.tamu, 
-            status: res.status 
-        };
-        this.showEditModal = true;
-    },
-
-    updateRes() {
-        let idx = this.reservations.findIndex(r => r.id === this.formRes.id);
-        if (idx !== -1) {
-            this.reservations[idx] = { 
-                ...this.reservations[idx], 
-                nama: this.formRes.nama, 
-                tanggal: this.formRes.tanggal, 
-                tamu: this.formRes.tamu, 
-                telepon: this.formRes.telepon, 
-                meja: this.formRes.meja,
-                jam_mulai: this.formRes.jamMulai, 
-                jam_selesai: this.formRes.jamSelesai, 
-                status: this.formRes.status
-            };
-        }
-        this.showEditModal = false;
-        this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        this.showSaveSuccess = true;
-        setTimeout(() => { this.showSaveSuccess = false; }, 5000);
-    },
-
-    deleteData() {
-        this.reservations = this.reservations.filter(r => r.id !== this.deleteId);
-        this.showDeleteModal = false;
-
-        this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        this.showSaveSuccess = true;
-        setTimeout(() => { this.showSaveSuccess = false; }, 5000);
-    }
-}" class="font-['Inter'] relative">
+<div x-data="reservasiData()" class="font-['Inter'] relative" x-cloak>
 
     <div class="mb-8 flex justify-between items-end">
         <div>
@@ -121,14 +24,10 @@
         </div>
 
         <div class="flex-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Nomor Meja</label>
+            <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Cari Nomor Meja</label>
             <div class="relative">
-                <i data-lucide="layout-grid" class="absolute left-4 top-3 w-4 h-4 text-terralogBlue"></i>
-                <select x-model="selectedTable" class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium appearance-none focus:border-terralogBlue outline-none cursor-pointer shadow-sm transition-all">
-                    <option value="">Semua Meja</option>
-                    <template x-for="i in 20"><option :value="i" x-text="'Meja ' + i"></option></template>
-                </select>
-                <i data-lucide="chevron-down" class="absolute right-4 top-3 w-4 h-4 text-gray-400 pointer-events-none"></i>
+                <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-terralogBlue"></i>
+                <input type="text" x-model="selectedTable" placeholder="Contoh: 01" class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium focus:border-terralogBlue outline-none shadow-sm transition-all">
             </div>
         </div>
 
@@ -140,7 +39,7 @@
             </div>
         </div>
 
-        <button class="px-8 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition shadow-sm h-[42px] border border-gray-200">
+        <button @click="searchQuery = ''; selectedTable = ''" class="px-8 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition shadow-sm h-[42px] border border-gray-200">
             Reset
         </button>
     </div>
@@ -160,9 +59,12 @@
             </thead>
             <tbody class="text-sm font-medium text-gray-700">
                 <template x-for="res in reservations" :key="res.id">
-                    <tr x-show="res.nama.toLowerCase().includes(searchQuery.toLowerCase())" class="border-b border-gray-50 last:border-0 hover:bg-blue-50/30 transition">
+                    <tr x-show="res.nama.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedTable === '' || res.meja.includes(selectedTable))" class="border-b border-gray-50 last:border-0 hover:bg-blue-50/30 transition">
                         <td class="px-6 py-4 text-gray-400 font-bold" x-text="res.id"></td>
-                        <td class="px-6 py-4 font-bold text-gray-800" x-text="res.nama"></td>
+                        <td class="px-6 py-4 font-bold text-gray-800">
+                            <span x-text="res.nama"></span>
+                            <div class="text-[10px] text-gray-400 mt-0.5 font-normal">Meja: <span x-text="res.meja" class="font-bold text-terralogBlue"></span></div>
+                        </td>
                         <td class="px-6 py-4" x-text="res.tanggal"></td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2 bg-blue-50/50 py-1.5 rounded-lg border border-blue-100 w-20 mx-auto">
@@ -175,7 +77,7 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <span class="px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase inline-block w-28 text-center shadow-sm"
-                                :class="{'bg-[#FF8A48]': res.status === 'Menunggu', 'bg-emerald-500': res.status === 'Dikonfirmasi', 'bg-red-500': res.status === 'Dibatalkan'}"
+                                :class="{'bg-[#FF8A48]': res.status === 'Menunggu', 'bg-emerald-500': res.status === 'Dikonfirmasi', 'bg-red-500': res.status === 'Dibatalkan', 'bg-blue-500': res.status === 'Selesai'}"
                                 x-text="res.status"></span>
                         </td>
                         <td class="px-6 py-4 text-center">
@@ -215,11 +117,8 @@
             <div class="p-6 space-y-5 bg-white text-left">
                 <div class="flex gap-4">
                     <div class="w-1/3">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Meja</label>
-                        <select x-model="newRes.meja" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
-                            <option value="">Pilih</option>
-                            <template x-for="i in 20"><option :value="i" x-text="'Meja ' + i"></option></template>
-                        </select>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Nomor Meja</label>
+                        <input type="text" x-model="newRes.meja" placeholder="Misal: 01, 02" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                     <div class="w-2/3">
                         <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Nama Pelanggan</label>
@@ -236,8 +135,8 @@
                         <input type="time" x-model="newRes.jamMulai" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                     <div class="flex-1">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Jam Selesai</label>
-                        <input type="time" x-model="newRes.jamSelesai" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block">Durasi (Menit)</label>
+                        <input type="number" x-model="newRes.durasi" placeholder="90" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                 </div>
                 <div class="flex gap-4">
@@ -265,14 +164,12 @@
         <div x-transition:opacity class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showEditModal = false"></div>
         <div x-transition:enter="transition ease-out duration-300 transform scale-95" 
              class="relative bg-white w-full max-w-[550px] mx-4 rounded-3xl shadow-2xl overflow-hidden text-left">
-            
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <h2 class="text-xl font-bold text-gray-800 tracking-tight">Edit Reservasi</h2>
                 <button @click="showEditModal = false" class="text-gray-400 hover:text-red-500 transition-colors">
                     <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
-
             <div class="p-6 space-y-5 bg-white">
                 <div class="flex gap-4">
                     <div class="w-1/3">
@@ -284,7 +181,6 @@
                         <input type="text" x-model="formRes.nama" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                 </div>
-
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Tanggal</label>
@@ -292,23 +188,19 @@
                     </div>
                     <div class="flex-1">
                         <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Nomor Meja</label>
-                        <select x-model="formRes.meja" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
-                            <template x-for="i in 20"><option :value="i" x-text="'Meja ' + i"></option></template>
-                        </select>
+                        <input type="text" x-model="formRes.meja" placeholder="Misal: 01, 02" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                 </div>
-
                 <div class="flex gap-4">
                     <div class="flex-1">
                         <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Jam Mulai</label>
                         <input type="time" x-model="formRes.jamMulai" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                     <div class="flex-1">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Jam Selesai</label>
-                        <input type="time" x-model="formRes.jamSelesai" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Durasi (Menit)</label>
+                        <input type="number" x-model="formRes.durasi" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                 </div>
-
                 <div class="flex gap-4">
                     <div class="w-1/3">
                         <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1.5">Jumlah Tamu</label>
@@ -329,7 +221,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="px-6 py-5 border-t border-gray-50 bg-gray-50/50 flex justify-end gap-3">
                 <button @click="showEditModal = false" class="px-6 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition">Batal</button>
                 <button @click="updateRes()" class="px-8 py-3 bg-terralogBlue text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-900 transition">Simpan Perubahan</button>
@@ -361,7 +252,6 @@
          x-transition:leave-end="translate-x-full opacity-0"
          class="fixed top-20 right-5 z-[1000] w-80" 
          style="display: none;" x-cloak>
-        
         <div class="bg-[#E6F9F0] border-l-4 border-[#28A745] p-4 rounded-2xl shadow-xl relative text-left">
             <div class="flex items-start gap-3">
                 <div class="bg-[#28A745] rounded-full p-1 mt-1 shrink-0">
@@ -369,7 +259,7 @@
                 </div>
                 <div class="flex-1">
                     <h4 class="text-sm font-bold text-gray-800 leading-tight">Berhasil!</h4>
-                    <p class="text-[11px] text-gray-600 mt-1 font-medium leading-normal">Data reservasi pada tabel telah diperbarui secara otomatis.</p>
+                    <p class="text-[11px] text-gray-600 mt-1 font-medium leading-normal">Data reservasi pada tabel telah diperbarui.</p>
                 </div>
                 <button @click="showSaveSuccess = false" class="text-gray-400 hover:text-gray-800">
                     <i data-lucide="x" class="w-4 h-4"></i>
@@ -378,4 +268,115 @@
         </div>
     </div>
 </div>
+
+<script id="data-reservasi" type="application/json">
+    {{ reservations | tojson | safe }}
+</script>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('reservasiData', () => ({
+        searchQuery: '',
+        selectedTable: '',
+        showAddModal: false, 
+        showEditModal: false,
+        showDeleteModal: false,
+        showSaveSuccess: false,
+        toastTime: '',
+        deleteId: null,
+
+        // Variabel diperbarui: mengganti jamSelesai dengan durasi
+        formRes: { id: '', nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', durasi: 90, tamu: '', status: '' },
+        newRes: { nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', durasi: 90, tamu: '' },
+
+        get today() {
+            return new Date().toISOString().split('T')[0];
+        },
+
+        reservations: JSON.parse(document.getElementById('data-reservasi').textContent),
+
+        // Fungsi pembantu untuk menghitung jam selesai secara lokal
+        hitungJamSelesai(jamMulai, durasiMenit) {
+            if (!jamMulai || !durasiMenit) return '';
+            let [h, m] = jamMulai.split(':');
+            let dateObj = new Date();
+            dateObj.setHours(h, m, 0);
+            dateObj.setMinutes(dateObj.getMinutes() + parseInt(durasiMenit));
+            return dateObj.toTimeString().substring(0, 5);
+        },
+
+        saveReservation() {
+            const newId = (this.reservations.length + 1).toString().padStart(2, '0');
+            this.reservations.push({
+                id: newId,
+                nama: this.newRes.nama,
+                tanggal: this.newRes.tanggal,
+                tamu: this.newRes.tamu,
+                telepon: this.newRes.telepon,
+                jam_mulai: this.newRes.jamMulai,
+                durasi: this.newRes.durasi,
+                jam_selesai: this.hitungJamSelesai(this.newRes.jamMulai, this.newRes.durasi),
+                meja: this.newRes.meja,
+                status: 'Menunggu'
+            });
+
+            this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            this.showAddModal = false;
+            
+            setTimeout(() => {
+                this.showSaveSuccess = true;
+                setTimeout(() => { this.showSaveSuccess = false; }, 5000);
+            }, 300);
+
+            this.newRes = { nama: '', telepon: '', meja: '', tanggal: '', jamMulai: '', durasi: 90, tamu: '' };
+        },
+
+        openEdit(res) {
+            this.formRes = { 
+                id: res.id, 
+                nama: res.nama, 
+                telepon: res.telepon, 
+                meja: res.meja || '', 
+                tanggal: res.tanggal, 
+                jamMulai: res.jam_mulai, 
+                durasi: res.durasi || 90, // Pastikan backend juga mengirim kunci 'durasi' agar dapat diedit secara akurat
+                tamu: res.tamu, 
+                status: res.status 
+            };
+            this.showEditModal = true;
+        },
+
+        updateRes() {
+            let idx = this.reservations.findIndex(r => r.id === this.formRes.id);
+            if (idx !== -1) {
+                this.reservations[idx] = { 
+                    ...this.reservations[idx], 
+                    nama: this.formRes.nama, 
+                    tanggal: this.formRes.tanggal, 
+                    tamu: this.formRes.tamu, 
+                    telepon: this.formRes.telepon, 
+                    meja: this.formRes.meja,
+                    durasi: this.formRes.durasi,
+                    jam_mulai: this.formRes.jamMulai, 
+                    jam_selesai: this.hitungJamSelesai(this.formRes.jamMulai, this.formRes.durasi), 
+                    status: this.formRes.status
+                };
+            }
+            this.showEditModal = false;
+            this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            this.showSaveSuccess = true;
+            setTimeout(() => { this.showSaveSuccess = false; }, 5000);
+        },
+
+        deleteData() {
+            this.reservations = this.reservations.filter(r => r.id !== this.deleteId);
+            this.showDeleteModal = false;
+
+            this.toastTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+            this.showSaveSuccess = true;
+            setTimeout(() => { this.showSaveSuccess = false; }, 5000);
+        }
+    }));
+});
+</script>
 {% endblock %}
