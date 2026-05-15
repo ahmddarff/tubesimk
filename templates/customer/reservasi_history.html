@@ -4,7 +4,7 @@
 <div class="customer-page-shell w-full">
     <!-- Breadcrumb -->
     <div class="mb-8 flex items-center gap-2 text-gray-600">
-        <a href="/customer/buat-reservasi" class="hover:text-terralogBlue">Reservasi Saya</a>
+        <a href="/customer/buat-reservasi" class="hover:text-terralogBlue transition">Reservasi Saya</a>
         <span class="text-gray-400">›</span>
         <span class="text-gray-800 font-semibold">Riwayat Lengkap</span>
     </div>
@@ -24,50 +24,86 @@
     <!-- Reservasi List -->
     <div class="space-y-6">
         {% for reservation in history_reservations %}
-        <div class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow">
+        <div class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-lg transition-shadow border border-gray-100">
             <div class="flex items-start justify-between mb-6">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-800 mb-3">#{{ reservation.id }}</h2>
-                    <div class="inline-block {% if reservation.status == 'Selesai' %}bg-green-100 text-green-800{% elif reservation.status == 'Dibatalkan' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-2 rounded-lg font-semibold text-sm">
-                        {{ reservation.status }}
+                    <h2 class="text-2xl font-bold text-slate-900 mb-3">#{{ reservation.reservation_number }}</h2>
+                    
+                    <div class="inline-block {% if reservation.status == 'completed' %}bg-green-100 text-green-800{% elif reservation.status == 'cancelled' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-1.5 rounded-full font-semibold text-xs uppercase tracking-wider">
+                        {% if reservation.status == 'completed' %}
+                            Selesai
+                        {% elif reservation.status == 'cancelled' %}
+                            Dibatalkan
+                        {% else %}
+                            {{ reservation.status }}
+                        {% endif %}
                     </div>
                 </div>
-                <a href="/customer/reservasi/{{ reservation.id }}" class="bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition inline-block">
+                <a href="/customer/reservasi/{{ reservation.id }}" class="bg-terralogBlue hover:bg-blue-900 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
                     Lihat Detail
                 </a>
             </div>
 
             <!-- Info Grid -->
-            <div class="grid grid-cols-4 gap-6 pt-6 border-t border-gray-200">
+            <div class="grid grid-cols-5 gap-6 pt-6 border-t border-gray-100">
                 <div>
-                    <p class="text-gray-600 text-sm mb-2">Tanggal</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ reservation.date }}</p>
+                    <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Tanggal</p>
+                    <p class="text-base font-bold text-gray-800">{{ reservation.reservation_date.strftime('%d %b %Y') if reservation.reservation_date else '-' }}</p>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm mb-2">Waktu</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ reservation.time }}</p>
+                    <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Waktu</p>
+                    <p class="text-base font-bold text-gray-800">{{ reservation.reservation_time.strftime('%H:%M') if reservation.reservation_time else '-' }} WIB</p>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm mb-2">Durasi</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ reservation.duration }}</p>
+                    <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Durasi</p>
+                    <p class="text-base font-bold text-gray-800">{{ reservation.duration }} Menit</p>
                 </div>
                 <div>
-                    <p class="text-gray-600 text-sm mb-2">Jumlah Tamu</p>
-                    <p class="text-lg font-semibold text-gray-800">{{ reservation.guests }} Orang</p>
+                    <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Jumlah Tamu</p>
+                    <p class="text-base font-bold text-gray-800">{{ reservation.guest_qty }} Orang</p>
+                </div>
+                <div>
+                    <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Meja</p>
+                    <p class="text-base font-bold text-gray-800">
+                        {% if reservation.reserved_tables %}
+                            Meja {{ reservation.reserved_tables[0].table_number_snapshot }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </p>
                 </div>
             </div>
+
+            {% if reservation.status == 'cancelled' and reservation.cancellation_reason %}
+            <div class="mt-4 p-4 bg-red-50/60 rounded-xl border border-red-100/50 flex gap-2 items-start text-sm">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-red-500 mt-0.5 shrink-0"></i>
+                <p class="text-red-700"><span class="font-bold">Alasan Pembatalan:</span> {{ reservation.cancellation_reason }}</p>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
 
     {% if history_reservations|length == 0 %}
-    <div class="bg-white rounded-2xl shadow-sm p-12 text-center">
-        <i data-lucide="history" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-        <p class="text-gray-600 mb-4">Tidak ada riwayat reservasi</p>
-        <a href="/customer/buat-reservasi" class="inline-block bg-terralogBlue hover:bg-terralogBlue/90 text-white font-bold py-2 px-6 rounded-lg transition">
-            Kembali ke Reservasi
+    <div class="bg-white rounded-2xl shadow-sm p-16 text-center border border-gray-100 max-w-2xl mx-auto mt-10">
+        <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-gray-400 mb-4 shadow-inner">
+            <i data-lucide="history" class="w-8 h-8"></i>
+        </div>
+        <p class="text-gray-800 font-bold text-xl mb-1">Riwayat Masih Kosong</p>
+        <p class="text-gray-500 text-sm mb-6">Anda belum memiliki catatan transaksi reservasi yang diselesaikan atau dibatalkan.</p>
+        <a href="/customer/buat-reservasi" class="inline-block bg-terralogBlue hover:bg-blue-900 text-white font-bold py-3 px-8 rounded-full transition shadow-md text-sm">
+            Kembali ke Reservasi Saya
         </a>
     </div>
     {% endif %}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
+
 {% endblock %}
