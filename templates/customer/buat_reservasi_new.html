@@ -7,7 +7,7 @@
     <div class="max-w-6xl">
         <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap">
-            <a href="/customer/reservasi-saya" class="text-terralogBlue hover:text-blue-900 transition">Reservasi Saya</a>
+            <a href="/customer/buat-reservasi" class="text-terralogBlue hover:text-blue-900 transition">Reservasi Saya</a>
             <span class="text-terralogBlue/60">›</span>
             <span class="text-terralogBlue">Buat Reservasi</span>
         </div>
@@ -18,13 +18,13 @@
                 <!-- Nama Pemesan -->
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-semibold text-slate-600">Nama Pemesan</p>
-                    <p class="text-base font-bold text-slate-900">Matthew Shen</p>
+                    <p class="text-base font-bold text-slate-900">{{ current_user.name }}</p>
                 </div>
                 
                 <!-- No Handphone -->
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-semibold text-slate-600">No Handphone</p>
-                    <p class="text-base font-bold text-slate-900">08123457890</p>
+                    <p class="text-base font-bold text-slate-900">{{ current_user.phone if current_user.phone else '-' }}</p>
                 </div>
                 
                 <!-- Meja -->
@@ -32,14 +32,9 @@
                     <p class="text-sm font-semibold text-slate-600">Meja</p>
                     <select x-model="meja" class="border border-slate-200 rounded-2xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white">
                         <option value="">Pilih Meja</option>
-                        <option value="M-101">M-101</option>
-                        <option value="M-102">M-102</option>
-                        <option value="M-103">M-103</option>
-                        <option value="M-104">M-104</option>
-                        <option value="M-105">M-105</option>
-                        <option value="M-106">M-106</option>
-                        <option value="M-107">M-107</option>
-                        <option value="M-108">M-108</option>
+                        {% for table in tables %}
+                        <option value="{{ table.id }}">Meja {{ table.table_number }} (Kapasitas: {{ table.capacity }} Orang)</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -52,7 +47,7 @@
                 <p class="text-slate-600">Lengkapi informasi di bawah ini untuk mengajukan reservasi</p>
             </div>
 
-            <form id="reservasiForm" method="POST" action="/customer/buat-reservasi/submit" class="space-y-8">
+            <form id="reservasiForm" @submit.prevent="submitReservasi" class="space-y-8">
                 <div class="grid grid-cols-3 gap-6">
                     <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 text-center">
                         <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
@@ -109,6 +104,7 @@
             tanggal: '',
             waktu: '',
             jumlahTamu: '',
+            notes: '',
 
             get availableTimes() {
                 // All time slots throughout the day
@@ -134,26 +130,41 @@
                 }
 
                 const reservasiData = {
-                    meja: this.meja,
-                    tanggal: this.tanggal,
-                    waktu: this.waktu,
-                    jumlahTamu: this.jumlahTamu,
-                    nama: 'Matthew Shen',
-                    nomor: '08123457890'
-                };
+                        meja: this.meja,
+                        tanggal: this.tanggal,
+                        waktu: this.waktu,
+                        jumlahTamu: this.jumlahTamu,
+                        notes: this.notes || '' 
+                    };
 
-                console.log('Reservasi submitted:', reservasiData);
-                alert(`Reservasi berhasil diajukan!\n\nMeja: ${this.meja}\nTanggal: ${this.tanggal}\nWaktu: ${this.waktu}\nJumlah Tamu: ${this.jumlahTamu}`);
-
-                // Reset form
-                this.meja = '';
-                this.tanggal = '';
-                this.waktu = '';
-                this.jumlahTamu = '';
+                // Tembak URL backend menggunakan Fetch API dengan header JSON
+                fetch('/customer/buat-reservasi/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(reservasiData)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            window.location.href = '/customer/buat-reservasi';
+                        } else {
+                            alert(result.message);
+                        }
+                    })
+                .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan koneksi server.');
+                });
             }
         }
     }
 
-    lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
 </script>
 {% endblock %}

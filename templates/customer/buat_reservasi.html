@@ -24,9 +24,8 @@
                     
                     <div class="flex justify-between items-start mb-6">
                         <div>
-                            <p class="text-xs text-gray-400 mb-1 font-semibold">No Reservasi</p>
-                            <h3 class="text-lg font-bold text-gray-900">#{{ reservation.reservation_number }}</h3>
-                        </div>
+                            <p class="text-xs text-gray-400 mb-1 font-semibold">No. Reservasi</p>
+                            <p class="font-bold text-slate-900 text-lg">#{{ reservation.reservation_number }}</p>
                         <div>
                             {% if reservation.status == 'pending' %}
                                 <span class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Menunggu</span>
@@ -47,15 +46,21 @@
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 mb-1 font-semibold">Jumlah Tamu</p>
-                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.capacity }} Orang</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.guest_qty }} Orang</p>
                         </div>
                     </div>
 
                     <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-400 mb-1 font-semibold">Meja</p>
-                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.table_number }}</p>
-                        </div>
+                    <div>
+                        <p class="text-xs text-gray-400 mb-1 font-semibold">Meja</p>
+                        <p class="font-bold text-gray-800 text-sm">
+                            {% if reservation.reserved_tables %}
+                                Meja {{ reservation.reserved_tables[0].table_number_snapshot }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
                         <a href="/customer/reservasi/{{ reservation.id }}" class="px-6 py-2 border-2 border-terralogBlue text-terralogBlue hover:bg-blue-50 font-bold rounded-lg transition text-sm">
                             Lihat Detail
                         </a>
@@ -109,14 +114,20 @@
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 mb-1 font-semibold">Jumlah Tamu</p>
-                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.capacity }} Orang</p>
+                            <p class="font-bold text-gray-800 text-sm">{{ reservation.guest_qty }} Orang</p>
                         </div>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="text-xs text-gray-400 mb-1 font-semibold">Meja</p>
-                            <p class="font-bold text-gray-800 text-sm">{{ reservation.table.table_number }}</p>
+                            <p class="font-bold text-gray-800 text-sm">
+                                {% if reservation.reserved_tables %}
+                                    Meja {{ reservation.reserved_tables[0].table_number_snapshot }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </p>
                         </div>
                         <a href="/customer/reservasi/{{ reservation.id }}" class="px-6 py-2 border-2 border-terralogBlue text-terralogBlue hover:bg-blue-50 font-bold rounded-lg transition text-sm">
                             Lihat Detail
