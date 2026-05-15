@@ -599,26 +599,37 @@ def pembayaran_nontunai(order_id):
 @login_required
 def pengaturan():
     if request.method == 'POST':
-        # Update data teks
         current_user.name = request.form.get('name')
         current_user.username = request.form.get('username')
         current_user.email = request.form.get('email')
         current_user.phone = request.form.get('phone')
 
-        # Logika Upload Foto Profil
-        if 'foto' in request.files:
-            file = request.files['foto']
+        # Konsisten menggunakan 'photo'
+        if 'photo' in request.files:
+            file = request.files['photo']
             if file and file.filename != '':
+                upload_path = os.path.join(current_app.root_path, 'static/uploads/profile')
+                if not os.path.exists(upload_path):
+                    os.makedirs(upload_path)
+
+                # Logika aman penghapusan foto lama (cek folder images maupun uploads)
                 if current_user.photo:
-                    old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                    old_path = os.path.join(current_app.root_path, 'static', current_user.photo)
+                    if not os.path.exists(old_path) and not current_user.photo.startswith('uploads/'):
+                        old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                        
                     if os.path.exists(old_path) and os.path.isfile(old_path):
                         try: os.remove(old_path)
                         except: pass
                 
                 filename = secure_filename(file.filename)
-                unique_filename = f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                file.save(os.path.join(current_app.root_path, 'static/images', unique_filename))
-                current_user.photo = unique_filename
+                unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                
+                # Simpan fisik
+                file.save(os.path.join(upload_path, unique_filename))
+                
+                # Simpan beserta alamat path relatifnya ke database
+                current_user.photo = f"uploads/profile/{unique_filename}"
 
         try:
             db.session.commit()

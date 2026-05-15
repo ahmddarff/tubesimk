@@ -32,7 +32,7 @@
                 
                 <div class="w-10 h-10 bg-terralogBlue rounded-full flex items-center justify-center text-white font-bold border-2 border-terralogPeach overflow-hidden">
                     {% if current_user.photo %}
-                        <img src="{{ url_for('static', filename='images/' + current_user.photo) }}" 
+                        <img src="{{ url_for('static', filename=current_user.photo) }}" 
                             class="w-full h-full object-cover"
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                         <span class="uppercase hidden">{{ current_user.name[:2] }}</span>

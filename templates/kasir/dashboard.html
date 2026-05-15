@@ -152,7 +152,9 @@
                     </div>
 
                     <div class="relative h-32 overflow-hidden bg-gray-100">
-                        <img src="{% if item.img.startswith('http') %}{{ item.img }}{% else %}{{ url_for('static', filename='images/' + item.img) }}{% endif %}" class="w-full h-full object-cover">
+                        <img src="{% if item.img.startswith('http') %}{{ item.img }}{% else %}{{ url_for('static', filename=item.img) }}{% endif %}" 
+                            class="w-full h-full object-cover">
+                        
                         {% if item.status == 'habis' %}
                         <div class="absolute inset-0 bg-black/60 flex items-center justify-center z-10 backdrop-blur-[1px]">
                             <span class="text-white font-black text-xs uppercase border-2 border-white px-3 py-1 rounded-lg">Habis</span>

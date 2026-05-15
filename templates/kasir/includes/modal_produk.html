@@ -12,10 +12,10 @@
         </div>
 
         <div class="flex gap-5 mb-8 border-b border-gray-100 pb-8">
-            <img :src="selectedItem.img && selectedItem.img.startsWith('http') ? selectedItem.img : '/static/images/' + selectedItem.img" 
-                 class="w-28 h-28 object-cover rounded-2xl shadow-sm border border-gray-100">
+            <img :src="selectedItem.img && selectedItem.img.startsWith('http') ? selectedItem.img : '/static/' + selectedItem.img" 
+                class="w-28 h-28 object-cover rounded-2xl shadow-sm border border-gray-100">
             <div class="flex flex-col justify-center">
-                <h3 class="text-xl font-bold text-gray-800 mb-1" x-text="selectedItem.nama"></h3>
+                <h3 class="text-xl font-bold text-terralogBlue mb-1" x-text="selectedItem.nama"></h3>
                 <p class="text-terralogBlue font-black text-xl" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
             </div>
         </div>

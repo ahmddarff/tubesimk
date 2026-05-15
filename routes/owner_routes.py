@@ -435,21 +435,31 @@ def update_akun():
         user.email = email or user.email
         user.phone = no_hp or user.phone
         
-        # Cek apakah ada file foto yang dikirim
-        if 'foto' in request.files:
-            file = request.files['foto']
+        # Konsisten menggunakan 'photo'
+        if 'photo' in request.files:
+            file = request.files['photo']
             if file and file.filename != '':
+                upload_path = os.path.join(current_app.root_path, 'static/uploads/profile')
+                if not os.path.exists(upload_path):
+                    os.makedirs(upload_path)
+
                 # Hapus foto lama
                 if user.photo:
-                    old_path = os.path.join(current_app.root_path, 'static/images', user.photo)
+                    old_path = os.path.join(current_app.root_path, 'static', user.photo)
+                    if not os.path.exists(old_path) and not user.photo.startswith('uploads/'):
+                        old_path = os.path.join(current_app.root_path, 'static/images', user.photo)
+                        
                     if os.path.exists(old_path) and os.path.isfile(old_path):
                         try: os.remove(old_path)
                         except: pass
-                # Simpan foto baru
+                
                 filename = secure_filename(file.filename)
-                unique_filename = f"user_{user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                file.save(os.path.join(current_app.root_path, 'static/images', unique_filename))
-                user.photo = unique_filename
+                unique_filename = f"{user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                
+                file.save(os.path.join(upload_path, unique_filename))
+                
+                # Simpan beserta alamat path relatifnya ke database
+                user.photo = f"uploads/profile/{unique_filename}"
 
         try:
             db.session.commit()

@@ -67,15 +67,16 @@
                 <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
                     <div class="relative">
                         <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
+                            
                             <img id="userPhotoPreview" 
-                                 src="{% if user.photo %}{{ url_for('static', filename='images/' + user.photo) }}{% endif %}" 
-                                 class="w-full h-full object-cover {% if not user.photo %}hidden{% endif %}"
-                                 onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
+                                src="{% if user.photo %}{{ url_for('static', filename=user.photo) }}{% endif %}" 
+                                class="w-full h-full object-cover {% if not user.photo %}hidden{% endif %}"
+                                onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
                             
                             <span id="userInitial" class="{% if user.photo %}hidden{% endif %}">{{ user.name[:2] }}</span>
                         </div>
 
-                        <input type="file" name="foto" id="inputFotoAkun" class="hidden" accept="image/*" onchange="previewFotoAkun(this)">
+                        <input type="file" name="photo" id="inputFotoAkun" class="hidden" accept="image/*" onchange="previewFotoAkun(this)">
 
                         <button type="button" onclick="document.getElementById('inputFotoAkun').click()"
                             class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">

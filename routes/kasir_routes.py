@@ -142,37 +142,36 @@ def riwayat_transaksi():
 @login_required
 def pengaturan():
     if request.method == 'POST':
-        # Mengambil data dari formulir teks
-        name = request.form.get('name')
-        username = request.form.get('username')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
+        current_user.name = request.form.get('name')
+        current_user.username = request.form.get('username')
+        current_user.email = request.form.get('email')
+        current_user.phone = request.form.get('phone')
 
-        # Memperbarui data pengguna
-        current_user.name = name
-        current_user.username = username
-        current_user.email = email
-        current_user.phone = phone
-
-        # --- LOGIKA UPLOAD FOTO ---
-        if 'foto' in request.files:
-            file = request.files['foto']
+        # Konsisten menggunakan 'photo'
+        if 'photo' in request.files:
+            file = request.files['photo']
             if file and file.filename != '':
-                # Hapus foto lama jika bukan null
+                upload_path = os.path.join(current_app.root_path, 'static/uploads/profile')
+                if not os.path.exists(upload_path):
+                    os.makedirs(upload_path)
+
+                # Hapus foto lama
                 if current_user.photo:
-                    old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                    old_path = os.path.join(current_app.root_path, 'static', current_user.photo)
+                    if not os.path.exists(old_path) and not current_user.photo.startswith('uploads/'):
+                        old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                        
                     if os.path.exists(old_path) and os.path.isfile(old_path):
                         try: os.remove(old_path)
                         except: pass
                 
-                # Simpan foto baru
                 filename = secure_filename(file.filename)
-                unique_filename = f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
-                file_path = os.path.join(current_app.root_path, 'static/images', unique_filename)
-                file.save(file_path)
+                unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
                 
-                # Update ke database
-                current_user.photo = unique_filename
+                file.save(os.path.join(upload_path, unique_filename))
+                
+                # Simpan beserta alamat path relatifnya ke database
+                current_user.photo = f"uploads/profile/{unique_filename}"
 
         try:
             db.session.commit()
@@ -183,12 +182,7 @@ def pengaturan():
         
         return redirect(url_for('kasir.pengaturan'))
 
-    return render_template(
-        'kasir/pengaturan.html',
-        segment='pengaturan',
-        role='kasir',
-        user=current_user
-    )
+    return render_template('kasir/pengaturan.html', segment='pengaturan', role='kasir', user=current_user)
 
 @kasir_bp.route('/api/update-password', methods=['POST'])
 @login_required
