@@ -1,0 +1,111 @@
+<aside class="w-[340px] bg-white rounded-[2rem] shadow-md border-2 border-terralogBlue/10 p-5 flex flex-col h-full overflow-hidden z-10">
+    <h2 class="text-xl font-extrabold mb-4 text-terralogBlue tracking-tight">Detail Pesanan</h2>
+    
+    <div class="flex p-1.5 bg-gray-50 border border-gray-100 rounded-xl mb-4">
+        <button @click="orderType = 'dine-in'" 
+                :class="orderType === 'dine-in' ? 'bg-terralogBlue text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'"
+                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-wider">Dine In</button>
+        <button @click="orderType = 'takeaway'" 
+                :class="orderType === 'takeaway' ? 'bg-terralogBlue text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'"
+                class="flex-1 py-2 text-xs font-bold rounded-lg transition-all uppercase tracking-wider">Take Away</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-4 text-[11px] font-bold">
+        <div class="col-span-2">
+            <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Nama Pelanggan</label>
+            <input type="text" placeholder="Nama..." class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none font-medium">
+        </div>
+        <div x-show="orderType === 'dine-in'">
+            <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Meja</label>
+            <select class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none text-center font-medium">
+                <option>01</option><option>02</option><option>03</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0 mb-2">
+        <template x-if="cart.length === 0">
+            <div class="flex flex-col items-center justify-center h-full text-center py-10">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                    <i data-lucide="shopping-basket" class="w-8 h-8 text-gray-300"></i>
+                </div>
+                <p class="text-sm font-bold text-gray-400">Keranjang kosong</p>
+            </div>
+        </template>
+        
+        <div class="space-y-3" x-init="$watch('cart', () => { $nextTick(() => lucide.createIcons()); })">
+            <template x-for="(item, index) in cart" :key="index">
+                <div class="flex flex-col group p-2 hover:bg-gray-50 rounded-xl transition-colors -mx-2"
+                     :class="selectedItems.includes(index) ? 'bg-red-50/50' : ''">
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="flex gap-3 items-center">
+                            <input type="checkbox" :value="index" x-model="selectedItems" x-show="isDeleteMode" x-transition
+                                   class="w-4 h-4 rounded border-gray-300 text-red-500 cursor-pointer">
+                            <div class="bg-blue-50 text-terralogBlue w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs border border-blue-100 shrink-0" x-text="item.qty"></div>
+                            <span class="font-bold text-gray-800 leading-tight" x-text="item.nama"></span>
+                        </div>
+                        <div class="flex items-center gap-3 pl-2">
+                            <span class="font-bold text-terralogBlue whitespace-nowrap" x-text="'Rp ' + (item.harga * item.qty).toLocaleString('id-ID')"></span>
+                            
+                            <button @click="editItem(index)" x-show="!isDeleteMode"
+                                    class="w-7 h-7 bg-blue-50 text-terralogBlue rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-terralogBlue hover:text-white">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div x-show="item.note" class="pl-10 pr-2 mt-1">
+                        <p class="text-[10px] text-gray-500 italic leading-snug" x-text="'- ' + item.note"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <div class="pt-4 border-t border-dashed border-gray-200">
+        <div x-show="!isDeleteMode" class="flex justify-between text-sm font-bold text-gray-500 mb-4">
+            <span>Subtotal</span>
+            <span class="text-gray-800" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+        </div>
+
+        <div x-show="isDeleteMode" class="flex justify-between text-sm font-bold text-red-500 mb-4">
+            <span>Mode Seleksi Hapus</span>
+            <span x-text="selectedItems.length + ' item dipilih'"></span>
+        </div>
+
+        <div class="flex gap-2 mb-3">
+            <button @click="isDeleteMode ? clearCart() : (isDeleteMode = true)" :disabled="cart.length === 0" 
+                    :class="isDeleteMode ? 'bg-red-50 text-red-600 border-red-200' : 'border-red-100 text-red-500'"
+                    class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                <i :data-lucide="isDeleteMode ? 'trash-2' : 'trash'" class="w-3.5 h-3.5"></i>
+                <span x-text="isDeleteMode ? 'Clear All' : 'Hapus'"></span>
+            </button>
+            <button @click="isDeleteMode ? cancelDelete() : saveOrder()" :disabled="cart.length === 0" 
+                    :class="isDeleteMode ? 'border-gray-200 text-gray-500 bg-gray-50' : 'border-blue-100 text-terralogBlue'"
+                    class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
+                <i :data-lucide="isDeleteMode ? 'x-circle' : 'bookmark'" class="w-3.5 h-3.5"></i>
+                <span x-text="isDeleteMode ? 'Batal' : 'Simpan'"></span>
+            </button>
+        </div>
+
+        <button @click="isDeleteMode ? confirmDelete() : (showPayment = true)" 
+                :disabled="cart.length === 0" 
+                :class="{
+                    'bg-red-600 shadow-lg shadow-red-200': isDeleteMode && cart.length > 0,
+                    'bg-[#E99817] shadow-lg shadow-orange-200': !isDeleteMode && cart.length > 0,
+                    'bg-gray-200 text-gray-400 shadow-none cursor-not-allowed': cart.length === 0
+                }"
+                class="w-full py-4 text-white rounded-2xl font-bold flex justify-between items-center px-5 transition-all active:scale-95">
+            
+            <span class="text-xs uppercase tracking-widest flex items-center gap-2">
+                <i :data-lucide="isDeleteMode ? 'check-square' : 'credit-card'" class="w-4 h-4"></i>
+                <span x-show="!isDeleteMode" class="flex items-center gap-2">
+                    <span class="bg-white/20 px-2 py-1 rounded-lg" x-text="cart.length + ' Item'"></span>
+                    <span>Bayar</span>
+                </span>
+                <span x-show="isDeleteMode" x-text="selectedItems.length > 0 ? 'Hapus (' + selectedItems.length + ')' : 'Hapus Item'"></span>
+            </span>
+
+            <span x-show="!isDeleteMode" class="text-lg font-black" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+        </button>
+    </div>
+</aside>

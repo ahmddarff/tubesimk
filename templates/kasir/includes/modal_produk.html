@@ -1,0 +1,46 @@
+<div x-show="openModal" class="fixed inset-0 z-[100] flex justify-end" x-cloak>
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm" @click="openModal = false"></div>
+    <div class="relative w-[400px] bg-white h-screen shadow-2xl p-8 flex flex-col" 
+         x-transition:enter="transition ease-out duration-300 transform" 
+         x-transition:enter-start="translate-x-full">
+        
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Detail Produk</h2>
+            <button @click="openModal = false" class="text-gray-400 hover:text-red-500 transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="flex gap-5 mb-8 border-b border-gray-100 pb-8">
+            <img :src="selectedItem.img && selectedItem.img.startsWith('http') ? selectedItem.img : '/static/images/' + selectedItem.img" 
+                 class="w-28 h-28 object-cover rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex flex-col justify-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-1" x-text="selectedItem.nama"></h3>
+                <p class="text-terralogBlue font-black text-xl" x-text="'Rp ' + (selectedItem.harga ? selectedItem.harga.toLocaleString('id-ID') : 0)"></p>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Catatan Tambahan (Opsional)</label>
+            <textarea x-model="note" placeholder="Contoh: Less sugar, extra ice..." 
+                      class="w-full border border-gray-200 rounded-2xl p-4 text-sm font-medium h-28 focus:border-terralogBlue bg-gray-50 outline-none transition-colors resize-none"></textarea>
+        </div>
+
+        <div class="mt-auto border-t border-gray-100 pt-6">
+            <div class="flex justify-between items-center mb-8">
+                <span class="font-bold text-gray-700 uppercase tracking-widest text-[11px]">Jumlah Item</span>
+                <div class="flex items-center gap-5 bg-gray-50 p-1 rounded-2xl border border-gray-100">
+                    <button @click="if(qty > 0) qty--" class="w-10 h-10 rounded-xl bg-white text-gray-600 shadow-sm flex items-center justify-center font-bold text-xl hover:text-terralogBlue transition-colors">-</button>
+                    <span class="font-black text-xl w-6 text-center text-terralogBlue" x-text="qty"></span>
+                    <button @click="qty++" class="w-10 h-10 rounded-xl bg-white text-gray-600 shadow-sm flex items-center justify-center font-bold text-xl hover:text-terralogBlue transition-colors">+</button>
+                </div>
+            </div>
+            
+            <button @click="addToCart()" 
+                    :class="qty === 0 ? 'bg-red-500 shadow-red-100' : 'bg-[#E99817] shadow-orange-100'"
+                    class="w-full py-4 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                <span x-text="qty === 0 ? 'Hapus dari Keranjang' : (editingIndex !== null ? 'Simpan Perubahan' : 'Tambah ke Pesanan')"></span>
+            </button>
+        </div>
+    </div>
+</div>

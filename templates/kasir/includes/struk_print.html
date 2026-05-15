@@ -1,0 +1,23 @@
+<div id="receipt-print" class="hidden">
+    <div style="text-align: center; border-bottom: 1px dashed #ccc; padding-bottom: 15px; margin-bottom: 15px;">
+        <div style="font-weight: 900; font-size: 16pt;">TERRALOG</div>
+        <div style="font-size: 8pt; color: #666;">Jalan Aman I No.2, Medan Kota</div>
+    </div>
+    <div style="font-size: 9pt; line-height: 1.5;">
+        <template x-for="item in cart">
+            <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span x-text="item.qty + 'x ' + item.nama"></span>
+                    <span x-text="'Rp ' + (item.qty * item.harga).toLocaleString('id-ID')"></span>
+                </div>
+                <div x-show="item.note" style="font-size: 8pt; color: #555; margin-left: 15px; font-style: italic;" x-text="'- ' + item.note"></div>
+            </div>
+        </template>
+        <div style="border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 10px; font-weight: 900; font-size: 11pt;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>TOTAL</span>
+                <span x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+            </div>
+        </div>
+    </div>
+</div>
