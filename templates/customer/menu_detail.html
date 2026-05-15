@@ -1,7 +1,7 @@
 {% extends 'layouts/layout_customer.html' %}
 
 {% block content %}
-<div class="customer-page-shell w-full" x-data="menuDetailApp()">
+<div class="customer-page-shell w-full" x-data="menuDetailApp({{ menu.id }}, '{{ menu.name|escape }}', {{ menu.price }})">
     <!-- Breadcrumb & Cart Badge -->
     <div class="mb-8 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap">
@@ -157,24 +157,34 @@
 </div>
 
 <script>
-    function menuDetailApp() {
+    function menuDetailApp(menuId, menuName, menuPrice) {
         return {
             qty: 1,
-            cart: [],
+            // Mengambil data keranjang yang sudah ada di localStorage agar tidak hilang saat pindah halaman
+            cart: JSON.parse(localStorage.getItem('cart')) || [],
+            menuId: menuId,
+            menuName: menuName,
+            menuPrice: menuPrice,
             
             addToCart() {
-                const existingIndex = this.cart.findIndex(item => item.nama === '{{ menu.name }}');
+                // Mencari item berdasarkan ID agar lebih aman dan akurat
+                const existingIndex = this.cart.findIndex(item => item.id === this.menuId);
                 if (existingIndex !== -1) {
                     this.cart[existingIndex].qty += this.qty;
                 } else {
                     this.cart.push({
-                        nama: '{{ menu.name }}',
-                        harga: {{ menu.price }},
+                        id: this.menuId,
+                        nama: this.menuName,
+                        harga: this.menuPrice,
                         qty: this.qty
                     });
                 }
+                
+                // Menyimpan state keranjang terbaru ke localStorage browser
+                localStorage.setItem('cart', JSON.stringify(this.cart));
+                
+                alert(`${this.qty}x ${this.menuName} berhasil ditambahkan ke keranjang!`);
                 this.qty = 1;
-                console.log('Item ditambah ke keranjang!');
             },
             
             goToCheckout() {
@@ -182,12 +192,15 @@
                     alert('Pilih minimal 1 item!');
                     return;
                 }
-                localStorage.setItem('cart', JSON.stringify(this.cart));
                 window.location.href = '/customer/checkout';
             }
         }
     }
 
-    lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}
