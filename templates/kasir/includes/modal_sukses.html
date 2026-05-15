@@ -1,60 +1,42 @@
-<div x-show="showPayment" class="fixed inset-0 z-[110] flex items-center justify-center" x-cloak>
-    <div x-transition:opacity class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showPayment = false"></div>
-    <div class="relative bg-white w-[750px] rounded-3xl shadow-2xl overflow-hidden flex flex-col" 
+<div x-show="showSuccess" class="fixed inset-0 z-[120] flex items-center justify-center" x-cloak>
+    <div x-transition:opacity class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    
+    <div class="relative bg-white w-[400px] rounded-[2rem] shadow-2xl p-8 flex flex-col items-center text-center"
          x-transition:enter="transition ease-out duration-300 transform scale-95 opacity-0">
-        <div class="bg-terralogBlue p-5 flex items-center gap-4 text-white">
-            <button @click="showPayment = false" class="hover:bg-white/20 p-2 rounded-full transition-colors"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
-            <h2 class="text-lg font-black tracking-wide">Proses Pembayaran</h2>
+
+        <div class="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 border-4 border-green-100">
+            <i data-lucide="check-circle" class="w-12 h-12 text-green-500"></i>
         </div>
-        <div class="flex flex-1 min-h-[450px]">
-            <div class="w-2/5 bg-gray-50 p-6 border-r border-gray-100 flex flex-col">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">TOTAL TAGIHAN</p>
-                <h3 class="text-3xl font-black text-terralogBlue mb-8" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></h3>
-                
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">PILIH METODE</p>
-                <div class="space-y-3">
-                    <button @click="paymentMethod = 'CASH'" class="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all" :class="paymentMethod === 'CASH' ? 'bg-white border-terralogBlue shadow-sm' : 'border-gray-200 bg-gray-100/50 hover:border-gray-300 text-gray-500'">
-                        <span class="font-bold text-sm uppercase">Uang Tunai</span>
-                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors" :class="paymentMethod === 'CASH' ? 'border-terralogBlue' : 'border-gray-300'">
-                            <div x-show="paymentMethod === 'CASH'" class="w-2.5 h-2.5 bg-terralogBlue rounded-full"></div>
-                        </div>
-                    </button>
-                    <button @click="paymentMethod = 'QRIS'" class="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all" :class="paymentMethod === 'QRIS' ? 'bg-white border-terralogBlue shadow-sm' : 'border-gray-200 bg-gray-100/50 hover:border-gray-300 text-gray-500'">
-                        <span class="font-bold text-sm uppercase">Scan QRIS</span>
-                        <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors" :class="paymentMethod === 'QRIS' ? 'border-terralogBlue' : 'border-gray-300'">
-                            <div x-show="paymentMethod === 'QRIS'" class="w-2.5 h-2.5 bg-terralogBlue rounded-full"></div>
-                        </div>
-                    </button>
-                </div>
+
+        <h2 class="text-2xl font-black text-gray-800 mb-2">Pembayaran Berhasil!</h2>
+        <p class="text-sm font-semibold text-gray-400 mb-8">Pesanan sudah diteruskan ke dapur.</p>
+
+        <div class="w-full bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100 text-left space-y-3">
+            <div class="flex justify-between items-center text-sm font-bold">
+                <span class="text-gray-500 uppercase tracking-wide text-xs">Total Tagihan</span>
+                <span class="text-terralogBlue text-base" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
             </div>
-            <div class="w-3/5 p-6 bg-white flex flex-col">
-                <div x-show="paymentMethod === 'CASH'" class="flex-1 flex flex-col">
-                    <div class="grid grid-cols-3 gap-3 mb-5 text-[11px] font-bold">
-                        <button @click="receivedAmount = subtotal.toString()" class="py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-terralogBlue hover:bg-terralogBlue hover:text-white transition-colors">Uang Pas</button>
-                        <button @click="receivedAmount = '50000'" class="py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-terralogBlue hover:bg-terralogBlue hover:text-white transition-colors">Rp 50.000</button>
-                        <button @click="receivedAmount = '100000'" class="py-2.5 bg-blue-50 border border-blue-100 rounded-xl text-terralogBlue hover:bg-terralogBlue hover:text-white transition-colors">Rp 100.000</button>
-                    </div>
-                    <div class="border-2 border-gray-100 rounded-2xl p-5 mb-5 bg-gray-50/50">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">UANG DITERIMA DARI PELANGGAN</p>
-                        <div class="text-3xl font-black text-gray-900" x-text="'Rp ' + parseInt(receivedAmount).toLocaleString('id-ID')"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 mb-6">
-                        <template x-for="n in ['7','8','9','4','5','6','1','2','3','000','0']">
-                            <button @click="receivedAmount === '0' ? receivedAmount = n : receivedAmount += n" class="py-3.5 border border-gray-100 rounded-xl text-lg font-bold text-gray-800 hover:bg-gray-50 active:bg-gray-100 transition-colors"><span x-text="n"></span></button>
-                        </template>
-                        <button @click="receivedAmount = receivedAmount.length > 1 ? receivedAmount.slice(0, -1) : '0'" class="py-3.5 border border-gray-100 rounded-xl flex items-center justify-center hover:bg-red-50 text-red-500 active:bg-red-100 transition-colors"><i data-lucide="delete" class="w-6 h-6"></i></button>
-                    </div>
-                    <button @click="showPayment = false; showSuccess = true" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm tracking-widest uppercase hover:bg-blue-900 shadow-md transition-colors active:scale-95">Konfirmasi & Bayar</button>
-                </div>
-                <div x-show="paymentMethod === 'QRIS'" class="flex-1 flex flex-col items-center justify-center text-center">
-                    <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6 w-full">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TerralogPOS" class="w-40 h-40 mx-auto rounded-xl">
-                    </div>
-                    <p class="text-gray-800 font-bold text-sm mb-1">Tunggu Pembayaran QRIS</p>
-                    <p class="text-gray-400 font-medium text-xs mb-8">Arahkan pelanggan untuk melakukan scan Barcode.</p>
-                    <button @click="showPayment = false; showSuccess = true" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-900 shadow-md transition-colors mt-auto active:scale-95">Pembayaran Diterima</button>
-                </div>
+            
+            <div class="flex justify-between items-center text-sm font-bold">
+                <span class="text-gray-500 uppercase tracking-wide text-xs">Metode Bayar</span>
+                <span class="text-gray-800 bg-gray-200 px-2 py-0.5 rounded uppercase text-xs" x-text="paymentMethod"></span>
             </div>
+
+            <div x-show="paymentMethod === 'CASH'" class="pt-3 border-t border-gray-200 mt-3 flex justify-between items-center text-sm font-bold">
+                <span class="text-gray-500 uppercase tracking-wide text-xs">Kembalian</span>
+                <span class="text-green-600 text-lg" x-text="'Rp ' + Math.max(0, parseInt(receivedAmount) - subtotal).toLocaleString('id-ID')"></span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3 w-full">
+            <button @click="printReceipt()" class="w-full py-3.5 bg-terralogBlue text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-900 shadow-md transition-colors active:scale-95 flex items-center justify-center gap-2">
+                <i data-lucide="printer" class="w-5 h-5"></i> Cetak Struk
+            </button>
+            
+            <button @click="showSuccess = false; receivedAmount = '0'; cart = []; customerName = ''; selectedTable = '';" 
+                    class="w-full py-3.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-gray-50 transition-colors active:scale-95">
+                Selesai & Pesanan Baru
+            </button>
         </div>
     </div>
 </div>

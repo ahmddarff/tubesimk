@@ -7,7 +7,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Font -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -27,7 +28,6 @@
         }
 
         @media print {
-
             body * {
                 visibility: hidden;
             }
@@ -61,6 +61,12 @@
                 padding: 0;
             }
         }
+
+        /* Animasi Toast */
+        @keyframes toastIn  { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-80px); opacity: 0; } }
+        .toast.show { animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .toast.hide { animation: toastOut 0.3s ease forwards; }
     </style>
 
     <script>
@@ -81,26 +87,28 @@
             }
         }
     </script>
+    {% block extra_css %}{% endblock %}
 </head>
 
 <body class="bg-[#F5F7FF] font-sans">
 
+    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all">
+        <i id="toast-icon" class="fa-solid text-base"></i>
+        <span id="toast-message">Berhasil!</span>
+    </div>
+
     <div class="min-h-screen flex">
 
-        <!-- SIDEBAR -->
         <aside class="fixed left-0 top-0 w-72 h-screen z-40">
             {% include 'includes/sidebar.html' %}
         </aside>
 
-        <!-- CONTENT -->
         <div class="flex-1 ml-72 flex flex-col min-h-screen">
 
-            <!-- NAVBAR -->
             <header class="sticky top-0 z-30 bg-white shadow-sm">
                 {% include 'includes/navbar.html' %}
             </header>
 
-            <!-- MAIN -->
             <main class="flex-1 p-8 overflow-x-hidden">
                 {% block content %}{% endblock %}
             </main>
@@ -117,7 +125,32 @@
         document.addEventListener('alpine:navigated', () => {
             lucide.createIcons();
         });
-    </script>
 
+        // Fungsi Show Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg   = document.getElementById('toast-message');
+            const icon  = document.getElementById('toast-icon');
+
+            msg.textContent = message;
+
+            // Reset classes
+            toast.className = 'toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all';
+            
+            if (type === 'success') {
+                toast.classList.add('border-green-500');
+                icon.className = 'fa-solid fa-circle-check text-green-500 text-base';
+            } else if (type === 'error') {
+                toast.classList.add('border-red-500');
+                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-base';
+            }
+
+            toast.classList.remove('hide');
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); toast.classList.add('hide'); }, 3500);
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,4 +1,4 @@
-import os
+import os, random, string
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
@@ -9,6 +9,26 @@ from werkzeug.utils import secure_filename
 
 kasir_bp = Blueprint('kasir', __name__)
 
+def generate_order_number():
+    # Ambil tanggal hari ini dengan format YYMMDD (contoh: 260515 untuk 15 Mei 2026)
+    prefix = datetime.now().strftime('%y%m%d')
+    search_pattern = f"ORD-{prefix}-%"
+    
+    # Cari pesanan terakhir yang dibuat pada hari ini berdasarkan prefix
+    last_order = Order.query.filter(Order.order_number.like(search_pattern))\
+                            .order_by(Order.id.desc()).first()
+    
+    if last_order:
+        # Jika ada, ambil 3 digit terakhir (XXX) lalu ubah jadi integer dan tambah 1
+        last_sequence = int(last_order.order_number.split('-')[-1])
+        new_sequence = last_sequence + 1
+    else:
+        # Jika belum ada pesanan sama sekali hari ini, mulai dari 1
+        new_sequence = 1
+        
+    # Format kembali menjadi string dengan padding 3 digit (001, 002, dst)
+    return f"ORD-{prefix}-{new_sequence:03d}"
+
 # =========================
 # DASHBOARD
 # =========================
@@ -18,11 +38,11 @@ def dashboard():
     # Mengambil seluruh data menu dari database
     menus_db = Menu.query.all()
     
+    # MENGAMBIL DATA MEJA YANG TERSEDIA
+    tables_db = Table.query.filter_by(is_available=True).order_by(Table.table_number).all()
+    
     menu_list = []
     for m in menus_db:
-        # Menentukan status ketersediaan berdasarkan kolom is_available dan stock
-        # Jika stok adalah None (untuk makanan/minuman yang selalu bisa dimasak) 
-        # atau lebih dari 0, dan status is_available adalah True, maka menu tersedia.
         if m.is_available and (m.stock is None or m.stock > 0):
             status_menu = 'tersedia'
         else:
@@ -32,11 +52,8 @@ def dashboard():
             "id": m.id,
             "nama": m.name,
             "harga": m.price,
-            # Menetapkan gambar bawaan apabila image_url pada database kosong
             "img": m.image_url if m.image_url else "gambar.png", 
             "status": status_menu,
-            # Karena model Menu belum memiliki atribut rating, nilai ini dapat 
-            # dibuat statis untuk sementara waktu.
             "rating": "4.8" 
         })
 
@@ -45,9 +62,9 @@ def dashboard():
         username=current_user.name,
         segment='dashboard',
         role='kasir',
-        menu=menu_list
+        menu=menu_list,
+        tables=tables_db # Mengirim data meja ke frontend
     )
-
 
 # =========================
 # PESANAN AKTIF
@@ -294,3 +311,86 @@ def update_password():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
+    
+# ── Dashboard APIs ─────────────────────────────────────────
+@kasir_bp.route('/api/submit-order', methods=['POST'])
+@login_required
+def submit_order():
+    data = request.json
+    cart = data.get('cart', [])
+    
+    if not cart:
+        return jsonify({"success": False, "message": "Keranjang kosong!"})
+
+    try:
+        # 1. GENERATE NOMOR PESANAN BERURUTAN
+        order_number = generate_order_number()
+
+        # LOGIKA METODE PEMBAYARAN AMAN
+        payment_method_raw = data.get('payment_method')
+        safe_payment_method = payment_method_raw.lower() if payment_method_raw else None
+        
+        if safe_payment_method == 'qris':
+            pay_status = 'paid'
+        else:
+            pay_status = 'unpaid'
+
+        # ==========================================
+        # PERBAIKAN: LOGIKA UPDATE STATUS MEJA & SNAPSHOT
+        # ==========================================
+        table_id = data.get('table_id') if data.get('order_type') == 'dine_in' else None
+        table_snapshot = None
+
+        if table_id:
+            table_obj = db.session.get(Table, table_id)
+            if table_obj:
+                # Ubah status meja menjadi terpakai (tidak tersedia)
+                table_obj.is_available = False
+                # Simpan nomor meja saat ini untuk riwayat pesanan
+                table_snapshot = table_obj.table_number
+        # ==========================================
+
+        # 2. Buat Objek Order
+        new_order = Order(
+            order_number=order_number,
+            customer_name=data.get('customer_name'),
+            table_id=table_id,
+            table_number_snapshot=table_snapshot, # <-- Disimpan di sini
+            order_type=data.get('order_type'),
+            payment_method=safe_payment_method,
+            payment_status=pay_status,
+            order_status='pending',
+            total_amount=data.get('total_amount', 0)
+        )
+        
+        db.session.add(new_order)
+        db.session.flush() # Ambil ID order sebelum commit untuk digunakan di item
+
+        # 3. Simpan Setiap Item ke OrderItem
+        for item in cart:
+            # PENGAMANAN: Cek harga asli langsung dari tabel Menu
+            menu_asli = db.session.get(Menu, item['id'])
+            
+            # Jika menu ditemukan pakai harga db, jika tidak pakai dari frontend
+            harga_valid = menu_asli.price if menu_asli else item['harga']
+
+            order_item = OrderItem(
+                order_id=new_order.id,
+                menu_id=item['id'],
+                qty=item['qty'],
+                price_at_order=harga_valid,
+                notes=item.get('note', ''),
+                item_status='pending'
+            )
+            db.session.add(order_item)
+
+        db.session.commit()
+        return jsonify({
+            "success": True, 
+            "message": "Pesanan berhasil dibuat!", 
+            "order_number": order_number
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})

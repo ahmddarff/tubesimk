@@ -44,15 +44,18 @@
                         </template>
                         <button @click="receivedAmount = receivedAmount.length > 1 ? receivedAmount.slice(0, -1) : '0'" class="py-3.5 border border-gray-100 rounded-xl flex items-center justify-center hover:bg-red-50 text-red-500 active:bg-red-100 transition-colors"><i data-lucide="delete" class="w-6 h-6"></i></button>
                     </div>
-                    <button @click="showPayment = false; showSuccess = true" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm tracking-widest uppercase hover:bg-blue-900 shadow-md transition-colors active:scale-95">Konfirmasi & Bayar</button>
+                    
+                    <button @click="submitOrderToDB()" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm tracking-widest uppercase hover:bg-blue-900 shadow-md transition-colors active:scale-95">Konfirmasi & Bayar</button>
                 </div>
+                
                 <div x-show="paymentMethod === 'QRIS'" class="flex-1 flex flex-col items-center justify-center text-center">
                     <div class="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-6 w-full">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TerralogPOS" class="w-40 h-40 mx-auto rounded-xl">
                     </div>
                     <p class="text-gray-800 font-bold text-sm mb-1">Tunggu Pembayaran QRIS</p>
                     <p class="text-gray-400 font-medium text-xs mb-8">Arahkan pelanggan untuk melakukan scan Barcode.</p>
-                    <button @click="showPayment = false; showSuccess = true" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-900 shadow-md transition-colors mt-auto active:scale-95">Pembayaran Diterima</button>
+                    
+                    <button @click="submitOrderToDB()" class="w-full py-4 bg-terralogBlue text-white rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-900 shadow-md transition-colors mt-auto active:scale-95">Pembayaran Diterima</button>
                 </div>
             </div>
         </div>

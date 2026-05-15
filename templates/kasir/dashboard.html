@@ -22,6 +22,7 @@
     cart: [], selectedItems: [],
     orderType: 'dine-in', searchQuery: '', selectedCategory: 'all',
     paymentMethod: 'CASH', receivedAmount: '0',
+    customerName: '', selectedTable: '',
 
     addToCart() {
         if (this.editingIndex !== null) {
@@ -30,8 +31,8 @@
                 // Jika qty 0, hapus item dari keranjang
                 this.cart.splice(this.editingIndex, 1);
             } else {
-                // Cek apakah notes baru sama dengan item lain di keranjang
-                let matchIdx = this.cart.findIndex((c, i) => i !== this.editingIndex && c.nama === this.selectedItem.nama && c.note === this.note);
+                // Cek apakah notes baru sama dengan item lain di keranjang (Pencarian pakai ID agar lebih akurat)
+                let matchIdx = this.cart.findIndex((c, i) => i !== this.editingIndex && c.id === this.selectedItem.id && c.note === this.note);
                 
                 if (matchIdx !== -1) {
                     this.cart[matchIdx].qty += this.qty;
@@ -46,11 +47,12 @@
         } else {
             // LOGIKA TAMBAH BARU (Hanya jika qty > 0)
             if (this.qty > 0) {
-                let existing = this.cart.find(c => c.nama === this.selectedItem.nama && c.note === this.note);
+                let existing = this.cart.find(c => c.id === this.selectedItem.id && c.note === this.note);
                 if (existing) { 
                     existing.qty += this.qty; 
                 } else { 
                     this.cart.push({ 
+                        id: this.selectedItem.id,  // <-- ID Menu
                         nama: this.selectedItem.nama, 
                         harga: this.selectedItem.harga, 
                         qty: this.qty, 
@@ -66,10 +68,111 @@
     editItem(index) {
         let item = this.cart[index];
         this.editingIndex = index;
-        this.selectedItem = { nama: item.nama, harga: item.harga, img: item.img };
+        this.selectedItem = { id: item.id, nama: item.nama, harga: item.harga, img: item.img }; 
         this.qty = item.qty;
         this.note = item.note || '';
         this.openModal = true;
+    },
+
+    // 1. FUNGSI HELPER UNTUK VALIDASI
+    validateOrder() {
+        if (this.cart.length === 0) { 
+            showToast('Keranjang masih kosong!', 'error'); 
+            return false; 
+        }
+        if (!this.customerName || this.customerName.trim() === '') { 
+            showToast('Nama pelanggan wajib diisi!', 'error'); 
+            return false; 
+        }
+        if (this.orderType === 'dine-in' && !this.selectedTable) { 
+            showToast('Pilih nomor meja terlebih dahulu!', 'error'); 
+            return false; 
+        }
+        return true; // Lolos semua pengecekan
+    },
+
+    // 2. FUNGSI UNTUK MEMBUKA MODAL PEMBAYARAN
+    openPaymentModal() {
+        if (this.validateOrder()) {
+            this.showPayment = true;
+        }
+    },
+
+    // 3. FUNGSI SUBMIT KE DATABASE (BAYAR LUNAS)
+    submitOrderToDB() {
+        // 1. Cek validasi dasar (nama, meja, cart kosong)
+        if (!this.validateOrder()) return; 
+
+        // 2. VALIDASI UANG KURANG (KHUSUS CASH)
+        if (this.paymentMethod === 'CASH') {
+            // Ubah string ke integer untuk dibandingkan
+            let bayar = parseInt(this.receivedAmount);
+            if (bayar < this.subtotal || isNaN(bayar)) {
+                showToast('Uang yang diterima kurang dari total tagihan!', 'error');
+                return; // Hentikan proses, jangan kirim ke database
+            }
+        }
+
+        const payload = {
+            customer_name: this.customerName,
+            table_id: this.selectedTable,
+            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+            payment_method: this.paymentMethod,
+            total_amount: this.subtotal,
+            cart: this.cart
+        };
+
+        fetch('/kasir/api/submit-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Tutup modal bayar, buka modal sukses
+                this.showPayment = false;
+                this.showSuccess = true;
+                
+                // PENTING: Jangan ada this.cart = [] di sini! 
+                // Biarkan data tetap ada agar struk dan kembalian bisa dihitung.
+                // Reset keranjang hanya dilakukan saat tombol 'Selesai' di modal sukses ditekan.
+
+            } else {
+                showToast('Gagal simpan pesanan: ' + data.message, 'error');
+            }
+        })
+        .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
+    },
+
+    // 4. FUNGSI SIMPAN (HOLD ORDER)
+    saveOrder() { 
+        // Langsung gunakan helper validasi
+        if (!this.validateOrder()) return; 
+
+        const payload = {
+            customer_name: this.customerName,
+            table_id: this.selectedTable,
+            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+            payment_method: null, // Dikirim null agar statusnya unpaid
+            total_amount: this.subtotal,
+            cart: this.cart
+        };
+
+        fetch('/kasir/api/submit-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Pesanan berhasil disimpan (Hold Order)!', 'success');
+            } else {
+                showToast('Gagal menyimpan pesanan: ' + data.message, 'error');
+            }
+        })
+        .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
     },
 
     confirmDelete() {
@@ -78,7 +181,7 @@
                 this.selectedItems.sort((a, b) => b - a).forEach(idx => this.cart.splice(idx, 1));
                 this.cancelDelete();
             }
-        } else { alert('Pilih item yang ingin dihapus dulu, bosku!'); }
+        } else { showToast('Pilih item yang ingin dihapus dulu!'); }
     }, 
 
     cancelDelete() { this.isDeleteMode = false; this.selectedItems = []; },
@@ -93,7 +196,6 @@
 
     get subtotal() { return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0); },
     removeItem(index) { this.cart.splice(index, 1); },
-    saveOrder() { if(this.cart.length > 0) { alert('Pesanan disimpan (Hold Order)!'); this.cart = []; } },
     printReceipt() { window.print(); },
 
     handlePhysicKey(key) {
@@ -134,15 +236,15 @@
             <div class="grid grid-cols-3 lg:grid-cols-4 gap-4">
                 {% for item in menu %}
                 <div {% if item.status == 'tersedia' %}
-                    @click="openModal = true; selectedItem = { nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; qty = 1; note = ''; editingIndex = null;" 
+                    @click="openModal = true; selectedItem = { id: {{ item.id }}, nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; qty = 1; note = ''; editingIndex = null;" 
                     class="cursor-pointer bg-white rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-terralogBlue/30 overflow-hidden flex flex-col relative"
                 {% else %}
                     class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden opacity-60 grayscale-[0.5]"
                 {% endif %}>
                     
-                    <template x-if="cart.find(c => c.nama === '{{ item.nama }}')">
+                    <template x-if="cart.find(c => c.id === {{ item.id }})">
                         <div class="absolute top-2 left-2 bg-terralogBlue text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg z-20 font-black text-xs border-2 border-white" 
-                             x-text="cart.filter(c => c.nama === '{{ item.nama }}').reduce((a, b) => a + b.qty, 0)">
+                             x-text="cart.filter(c => c.id === {{ item.id }}).reduce((a, b) => a + b.qty, 0)">
                         </div>
                     </template>
 

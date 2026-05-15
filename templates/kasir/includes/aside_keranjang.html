@@ -13,12 +13,15 @@
     <div class="grid grid-cols-3 gap-3 mb-4 text-[11px] font-bold">
         <div class="col-span-2">
             <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Nama Pelanggan</label>
-            <input type="text" placeholder="Nama..." class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none font-medium">
+            <input type="text" x-model="customerName" placeholder="Nama..." class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none font-medium">
         </div>
         <div x-show="orderType === 'dine-in'">
             <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Meja</label>
-            <select class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none text-center font-medium">
-                <option>01</option><option>02</option><option>03</option>
+            <select x-model="selectedTable" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none text-center font-medium">
+                <option value="">Pilih</option>
+                {% for t in tables %}
+                    <option value="{{ t.id }}">{{ t.table_number }}</option>
+                {% endfor %}
             </select>
         </div>
     </div>
@@ -87,7 +90,7 @@
             </button>
         </div>
 
-        <button @click="isDeleteMode ? confirmDelete() : (showPayment = true)" 
+        <button @click="isDeleteMode ? confirmDelete() : openPaymentModal()" 
                 :disabled="cart.length === 0" 
                 :class="{
                     'bg-red-600 shadow-lg shadow-red-200': isDeleteMode && cart.length > 0,
