@@ -1,4 +1,5 @@
 import os
+from datetime import date
 from utils import *
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
@@ -16,11 +17,43 @@ kasir_bp = Blueprint('kasir', __name__)
 @kasir_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Mengambil seluruh data menu dari database
+    # 1. Statistik Meja
+    total_meja = Table.query.count()
+    meja_kosong = Table.query.filter_by(is_available=True).count()
+    
+    # 2. Statistik Pesanan (Hari Ini)
+    today = date.today()
+    pesanan_aktif = Order.query.filter(
+        Order.order_status.in_(['pending', 'preparing', 'ready']),
+        db.func.date(Order.created_at) == today
+    ).count()
+
+    # Belum Lunas: status pembayaran unpaid
+    belum_lunas = Order.query.filter(
+        Order.payment_status == 'unpaid',
+        db.func.date(Order.created_at) == today
+    ).count()
+
+    # Selesai: Order status completed
+    selesai = Order.query.filter(
+        Order.order_status == 'served',
+        db.func.date(Order.created_at) == today
+    ).count()
+
+    # Gabungkan ke dalam satu dictionary agar loop di HTML tetap rapi
+    stats_data = [
+        ('Meja Kosong', f"{meja_kosong}/{total_meja}"),
+        ('Pesanan Aktif', str(pesanan_aktif)),
+        ('Belum Lunas', str(belum_lunas)),
+        ('Selesai', str(selesai))
+    ]
+    
+    # 1. Mengambil data menu
     menus_db = Menu.query.all()
     
-    # MENGAMBIL DATA MEJA YANG TERSEDIA
-    tables_db = Table.query.filter_by(is_available=True).order_by(Table.table_number).all()
+    # 3. MENGHITUNG STATISTIK MEJA KOSONG (Data Nyata)
+    # Menghitung total baris di tabel Table yang mana is_available adalah True
+    total_meja_kosong = Table.query.filter_by(is_available=True).count()
     
     menu_list = []
     for m in menus_db:
@@ -34,18 +67,13 @@ def dashboard():
             "nama": m.name,
             "harga": m.price,
             "img": m.image_url if m.image_url else "gambar.png", 
-            "status": status_menu,
-            "rating": "4.8" 
+            "status": status_menu
         })
 
-    return render_template(
-        'kasir/dashboard.html', 
-        username=current_user.name,
-        segment='dashboard',
-        role='kasir',
-        menu=menu_list,
-        tables=tables_db # Mengirim data meja ke frontend
-    )
+    # Kirim variabel total_meja_kosong ke template
+    return render_template('kasir/dashboard.html', 
+                           menu=menu_list,
+                           stats=stats_data)
 
 # =========================
 # PESANAN AKTIF
