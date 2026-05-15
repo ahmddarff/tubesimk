@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Menu, Reservation, Order, OrderItem
+from models import Menu, Reservation, Order, OrderItem, Table
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -53,19 +53,74 @@ def dashboard():
 # PESANAN AKTIF
 # =========================
 @kasir_bp.route('/pesanan-aktif')
+@login_required
 def pesanan_aktif():
-    pesanan_list = [
-        {"id": "P052", "nama": "Agnes", "meja": "07", "status": "PENDING", "total": 48000, "waktu": "12.12", "tipe": "DINE IN"},
-        {"id": "P051", "nama": "Joy", "meja": "-", "status": "PENDING", "total": 48000, "waktu": "11.56", "tipe": "TAKE AWAY"},
-        {"id": "P049", "nama": "Rahma", "meja": "06", "status": "READY", "total": 48000, "waktu": "11.27", "tipe": "DINE IN"},
-        {"id": "P045", "nama": "Sonya", "meja": "03", "status": "SERVED", "total": 48000, "waktu": "10.40", "tipe": "DINE IN"},
-    ]
+    # Mengambil pesanan yang statusnya masih aktif (belum selesai)
+    status_aktif = ['pending', 'preparing', 'ready', 'served']
+    orders_db = Order.query.filter(Order.order_status.in_(status_aktif)).order_by(Order.created_at.desc()).all()
+    
+    # ==========================================
+    # LOGIKA PERHITUNGAN STATISTIK
+    # ==========================================
+    # 1. Menghitung Meja (Kosong / Total)
+    total_meja = Table.query.count()
+    meja_kosong = Table.query.filter_by(is_available=True).count()
+    format_meja = f"{meja_kosong}/{total_meja}"
 
+    # 2. Menghitung Pesanan Aktif
+    jumlah_pesanan_aktif = len(orders_db)
+
+    # 3. Menghitung Pesanan Belum Lunas (dari pesanan yang sedang aktif)
+    belum_lunas = sum(1 for o in orders_db if o.payment_status == 'unpaid')
+
+    # 4. Menghitung Pesanan Selesai (semua pesanan yang berstatus 'completed')
+    # Catatan: Jika ingin dibatasi hanya hari ini, Anda bisa menambahkan filter tanggal
+    jumlah_selesai = Order.query.filter_by(order_status='completed').count()
+
+    # Mengemas statistik ke dalam bentuk daftar tuple untuk dikirim ke Jinja2
+    data_statistik = [
+        ('Meja Kosong', format_meja), 
+        ('Pesanan Aktif', str(jumlah_pesanan_aktif)), 
+        ('Belum Lunas', str(belum_lunas)), 
+        ('Selesai', str(jumlah_selesai))
+    ]
+    # ==========================================
+
+    pesanan_aktif_data = []
+    
+    for order in orders_db:
+        # Menyiapkan item untuk detail pesanan
+        items_list = []
+        for item in order.items:
+            items_list.append({
+                'nama': item.menu.name if item.menu else 'Item',
+                'qty': item.qty,
+                'harga': item.price_at_order,
+                'catatan': item.notes or ''
+            })
+
+        tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
+        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu Anonim")
+
+        pesanan_aktif_data.append({
+            'id': order.order_number,
+            'nama': nama_pelanggan,
+            'waktu': order.created_at.strftime('%H:%M'),
+            'tipe': tipe_map.get(order.order_type, 'DINE IN'),
+            'meja': order.table_number_snapshot or '-',
+            'status': str(order.order_status).upper(), 
+            'total': order.total_amount,
+            'lunas': True if order.payment_status == 'paid' else False,
+            'items': items_list
+        })
+
+    # Mengirimkan variabel baru bernama 'statistik' ke templat HTML
     return render_template(
-        'kasir/pesanan_aktif.html',
-        segment='pesanan_aktif',
-        role='kasir',
-        pesanan=pesanan_list
+        'kasir/pesanan_aktif.html', 
+        segment='pesanan_aktif', 
+        pesanan=pesanan_aktif_data,
+        statistik=data_statistik,
+        role='kasir' 
     )
 
 
