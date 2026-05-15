@@ -50,6 +50,9 @@ def dashboard():
     
     # 1. Mengambil data menu
     menus_db = Menu.query.all()
+
+    # MENGAMBIL DATA MEJA YANG TERSEDIA
+    tables_db = Table.query.filter_by(is_available=True).order_by(Table.table_number).all()
     
     # 3. MENGHITUNG STATISTIK MEJA KOSONG (Data Nyata)
     # Menghitung total baris di tabel Table yang mana is_available adalah True
@@ -72,8 +75,11 @@ def dashboard():
 
     # Kirim variabel total_meja_kosong ke template
     return render_template('kasir/dashboard.html', 
-                           menu=menu_list,
-                           stats=stats_data)
+                        menu=menu_list,
+                        stats=stats_data,
+                        segment='dashboard',
+                        role='kasir',
+                        tables=tables_db)
 
 # =========================
 # PESANAN AKTIF
