@@ -1,4 +1,4 @@
-from datetime import time, date
+from datetime import time, date, datetime
 from werkzeug.security import generate_password_hash
 from app import app, db
 from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table, Reservation, ReservationTable
@@ -197,7 +197,7 @@ def run_seeders():
             
         print("✅ Berhasil: 5 Data Meja ditambahkan!")
 
-        # ==========================================
+       # ==========================================
         # 9. SEEDER ORDER & ORDER ITEMS 
         # ==========================================
         # Mengambil referensi pelanggan dan menu dari basis data
@@ -215,7 +215,7 @@ def run_seeders():
         # Fallback ID (Cadangan) jika menu di atas terhapus
         fallback_id = Menu.query.first().id if Menu.query.first() else 1
 
-        # Daftar 4 Pesanan beserta 7 Item di dalamnya
+        # Daftar 4 Pesanan dengan waktu (created_at) yang disimulasikan berbeda
         data_orders = [
             {
                 "order_number": "ORD-20260514-001",
@@ -227,6 +227,7 @@ def run_seeders():
                 "payment_method": "cash",
                 "payment_status": "paid",
                 "total_amount": 50000,
+                "created_at": datetime(2026, 5, 14, 10, 0, 0), # Datang pukul 10:00
                 "items": [
                     {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served"}
@@ -242,6 +243,7 @@ def run_seeders():
                 "payment_method": "qris",
                 "payment_status": "paid",
                 "total_amount": 29000,
+                "created_at": datetime(2026, 5, 14, 10, 15, 0), # Datang pukul 10:15
                 "items": [
                     {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "preparing"},
                     {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "pending"}
@@ -257,6 +259,7 @@ def run_seeders():
                 "payment_method": "cash",
                 "payment_status": "unpaid",
                 "total_amount": 45000,
+                "created_at": datetime(2026, 5, 14, 10, 30, 0), # Datang pukul 10:30
                 "items": [
                     {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus dimsum banyak", "status": "pending"}
                 ]
@@ -265,12 +268,13 @@ def run_seeders():
                 "order_number": "ORD-20260514-004",
                 "user_id": None,
                 "customer_name": "Ojol Grab",
-                "table_id": None, # Null karena ini pesanan bawa pulang (Take Away)
+                "table_id": None,
                 "order_type": "take_away",
                 "order_status": "ready",
                 "payment_method": "cash",
                 "payment_status": "unpaid",
                 "total_amount": 30000,
+                "created_at": datetime(2026, 5, 14, 10, 45, 0), # Datang pukul 10:45
                 "items": [
                     {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "ready"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "ready"}
@@ -282,7 +286,7 @@ def run_seeders():
         for data in data_orders:
             order_exist = Order.query.filter_by(order_number=data["order_number"]).first()
             if not order_exist:
-                # Membuat Pesanan (Order)
+                # Membuat Pesanan (Order) dengan memasukkan created_at secara spesifik
                 pesanan_baru = Order(
                     order_number=data["order_number"],
                     user_id=data["user_id"],
@@ -292,7 +296,8 @@ def run_seeders():
                     order_status=data["order_status"],
                     payment_method=data["payment_method"],
                     payment_status=data["payment_status"],
-                    total_amount=data["total_amount"]
+                    total_amount=data["total_amount"],
+                    created_at=data["created_at"]  # <-- Injeksi waktu pembuatan di sini
                 )
                 db.session.add(pesanan_baru)
                 db.session.commit() # Disimpan agar pesanan_baru.id terbentuk
@@ -310,7 +315,7 @@ def run_seeders():
                     db.session.add(item_baru)
                     
                 db.session.commit()
-        print("✅ Berhasil: 4 Data Order dan 7 Data Order Item ditambahkan!")
+        print("✅ Berhasil: 4 Data Order (dengan rentang waktu berbeda) dan 7 Data Order Item ditambahkan!")
 
         # ==========================================
         # 10. SEEDER RESERVASI
