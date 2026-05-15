@@ -23,56 +23,7 @@
 {% extends 'layouts/layout_kasir.html' %}
 
 {% block content %}
-<div x-data="{ 
-    searchQuery: '', filterMethod: '', filterDate: '', 
-    showModal: false, showExportModal: false, selectedTrx: {},
-    currentPage: 1, itemsPerPage: 5,
-
-    refreshIcons() { this.$nextTick(() => { lucide.createIcons(); }); },
-    
-    openDetail(trx) { 
-        this.selectedTrx = trx; 
-        this.showModal = true; 
-        this.refreshIcons(); 
-    },
-
-    exportData(format) {
-        alert('File ' + format + ' sedang dibuat. Silahkan cek folder download Anda.');
-        this.showExportModal = false;
-    },
-
-    transactions: [
-        { id: 'TRX-00015', tanggal: '2024-04-06', waktu: '19.00', kasir: 'Rahma', pelanggan: 'Richard Lim', metode: 'TUNAI', total: 50000, items: [{nama: 'Chicken Katsu', harga: 50000, jumlah: 1, subtotal: 50000}] },
-        { id: 'TRX-00016', tanggal: '2024-04-06', waktu: '19.15', kasir: 'Rahma', pelanggan: 'Arialdi Manday', metode: 'QRIS', total: 75000, items: [{nama: 'Terralog Coffee', harga: 25000, jumlah: 2, subtotal: 50000}, {nama: 'French Fries', harga: 25000, jumlah: 1, subtotal: 25000}] },
-        { id: 'TRX-00017', tanggal: '2024-04-06', waktu: '19.45', kasir: 'Rahma', pelanggan: 'Chaterine Jelek', metode: 'TUNAI', total: 35000, items: [{nama: 'Matcha Latte', harga: 35000, jumlah: 1, subtotal: 35000}] },
-        { id: 'TRX-00018', tanggal: '2024-04-07', waktu: '10.00', kasir: 'Dimas', pelanggan: 'Aldrik Running', metode: 'QRIS', total: 120000, items: [{nama: 'Beef Burger', harga: 45000, jumlah: 2, subtotal: 90000}, {nama: 'Lemon Tea', harga: 15000, jumlah: 2, subtotal: 30000}] },
-        { id: 'TRX-00019', tanggal: '2024-04-07', waktu: '11.30', kasir: 'Dimas', pelanggan: 'Rahmaini Erna', metode: 'TUNAI', total: 25000, items: [{nama: 'Americano', harga: 25000, jumlah: 1, subtotal: 25000}] },
-        { id: 'TRX-00020', tanggal: '2024-04-07', waktu: '13.10', kasir: 'Dimas', pelanggan: 'Earlin Pinky', metode: 'QRIS', total: 85000, items: [{nama: 'Nasi Goreng Terralog', harga: 40000, jumlah: 1, subtotal: 40000}] },
-        { id: 'TRX-00021', tanggal: '2024-04-08', waktu: '15.20', kasir: 'Rahma', pelanggan: 'Budi Santoso', metode: 'TUNAI', total: 60000, items: [{nama: 'Spaghetti Carbonara', harga: 60000, jumlah: 1, subtotal: 60000}] },
-        { id: 'TRX-00022', tanggal: '2024-04-08', waktu: '16.00', kasir: 'Rahma', pelanggan: 'Siti Aminah', metode: 'QRIS', total: 40000, items: [{nama: 'Croissant Almond', harga: 40000, jumlah: 1, subtotal: 40000}] },
-        { id: 'TRX-00023', tanggal: '2024-04-08', waktu: '18.45', kasir: 'Rahma', pelanggan: 'Andi Wijaya', metode: 'TUNAI', total: 110000, items: [{nama: 'Double Espresso', harga: 30000, jumlah: 2, subtotal: 60000}] },
-        { id: 'TRX-00024', tanggal: '2024-04-09', waktu: '09.15', kasir: 'Dimas', pelanggan: 'Dewi Lestari', metode: 'QRIS', total: 55000, items: [{nama: 'Caffé Latte', harga: 35000, jumlah: 1, subtotal: 35000}] }
-    ],
-
-    get filteredTransactions() {
-        return this.transactions.filter(t => {
-            const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
-            const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
-            const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
-            return matchName && matchMethod && matchDate;
-        });
-    },
-
-    get pagedTransactions() {
-        const start = (this.currentPage - 1) * this.itemsPerPage;
-        this.refreshIcons();
-        return this.filteredTransactions.slice(start, start + parseInt(this.itemsPerPage));
-    },
-
-    get totalPages() {
-        return Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
-    }
-}" x-init="refreshIcons()" class="font-['Inter']">
+<div x-data="riwayatTransaksi()" x-init="refreshIcons()" class="font-['Inter'] relative" x-cloak>
 
     <div class="mb-8 flex justify-between items-end">
         <div>
@@ -86,10 +37,7 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <template x-for="card in [
-            {label:'Total Pesanan', val:filteredTransactions.length, icon:'receipt'}, 
-            {label:'Total Omzet', val:'Rp '+filteredTransactions.reduce((a,b)=>a+b.total,0).toLocaleString('id-ID'), icon:'banknote'}
-        ]">
+        <template x-for="card in cardStats" :key="card.label">
             <div class="bg-white p-5 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-sm">
                 <div class="bg-blue-50 p-3.5 rounded-xl text-terralogBlue">
                     <i :data-lucide="card.icon" class="w-6 h-6"></i>
@@ -106,7 +54,10 @@
                 <div class="bg-blue-50 p-3.5 rounded-xl text-terralogBlue"><i data-lucide="pie-chart" class="w-6 h-6"></i></div>
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Metode Terlaris</p>
-                    <p class="text-xs font-bold text-gray-700">QRIS <span class="text-terralogBlue">60%</span></p>
+                    <p class="text-xs font-bold text-gray-700">
+                        <span x-text="metodeTerlaris.nama"></span> 
+                        <span class="text-terralogBlue" x-text="metodeTerlaris.persentase"></span>
+                    </p>
                 </div>
             </div>
             <div class="pie-chart-container">
@@ -133,14 +84,14 @@
             <i data-lucide="search" class="absolute left-4 top-3.5 w-4 h-4 text-gray-400"></i>
             <input type="text" x-model="searchQuery" @input="currentPage = 1" placeholder="Cari pelanggan atau ID transaksi..." class="w-full pl-12 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:border-terralogBlue outline-none shadow-sm transition-all">
         </div>
-        <button @click="searchQuery = ''; filterMethod = ''; filterDate = ''; currentPage = 1; refreshIcons();" class="px-8 py-2.5 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-600 transition shadow-md whitespace-nowrap">Reset</button>
+        <button @click="resetFilters()" class="px-8 py-2.5 bg-red-500 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-600 transition shadow-md whitespace-nowrap">Reset</button>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-left">
             <thead class="bg-gray-50/50 border-b text-sm font-bold text-gray-800">
                 <tr>
-                    <th class="px-6 py-4 w-[15%]">ID TRX</th>
+                    <th class="px-6 py-4 w-[15%]">No. Order</th>
                     <th class="px-6 py-4 w-[15%]">Tanggal</th>
                     <th class="px-6 py-4 w-[25%]">Pelanggan</th>
                     <th class="px-6 py-4 text-center w-[15%]">Metode</th>
@@ -262,6 +213,105 @@
             <button @click="showExportModal = false" class="w-full py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition">Batal</button>
         </div>
     </div>
+</div>
 
-</div> 
+<script id="data-transaksi" type="application/json">
+    {{ transactions | tojson | safe }}
+</script>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('riwayatTransaksi', () => ({
+        searchQuery: '',
+        filterMethod: '',
+        filterDate: '',
+        showModal: false,
+        showExportModal: false,
+        selectedTrx: {},
+        currentPage: 1,
+        itemsPerPage: 5,
+
+        // Menarik data yang disuntikkan dari Flask
+        transactions: JSON.parse(document.getElementById('data-transaksi').textContent),
+
+        // Fungsi Utilities
+        refreshIcons() { 
+            this.$nextTick(() => { 
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons(); 
+                }
+            }); 
+        },
+
+        resetFilters() {
+            this.searchQuery = '';
+            this.filterMethod = '';
+            this.filterDate = '';
+            this.currentPage = 1;
+            this.refreshIcons();
+        },
+
+        openDetail(trx) { 
+            this.selectedTrx = trx; 
+            this.showModal = true; 
+            this.refreshIcons(); 
+        },
+
+        exportData(format) {
+            alert('File ' + format + ' sedang dibuat. Silahkan cek folder download Anda.');
+            this.showExportModal = false;
+        },
+
+        // Komputasi Data (*Computed Properties*)
+        get filteredTransactions() {
+            return this.transactions.filter(t => {
+                const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
+                const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
+                const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
+                return matchName && matchMethod && matchDate;
+            });
+        },
+
+        get pagedTransactions() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            this.refreshIcons();
+            return this.filteredTransactions.slice(start, start + parseInt(this.itemsPerPage));
+        },
+
+        get totalPages() {
+            return Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
+        },
+
+        get cardStats() {
+            return [
+                {
+                    label: 'Total Pesanan', 
+                    val: this.filteredTransactions.length, 
+                    icon: 'receipt'
+                },
+                {
+                    label: 'Total Omzet', 
+                    val: 'Rp ' + this.filteredTransactions.reduce((a, b) => a + b.total, 0).toLocaleString('id-ID'), 
+                    icon: 'banknote'
+                }
+            ];
+        },
+
+        get metodeTerlaris() {
+            if (this.filteredTransactions.length === 0) return { nama: '-', persentase: '0%' };
+            
+            let count = { 'QRIS': 0, 'TUNAI': 0 };
+            this.filteredTransactions.forEach(t => {
+                if (count[t.metode] !== undefined) count[t.metode]++;
+            });
+            
+            let total = this.filteredTransactions.length;
+            let unggul = count['QRIS'] > count['TUNAI'] ? 'QRIS' : 'TUNAI';
+            let persen = Math.round((count[unggul] / total) * 100);
+            
+            return { nama: unggul, persentase: persen + '%' };
+        }
+    }));
+});
+</script>
 {% endblock %}

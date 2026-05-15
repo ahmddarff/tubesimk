@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Menu, Reservation
+from models import Menu, Reservation, Order, OrderItem
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -127,40 +127,46 @@ def reservasi():
 # RIWAYAT TRANSAKSI
 # =========================
 @kasir_bp.route('/riwayat-transaksi')
+@login_required
 def riwayat_transaksi():
-    stats_data = {
-        'total_transaksi': 6,
-        'total_penjualan': 450000,
-        'tunai_persen': 50,
-        'qris_persen': 50
-    }
+    # Ambil pesanan dengan status 'served' atau 'completed' (asumsi: ini adalah transaksi selesai)
+    orders_db = Order.query.filter(Order.order_status.in_(['served', 'completed'])).order_by(Order.created_at.desc()).all()
+    
+    data_transaksi = []
+    
+    for order in orders_db:
+        # Menyiapkan list item untuk transaksi ini
+        items_list = []
+        for item in order.items:
+            items_list.append({
+                'nama': item.menu.name if item.menu else 'Item Terhapus',
+                'harga': item.price_at_order,
+                'jumlah': item.qty,
+                'subtotal': item.price_at_order * item.qty
+            })
 
-    transaksi_list = [
-        {
-            'id': 'TRX-00015',
-            'tanggal': '2024-04-06',
-            'waktu': '19.00',
-            'pelanggan': 'Richard Lim',
-            'kasir': 'Rahma',
-            'metode': 'TUNAI',
-            'total': 50000,
-            'items': [
-                {
-                    'nama': 'Chicken Katsu',
-                    'harga': 50000,
-                    'jumlah': 1,
-                    'subtotal': 50000
-                }
-            ]
-        }
-    ]
+        # Menentukan nama pelanggan
+        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu Anonim")
+        
+        # Mapping metode pembayaran (Opsional: menyesuaikan format teks)
+        metode_map = {'cash': 'TUNAI', 'qris': 'QRIS'}
+        metode_bayar = metode_map.get(order.payment_method, str(order.payment_method).upper())
 
-    return render_template(
-        'kasir/riwayat_transaksi.html',
-        segment='riwayat_transaksi',
-        stats=stats_data,
-        transactions=transaksi_list,
-        role='kasir'
+        data_transaksi.append({
+            'id': order.order_number,
+            'tanggal': order.created_at.strftime('%Y-%m-%d'),
+            'waktu': order.created_at.strftime('%H.%M'),
+            'kasir': 'Kasir Terralog', # Sesuaikan jika Anda mencatat relasi kasir di DB
+            'pelanggan': nama_pelanggan,
+            'metode': metode_bayar,
+            'total': order.total_amount,
+            'items': items_list
+        })
+
+    return render_template('kasir/riwayat_transaksi.html', 
+        segment='riwayat_transaksi', 
+        transactions=data_transaksi,
+        role='kasir',
     )
 
 
