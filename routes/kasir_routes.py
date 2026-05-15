@@ -349,11 +349,27 @@ def submit_order():
 
         # 3. Simpan Setiap Item ke OrderItem
         for item in cart:
-            # PENGAMANAN: Cek harga asli langsung dari tabel Menu
             menu_asli = db.session.get(Menu, item['id'])
-            
-            # Jika menu ditemukan pakai harga db, jika tidak pakai dari frontend
-            harga_valid = menu_asli.price if menu_asli else item['harga']
+            if not menu_asli:
+                db.session.rollback()
+                return jsonify({
+                    "success": False, 
+                    "message": f"Menu '{item['nama']}' sudah tidak tersedia!" 
+                })
+            harga_valid = menu_asli.price
+
+            # ==========================================
+            # LOGIKA PENGURANGAN STOK (Hanya jika stock tidak NULL)
+            # ==========================================
+            if menu_asli.stock is not None:
+                # Pastikan stok cukup sebelum dikurangi (Opsional, untuk keamanan ekstra)
+                if menu_asli.stock >= item['qty']:
+                    menu_asli.stock -= item['qty']
+                else:
+                    # Jika stok ternyata tidak cukup (misal dibalap user lain)
+                    db.session.rollback()
+                    return jsonify({"success": False, "message": f"Stok {menu_asli.name} tidak cukup!"})
+            # ==========================================
 
             order_item = OrderItem(
                 order_id=new_order.id,
