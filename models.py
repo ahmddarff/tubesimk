@@ -87,7 +87,7 @@ class Table(db.Model):
     updated_at      = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relasi
-    reservations = db.relationship('Reservation', backref='table', lazy=True)
+    reservation_details = db.relationship('ReservationTable', backref='table_ref', lazy=True)
     orders = db.relationship('Order', backref='table', lazy=True)
 
 class Reservation(db.Model):
@@ -97,8 +97,8 @@ class Reservation(db.Model):
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name       = db.Column(db.String(100), nullable=True)
     phone               = db.Column(db.String(20), nullable=False)
-    table_id            = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True)
-    table_number_snapshot = db.Column(db.String(20), nullable=True)
+    guest_qty           = db.Column(db.Integer, nullable=False) # Jumlah tamu
+    duration            = db.Column(db.Integer, default=90)     # Durasi dalam menit
     notes               = db.Column(db.Text, nullable=True) # Catatan khusus saat booking (Opsional)
     cancellation_reason = db.Column(db.Text, nullable=True) # Alasan jika dibatalkan (Opsional)
     reservation_date    = db.Column(db.Date, nullable=False)
@@ -108,6 +108,9 @@ class Reservation(db.Model):
     created_at          = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at          = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    # Relasi ke tabel anak (ReservationTable)
+    reserved_tables     = db.relationship('ReservationTable', backref='reservation', lazy=True, cascade="all, delete-orphan")
+
     # Constraint untuk memastikan setidaknya user_id atau customer_name harus diisi
     __table_args__ = (
         CheckConstraint(
@@ -115,6 +118,16 @@ class Reservation(db.Model):
             name='check_reservation_user_or_name'
         ),
     )
+
+class ReservationTable(db.Model):
+    __tablename__ = 'reservation_tables'
+    id                      = db.Column(db.Integer, primary_key=True)
+    reservation_id          = db.Column(db.Integer, db.ForeignKey('reservations.id'), nullable=False)
+    table_id                = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True)
+    table_number_snapshot   = db.Column(db.String(20), nullable=False) # Snapshot nomor meja saat dibooking
+
+    created_at              = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at              = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Order(db.Model):
     __tablename__ = 'orders'
