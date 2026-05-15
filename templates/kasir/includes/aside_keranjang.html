@@ -1,5 +1,7 @@
 <aside class="w-[340px] bg-white rounded-[2rem] shadow-md border-2 border-terralogBlue/10 p-5 flex flex-col h-full overflow-hidden z-10">
-    <h2 class="text-xl font-extrabold mb-4 text-terralogBlue tracking-tight">Detail Pesanan</h2>
+    <h2 class="text-xl font-extrabold mb-4 text-terralogBlue tracking-tight" 
+        x-text="editingOrderNumber ? 'Edit: ' + editingOrderNumber : 'Detail Pesanan'">
+    </h2>
     
     <div class="flex p-1.5 bg-gray-50 border border-gray-100 rounded-xl mb-4">
         <button @click="orderType = 'dine-in'" 
@@ -42,22 +44,27 @@
                      :class="selectedItems.includes(index) ? 'bg-red-50/50' : ''">
                     <div class="flex justify-between items-center text-sm">
                         <div class="flex gap-3 items-center">
-                            <input type="checkbox" :value="index" x-model="selectedItems" x-show="isDeleteMode" x-transition
+                            <input type="checkbox" :value="index" x-model="selectedItems" 
+                                   x-show="isDeleteMode && (!item.status || item.status === 'pending')" x-transition
                                    class="w-4 h-4 rounded border-gray-300 text-red-500 cursor-pointer">
+                            
+                            <i data-lucide="lock" x-show="isDeleteMode && item.status && item.status !== 'pending'" class="w-4 h-4 text-gray-300"></i>
+
                             <div class="bg-blue-50 text-terralogBlue w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs border border-blue-100 shrink-0" x-text="item.qty"></div>
                             <span class="font-bold text-gray-800 leading-tight" x-text="item.nama"></span>
                         </div>
                         <div class="flex items-center gap-3 pl-2">
                             <span class="font-bold text-terralogBlue whitespace-nowrap" x-text="'Rp ' + (item.harga * item.qty).toLocaleString('id-ID')"></span>
                             
-                            <button @click="editItem(index)" x-show="!isDeleteMode"
+                            <button @click="editItem(index)" x-show="!isDeleteMode && (!item.status || item.status === 'pending')"
                                     class="w-7 h-7 bg-blue-50 text-terralogBlue rounded-lg flex items-center justify-center shrink-0 transition-colors hover:bg-terralogBlue hover:text-white">
                                 <i data-lucide="edit-3" class="w-4 h-4"></i>
                             </button>
                         </div>
                     </div>
-                    <div x-show="item.note" class="pl-10 pr-2 mt-1">
-                        <p class="text-[10px] text-gray-500 italic leading-snug" x-text="'- ' + item.note"></p>
+                    <div x-show="item.note || item.status" class="pl-10 pr-2 mt-1 flex justify-between items-center">
+                        <p class="text-[10px] text-gray-500 italic leading-snug" x-text="item.note ? '- ' + item.note : ''"></p>
+                        <span x-show="item.status" class="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-gray-100 text-gray-400" x-text="item.status"></span>
                     </div>
                 </div>
             </template>
@@ -82,11 +89,11 @@
                 <i :data-lucide="isDeleteMode ? 'trash-2' : 'trash'" class="w-3.5 h-3.5"></i>
                 <span x-text="isDeleteMode ? 'Clear All' : 'Hapus'"></span>
             </button>
-            <button @click="isDeleteMode ? cancelDelete() : saveOrder()" :disabled="cart.length === 0" 
+            <button @click="isDeleteMode ? cancelDelete() : (editingOrderNumber ? alert('Fungsi Update API belum dibuat') : saveOrder())" :disabled="cart.length === 0" 
                     :class="isDeleteMode ? 'border-gray-200 text-gray-500 bg-gray-50' : 'border-blue-100 text-terralogBlue'"
                     class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
                 <i :data-lucide="isDeleteMode ? 'x-circle' : 'bookmark'" class="w-3.5 h-3.5"></i>
-                <span x-text="isDeleteMode ? 'Batal' : 'Simpan'"></span>
+                <span x-text="isDeleteMode ? 'Batal' : (editingOrderNumber ? 'Update' : 'Simpan')"></span>
             </button>
         </div>
 
@@ -99,16 +106,13 @@
                 }"
                 class="w-full py-4 text-white rounded-2xl font-bold flex justify-between items-center px-5 transition-all active:scale-95">
             
-            <span class="text-xs uppercase tracking-widest flex items-center gap-2">
+            <span class="text-xs uppercase tracking-widest flex items-center gap-2 font-black">
                 <i :data-lucide="isDeleteMode ? 'check-square' : 'credit-card'" class="w-4 h-4"></i>
-                <span x-show="!isDeleteMode" class="flex items-center gap-2">
-                    <span class="bg-white/20 px-2 py-1 rounded-lg" x-text="cart.length + ' Item'"></span>
-                    <span>Bayar</span>
-                </span>
+                <span x-show="!isDeleteMode">Bayar</span>
                 <span x-show="isDeleteMode" x-text="selectedItems.length > 0 ? 'Hapus (' + selectedItems.length + ')' : 'Hapus Item'"></span>
             </span>
 
-            <span x-show="!isDeleteMode" class="text-lg font-black" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
+            <span x-show="!isDeleteMode" class="text-lg font-black tracking-tight" x-text="'Rp ' + subtotal.toLocaleString('id-ID')"></span>
         </button>
     </div>
 </aside>

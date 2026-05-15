@@ -250,8 +250,8 @@ def run_seeders():
                 "total_amount": 29000,
                 "created_at": now_utc - timedelta(minutes=45),
                 "items": [
-                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "preparing"},
-                    {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "pending"}
+                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "ready"},
+                    {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "served"}
                 ]
             },
             {
@@ -267,7 +267,7 @@ def run_seeders():
                 "total_amount": 45000,
                 "created_at": now_utc - timedelta(minutes=15),
                 "items": [
-                    {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus dimsum banyak", "status": "pending"}
+                    {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus dimsum banyak", "status": "preparing"}
                 ]
             },
             {
@@ -283,8 +283,8 @@ def run_seeders():
                 "total_amount": 30000,
                 "created_at": now_utc - timedelta(minutes=5),
                 "items": [
-                    {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "ready"},
-                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "ready"}
+                    {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "pending"},
+                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "pending"}
                 ]
             }
         ]

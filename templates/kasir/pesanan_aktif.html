@@ -85,7 +85,7 @@
                                       'text-blue-500': p.status === 'READY',
                                       'text-emerald-600': p.status === 'SERVED'
                                   }"
-                                  :title="'Dipesan pada ' + p.waktu_asli" 
+                                  :title="'Dipesan pada ' + formatWaktuLokal(p.waktu_iso)"
                                   x-text="timeAgo(p.waktu_iso)">
                             </span>
                         </div>
@@ -186,6 +186,17 @@ document.addEventListener('alpine:init', () => {
             return hours + 'j ' + mins + 'm';
         },
 
+        formatWaktuLokal(isoString) {
+            if (!isoString) return '-';
+            const dateObj = new Date(isoString);
+            
+            // Ambil jam dan menit lokal, lalu pastikan 2 digit (misal: 07, 09, 14)
+            const hours = String(dateObj.getHours()).padStart(2, '0');
+            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+            
+            return hours + ':' + minutes;
+        },
+
         get todayDate() {
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -230,8 +241,24 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        serveItem(item) {
+            // 1. Ubah status item di UI menjadi 'served'
+            // (Nanti kamu perlu membuat fetch() ke backend API di sini untuk update database)
+            item.status = 'served';
+
+            // 2. Mengecek apakah semua item di dalam pesanan ini statusnya sudah 'served'?
+            const semuaSelesai = this.selectedOrder.items.every(i => i.status === 'served');
+
+            // 3. Jika semua item sudah diantar, otomatis ubah status pesanan utama menjadi SERVED
+            if (semuaSelesai) {
+                this.updateStatus('SERVED');
+                this.showDetail = false; // Tutup modal karena pesanan sudah beres
+                alert("Semua item telah diantar. Status pesanan otomatis menjadi SERVED!");
+            }
+        },
+
         editOrder() {
-            window.location.href = '/kasir?edit=' + this.selectedOrder.id;
+            window.location.href = '/kasir/dashboard?edit=' + this.selectedOrder.id;
         }, 
         
         handlePhysicKey(key) {

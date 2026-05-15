@@ -24,6 +24,25 @@
     paymentMethod: 'CASH', receivedAmount: '0',
     customerName: '', selectedTable: '',
 
+    // --- VARIABEL BARU UNTUK MODE EDIT ---
+    editingOrderNumber: null,
+    isEditLunas: false,
+
+    // --- FUNGSI INIT ---
+    init() {
+        const rawData = document.getElementById('edit-data').textContent;
+        const editData = JSON.parse(rawData);
+        
+        if (editData) {
+            this.editingOrderNumber = editData.order_number;
+            this.customerName = editData.customer_name || '';
+            this.selectedTable = editData.table_id || '';
+            this.orderType = editData.order_type || 'dine-in';
+            this.cart = editData.cart || [];
+            this.isEditLunas = editData.lunas;
+        }
+    },
+
     addToCart() {
         if (this.editingIndex !== null) {
             // LOGIKA EDIT ITEM
@@ -188,8 +207,20 @@
     clearSelection() { this.selectedItems = []; },
     clearCart() { 
         if(this.cart.length > 0) {
-            if(confirm('Yakin ingin mengosongkan seluruh isi keranjang?')) {
-                this.cart = []; this.cancelDelete();
+            // Ambil hanya item yang statusnya sudah dikunci (preparing, ready, served)
+            const lockedItems = this.cart.filter(item => item.status && item.status !== 'pending');
+            
+            // Cegah jika ternyata semua item di keranjang sudah terkunci
+            if (lockedItems.length === this.cart.length) {
+                alert('Semua item sudah diproses dapur dan tidak bisa dihapus secara massal.');
+                this.cancelDelete();
+                return;
+            }
+
+            if(confirm('Yakin ingin menghapus semua item yang belum diproses dapur?')) {
+                // Timpa keranjang hanya dengan item yang terkunci
+                this.cart = lockedItems; 
+                this.cancelDelete();
             }
         }
     },
@@ -288,5 +319,8 @@
     {% include 'kasir/includes/modal_sukses.html' %}
     {% include 'kasir/includes/struk_print.html' %}
 
+    <script id="edit-data" type="application/json">
+        {{ edit_data | tojson | safe if edit_data else 'null' }}
+    </script>
 </div>
 {% endblock %}

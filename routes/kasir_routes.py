@@ -76,7 +76,37 @@ def dashboard():
         })
 
     # ==========================================
-    # 3. RENDER TEMPLATE
+    # 3. LOGIKA MODE EDIT PESANAN
+    # ==========================================
+    edit_order_id = request.args.get('edit')
+    edit_data = None
+
+    if edit_order_id:
+        order_to_edit = Order.query.filter_by(order_number=edit_order_id).first()
+        if order_to_edit:
+            cart_items = []
+            for item in order_to_edit.items:
+                cart_items.append({
+                    "id": item.menu_id,
+                    "nama": item.menu.name if item.menu else "Menu Dihapus",
+                    "harga": item.price_at_order,
+                    "qty": item.qty,
+                    "note": item.notes or "",
+                    "img": item.menu.image_url if item.menu and item.menu.image_url else "gambar.png",
+                    "status": item.item_status # Penting untuk menandai mana yang sudah dimasak
+                })
+            
+            edit_data = {
+                "order_number": order_to_edit.order_number,
+                "customer_name": order_to_edit.customer_name,
+                "table_id": order_to_edit.table_id,
+                "order_type": "dine-in" if order_to_edit.order_type == "dine_in" else "takeaway",
+                "cart": cart_items,
+                "lunas": True if order_to_edit.payment_status == 'paid' else False
+            }
+
+    # ==========================================
+    # 4. RENDER TEMPLATE
     # ==========================================
     return render_template(
         'kasir/dashboard.html', 
@@ -84,7 +114,8 @@ def dashboard():
         role='kasir',
         stats=stats_data,
         tables=tables_db,
-        menu=menu_list
+        menu=menu_list,
+        edit_data=edit_data
     )
 
 # =========================
@@ -151,7 +182,8 @@ def pesanan_aktif():
                 'nama': item.menu.name if item.menu else 'Item Tidak Dikenal',
                 'qty': item.qty,
                 'harga': item.price_at_order,
-                'catatan': item.notes or ''
+                'catatan': item.notes or '',
+                'status': item.item_status
             })
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
