@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 
-from models import User, Menu, Category, Order, OrderItem, Table, Reservation
+from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
@@ -56,17 +56,16 @@ def menu_reviews(menu_id):
                            segment='daftar_menu', 
                            role='customer')
 
+# Halaman List Reservasi Aktif & Riwayat
 @customer_bp.route('/buat-reservasi')
 @login_required
 def buat_reservasi():
-    # Mengambil semua reservasi milik pengguna yang sedang masuk (login)
-    user_reservations = Reservation.query.filter_by(user_id=current_user.id)\
-        .order_by(Reservation.reservation_date.desc(), Reservation.reservation_time.desc()).all()
+    user_reservations = Reservation.query.options(
+        joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
+    ).filter_by(user_id=current_user.id)\
+     .order_by(Reservation.reservation_date.desc(), Reservation.reservation_time.desc()).all()
     
-    # Memisahkan reservasi aktif (pending, confirmed)
     active_reservations = [r for r in user_reservations if r.status in ['pending', 'confirmed']]
-    
-    # Memisahkan riwayat reservasi (completed, cancelled)
     history_reservations = [r for r in user_reservations if r.status in ['completed', 'cancelled']]
     
     return render_template('customer/buat_reservasi.html', 
@@ -75,65 +74,147 @@ def buat_reservasi():
                            active_reservations=active_reservations, 
                            history_reservations=history_reservations)
 
-@customer_bp.route('/buat-reservasi/submit', methods=['POST'])
-def submit_buat_reservasi():
-    # Mengambil data dari formulir
-    tanggal = request.form.get('tanggal')
-    waktu = request.form.get('waktu')
-    jumlah_tamu = request.form.get('jumlah_tamu')
-    meja = request.form.get('meja')
-    
-    # Generate ID Reservasi acak
-    reservasi_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    
-    # Formatisasi tampilan tanggal
-    tanggal_display = ""
-    if tanggal:
-        date_obj = datetime.strptime(tanggal, '%Y-%m-%d')
-        day_names = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
-        month_names = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-                 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
-        day_name = day_names[date_obj.weekday()]
-        month_name = month_names[date_obj.month - 1]
-        tanggal_display = f'{date_obj.day:02d} {month_name} {date_obj.year} ({day_name})'
-    
-    # Formatisasi tampilan waktu (asumsi durasi 2 jam)
-    waktu_display = waktu
-    if waktu:
-        try:
-            time_obj = datetime.strptime(waktu, '%H:%M')
-            end_hour = (time_obj.hour + 2) % 24
-            waktu_display = f'{time_obj.strftime("%H:%M")} - {end_hour:02d}:00 WIB'
-        except:
-            pass
-    
-    return render_template('customer/reservasi_detail.html', 
-                         nama='Matthew Shen',
-                         nomor='08123457890',
-                         meja=meja,
-                         tanggal_display=tanggal_display,
-                         waktu_display=waktu_display,
-                         jumlah_tamu=jumlah_tamu,
-                         reservasi_id=reservasi_id,
-                         segment='buat_reservasi',
-                         role='customer')
-
+# Halaman Form Reservasi Baru (Mengirim daftar meja dari DB)
 @customer_bp.route('/reservasi/new')
+@login_required
 def reservasi_new():
-    return render_template('customer/buat_reservasi_new.html', segment='buat_reservasi', role='customer')
+    # Mengambil semua data meja yang berstatus tersedia
+    tables = Table.query.filter_by(is_available=True).all()
+    return render_template('customer/buat_reservasi_new.html', 
+                           segment='buat_reservasi', 
+                           role='customer',
+                           tables=tables)
 
-@customer_bp.route('/reservasi/<reservation_id>')
+# API Endpoint POST: Menerima data JSON dari Submit Alpine.js
+@customer_bp.route('/buat-reservasi/submit', methods=['POST'])
+@login_required
+def submit_buat_reservasi():
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"success": False, "message": "Data kosong"}), 400
+
+        table_id = data.get('meja')
+        tanggal_str = data.get('tanggal')
+        waktu_str = data.get('waktu')
+        jumlah_tamu = data.get('jumlahTamu')
+        notes = data.get('notes', '')
+
+        if not all([table_id, tanggal_str, waktu_str, jumlah_tamu]):
+            return jsonify({"success": False, "message": "Mohon lengkapi semua data utama!"}), 400
+
+        # Cari data meja untuk mengambil nomor meja sebagai snapshot
+        target_table = Table.query.get(int(table_id))
+        if not target_table:
+            return jsonify({"success": False, "message": "Meja tidak ditemukan!"}), 404
+
+        # Parsing Date dan Time objek
+        reservation_date = datetime.strptime(tanggal_str, '%Y-%m-%d').date()
+        reservation_time = datetime.strptime(waktu_str, '%H:%M').time()
+
+        # Buat kode reservation_number unik (Contoh: RSV-AB12CD)
+        random_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        reservation_number = f"RSV-{random_code}"
+
+        # 1. Simpan data induk ke tabel 'reservations'
+        new_reservation = Reservation(
+            reservation_number=reservation_number,
+            user_id=current_user.id,
+            customer_name=current_user.name,
+            phone=current_user.phone or '-',
+            guest_qty=int(jumlah_tamu),
+            duration=120, # Default durasi 120 menit (2 jam) sesuai frontend Anda
+            notes=notes,
+            reservation_date=reservation_date,
+            reservation_time=reservation_time,
+            status='pending'
+        )
+        db.session.add(new_reservation)
+        db.session.flush() # Ambil ID reservasi yang baru dibuat tanpa commit dulu
+
+        # 2. Simpan data anak ke tabel pivot 'reservation_tables'
+        new_res_table = ReservationTable(
+            reservation_id=new_reservation.id,
+            table_id=target_table.id,
+            table_number_snapshot=target_table.table_number
+        )
+        db.session.add(new_res_table)
+        
+        # Commit seluruh rangkaian transaksi database
+        db.session.commit()
+
+        flash('Reservasi Anda berhasil diajukan!', 'success')
+        return jsonify({"success": True, "message": "Reservasi sukses dibuat."})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error Database Reservasi: {str(e)}")
+        return jsonify({"success": False, "message": f"Terjadi kesalahan internal: {str(e)}"}), 500
+    
+# Halaman Detail Reservasi Spesifik
+@customer_bp.route('/reservasi/<int:reservation_id>')
+@login_required
 def reservasi_detail(reservation_id):
-    return render_template('customer/reservasi_detail.html', segment='buat_reservasi', role='customer', reservation_id=reservation_id)
+    reservation = Reservation.query.options(
+        joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
+    ).get_or_404(reservation_id)
+    
+    if reservation.user_id != current_user.id:
+        flash('Anda tidak memiliki akses ke halaman ini!', 'danger')
+        return redirect(url_for('customer.buat_reservasi'))
+
+    return render_template('customer/reservasi_detail.html', 
+                           segment='buat_reservasi', 
+                           role='customer', 
+                           reservation=reservation)
+
+@customer_bp.route('/reservasi/<int:reservation_id>/cancel', methods=['POST'])
+@login_required
+def cancel_reservation(reservation_id):
+    # Ambil data reservasi
+    reservation = Reservation.query.get_or_404(reservation_id)
+    
+    # Keamanan: Pastikan hanya pemilik reservasi yang bisa membatalkan
+    if reservation.user_id != current_user.id:
+        return jsonify({"success": False, "message": "Anda tidak memiliki akses untuk tindakan ini!"}), 403
+        
+    # Pastikan reservasi masih dalam status yang bisa dibatalkan (pending / confirmed)
+    if reservation.status not in ['pending', 'confirmed']:
+        return jsonify({"success": False, "message": "Reservasi sudah selesai atau telah dibatalkan sebelumnya."}), 400
+        
+    # Ambil JSON payload alasan pembatalan dari Alpine.js fetch
+    data = request.json
+    reason = data.get('reason', '').strip() if data else ''
+    
+    if not reason:
+        return jsonify({"success": False, "message": "Alasan pembatalan wajib diisi!"}), 400
+        
+    try:
+        # Ubah status dan simpan alasannya ke database
+        reservation.status = 'cancelled'
+        reservation.cancellation_reason = reason
+        
+        db.session.commit()
+        return jsonify({"success": True, "message": "Reservasi berhasil dibatalkan."})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Gagal memperbarui database: {str(e)}"}), 500
 
 @customer_bp.route('/reservasi/history')
+@login_required
 def reservasi_history():
-    history_reservations = [
-        {"id": "AB650", "status": "Selesai", "date": "05 April 2026", "time": "16:00 WIB", "duration": "1 Jam", "guests": "2"},
-        {"id": "AC780", "status": "Dibatalkan", "date": "06 Desember 2025", "time": "08:00 WIB", "duration": "2+ Jam", "guests": "134"},
-        {"id": "AB456", "status": "Selesai", "date": "15 Maret 2026", "time": "19:30 WIB", "duration": "3 Jam", "guests": "5"}
-    ]
-    return render_template('customer/reservasi_history.html', segment='buat_reservasi', role='customer', history_reservations=history_reservations)
+    history_reservations = Reservation.query.options(
+        joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
+    ).filter(
+        Reservation.user_id == current_user.id,
+        Reservation.status.in_(['completed', 'cancelled'])
+    ).order_by(Reservation.reservation_date.desc(), Reservation.reservation_time.desc()).all()
+    
+    return render_template('customer/reservasi_history.html', 
+                           segment='buat_reservasi', 
+                           role='customer', 
+                           history_reservations=history_reservations)
 
 
 # =========================

@@ -1,197 +1,227 @@
 {% extends 'layouts/layout_customer.html' %}
 
-{% block title %}Reservasi Saat ini - Terralog{% endblock %}
+{% block title %}Detail Reservasi #{{ reservation.reservation_number }} - Terralog{% endblock %}
 
 {% block content %}
-<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="reservasiDetail()">
+<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="reservasiDetail({{ reservation.id }})">
     <div class="max-w-6xl">
-        <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-gray-600">
-            <a href="/customer/reservasi-saya" class="text-sm font-medium text-slate-500 hover:text-terralogBlue">Reservasi Saya</a>
+            <a href="/customer/buat-reservasi" class="text-sm font-medium text-slate-500 hover:text-terralogBlue transition">Reservasi Saya</a>
             <span class="text-gray-400">›</span>
-            <span class="text-sm font-semibold text-slate-900">Reservasi Saat ini</span>
+            <span class="text-sm font-semibold text-slate-900">Detail Reservasi</span>
         </div>
 
         <div class="flex justify-between items-start mb-8 gap-8">
-            <!-- Info Card -->
             <div class="bg-white rounded-[28px] border-2 border-[#D6E4FF] shadow-sm p-8 flex-1">
                 <div class="space-y-6">
-                    <!-- Nama Pemesan -->
                     <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                         <p class="text-sm font-semibold text-slate-600">Nama Pemesan</p>
-                        <p class="text-base font-bold text-slate-900">{{ nama }}</p>
+                        <p class="text-base font-bold text-slate-900">{{ current_user.name }}</p>
                     </div>
                     
-                    <!-- No Handphone -->
                     <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                         <p class="text-sm font-semibold text-slate-600">No Handphone</p>
-                        <p class="text-base font-bold text-slate-900">{{ nomor }}</p>
+                        <p class="text-base font-bold text-slate-900">{{ current_user.phone if current_user.phone else '-' }}</p>
                     </div>
                     
-                    <!-- Meja -->
                     <div class="flex justify-between items-center">
                         <p class="text-sm font-semibold text-slate-600">Meja</p>
-                        <p class="text-base font-bold text-slate-900">{{ meja }}</p>
+                        <p class="text-base font-bold text-slate-900">
+                            {% if reservation.reserved_tables %}
+                                Meja {{ reservation.reserved_tables[0].table_number_snapshot }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Status Card -->
             <div class="text-right">
                 <div class="inline-block mb-6">
-                    <span class="bg-terralogGold text-blue-900 px-8 py-3 rounded-full text-sm font-bold">Dijadwalkan</span>
+                    {% if reservation.status == 'pending' %}
+                        <span class="bg-amber-100 text-amber-800 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">Menunggu Konfirmasi</span>
+                    {% elif reservation.status == 'confirmed' %}
+                        <span class="bg-blue-100 text-blue-800 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">Dikonfirmasi / Dijadwalkan</span>
+                    {% elif reservation.status == 'completed' %}
+                        <span class="bg-green-100 text-green-800 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">Selesai</span>
+                    {% elif reservation.status == 'cancelled' %}
+                        <span class="bg-red-100 text-red-800 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">Dibatalkan</span>
+                    {% endif %}
                 </div>
-                <div class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold inline-block">
-                    <p class="text-xs text-gray-300 mb-2">No. Reservasi</p>
-                    <p class="text-2xl">#{{ reservasi_id }}</p>
+                <div class="bg-slate-900 text-white px-8 py-4 rounded-2xl font-bold inline-block shadow-sm">
+                    <p class="text-xs text-gray-400 mb-1">No. Reservasi</p>
+                    <p class="text-2xl">#{{ reservation.reservation_number }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Status Timeline -->
+        {% if reservation.status != 'cancelled' %}
         <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 mb-8">
             <div class="flex justify-between items-end">
-                <!-- Reservasi Dijadwalkan -->
                 <div class="flex flex-col items-center flex-1">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-terralogGold shadow-lg mb-4">
-                        <i data-lucide="calendar" class="w-8 h-8 text-blue-900"></i>
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full {% if reservation.status in ['pending', 'confirmed', 'completed'] %}bg-terralogBlue text-white shadow-md{% else %}bg-gray-200 text-gray-400{% endif %} mb-4">
+                        <i data-lucide="calendar" class="w-7 h-7"></i>
                     </div>
-                    <p class="text-sm font-semibold text-slate-900 text-center">Reservasi Dijadwalkan</p>
+                    <p class="text-xs font-bold {% if reservation.status in ['pending', 'confirmed', 'completed'] %}text-slate-900{% else %}text-slate-400{% endif %} text-center">Reservasi Dijadwalkan</p>
                 </div>
 
-                <!-- Connector Line -->
-                <div class="flex-1 h-1 bg-gray-200 mx-2 mb-12"></div>
+                <div class="flex-1 h-1 {% if reservation.status in ['confirmed', 'completed'] %}bg-terralogBlue{% else %}bg-gray-200{% endif %} mx-2 mb-12"></div>
 
-                <!-- Berlangsungan -->
                 <div class="flex flex-col items-center flex-1">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 shadow-lg mb-4">
-                        <i data-lucide="clock" class="w-8 h-8 text-white"></i>
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full {% if reservation.status in ['confirmed', 'completed'] %}bg-terralogBlue text-white shadow-md{% else %}bg-gray-200 text-gray-400{% endif %} mb-4">
+                        <i data-lucide="clock" class="w-7 h-7"></i>
                     </div>
-                    <p class="text-sm font-semibold text-slate-600 text-center">Berlangsungan</p>
+                    <p class="text-xs font-bold {% if reservation.status in ['confirmed', 'completed'] %}text-slate-900{% else %}text-slate-400{% endif %} text-center">Telah Dikonfirmasi</p>
                 </div>
 
-                <!-- Connector Line -->
-                <div class="flex-1 h-1 bg-gray-200 mx-2 mb-12"></div>
+                <div class="flex-1 h-1 {% if reservation.status == 'completed' %}bg-terralogBlue{% else %}bg-gray-200{% endif %} mx-2 mb-12"></div>
 
-                <!-- Reservasi Selesai -->
                 <div class="flex flex-col items-center flex-1">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-300 shadow-lg mb-4">
-                        <i data-lucide="check-circle" class="w-8 h-8 text-white"></i>
+                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-full {% if reservation.status == 'completed' %}bg-green-500 text-white shadow-md{% else %}bg-gray-200 text-gray-400{% endif %} mb-4">
+                        <i data-lucide="check-circle" class="w-7 h-7"></i>
                     </div>
-                    <p class="text-sm font-semibold text-slate-600 text-center">Reservasi Selesai</p>
+                    <p class="text-xs font-bold {% if reservation.status == 'completed' %}text-slate-900{% else %}text-slate-400{% endif %} text-center">Reservasi Selesai</p>
                 </div>
             </div>
         </div>
+        {% else %}
+        <div class="bg-red-50 border border-red-200 rounded-[28px] p-6 mb-8 flex gap-4 items-start">
+            <div class="h-12 w-12 rounded-2xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h4 class="text-base font-bold text-red-900 mb-1">Reservasi Ini Telah Dibatalkan</h4>
+                <p class="text-sm text-red-700"><span class="font-semibold">Alasan:</span> {{ reservation.cancellation_reason if reservation.cancellation_reason else 'Tidak ada alasan khusus.' }}</p>
+            </div>
+        </div>
+        {% endif %}
 
-        <!-- Detail Reservasi -->
         <div class="bg-white rounded-[28px] border border-gray-100 shadow-sm p-8 mb-8">
             <div class="grid grid-cols-3 gap-6">
-                <!-- Tanggal Reservasi -->
                 <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                        <i data-lucide="calendar" class="w-8 h-8 text-terralogBlue"></i>
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                        <i data-lucide="calendar" class="w-6 h-6 text-terralogBlue"></i>
                     </div>
-                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Tanggal Reservasi</p>
-                    <p class="text-lg font-bold text-slate-900">{{ tanggal_display }}</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Tanggal Reservasi</p>
+                    <p class="text-base font-bold text-slate-900">{{ reservation.reservation_date.strftime('%d %B %Y') if reservation.reservation_date else '-' }}</p>
                 </div>
 
-                <!-- Waktu Reservasi -->
                 <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                        <i data-lucide="clock" class="w-8 h-8 text-terralogBlue"></i>
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                        <i data-lucide="clock" class="w-6 h-6 text-terralogBlue"></i>
                     </div>
-                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Waktu Reservasi</p>
-                    <p class="text-lg font-bold text-slate-900">{{ waktu_display }}</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Waktu Reservasi</p>
+                    <p class="text-base font-bold text-slate-900">{{ reservation.reservation_time.strftime('%H:%M') if reservation.reservation_time else '-' }} WIB</p>
                 </div>
 
-                <!-- Jumlah Tamu -->
                 <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-8 text-center">
-                    <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                        <i data-lucide="users" class="w-8 h-8 text-terralogBlue"></i>
+                    <div class="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                        <i data-lucide="users" class="w-6 h-6 text-terralogBlue"></i>
                     </div>
-                    <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-4">Jumlah Tamu</p>
-                    <p class="text-lg font-bold text-slate-900">{{ jumlah_tamu }} Orang</p>
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Jumlah Tamu</p>
+                    <p class="text-base font-bold text-slate-900">{{ reservation.guest_qty }} Orang</p>
                 </div>
             </div>
+
+            {% if reservation.notes %}
+            <div class="mt-6 p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Catatan Khusus dari Anda:</p>
+                <p class="text-sm text-slate-700 italic">"{{ reservation.notes }}"</p>
+            </div>
+            {% endif %}
         </div>
 
-        <!-- Batalkan Reservasi Button -->
+        {% if reservation.status in ['pending', 'confirmed'] %}
         <div class="flex justify-center">
-            <button @click="showCancelModal = true" class="w-full max-w-sm py-4 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-lg">
+            <button @click="showCancelModal = true" class="w-full max-w-sm py-4 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition shadow-md cursor-pointer">
                 Batalkan Reservasi
             </button>
         </div>
+        {% endif %}
 
-        <!-- Cancel Modal Popup -->
-        <div x-show="showCancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="showCancelModal = false">
-            <div class="bg-white rounded-[32px] p-8 max-w-md shadow-2xl animate-fade-in">
-                <!-- Emoji Icon -->
-                <div class="flex justify-center mb-6">
-                    <div class="text-6xl">😭</div>
+        <div x-show="showCancelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;" @click.self="showCancelModal = false">
+            <div class="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl animate-fade-in mx-4">
+                <div class="flex justify-center mb-4">
+                    <div class="text-5xl">😭</div>
                 </div>
 
-                <!-- Title -->
-                <h2 class="text-center text-2xl font-bold text-slate-900 mb-3">Batalkan Reservasi?</h2>
+                <h2 class="text-center text-xl font-bold text-slate-900 mb-2">Batalkan Reservasi?</h2>
+                <p class="text-center text-xs text-slate-500 mb-6">Apakah Anda yakin ingin membatalkan jadwal ini? Masukkan alasan pembatalan di bawah ini.</p>
 
-                <!-- Description -->
-                <p class="text-center text-sm text-slate-600 mb-6">Apakah kamu yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat dibatalkan.</p>
+                <textarea x-model="cancelReason" placeholder="Contoh: Ada acara mendadak / Salah input jam." class="w-full border-2 border-slate-200 focus:border-red-400 rounded-2xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-red-400 resize-none mb-2 bg-white" rows="3"></textarea>
 
-                <!-- Textarea -->
-                <textarea x-model="cancelReason" placeholder="Masukkan alasan pembatalan di sini." class="w-full border-2 border-red-300 rounded-3xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none mb-4" rows="4"></textarea>
+                <p x-show="showReasonError" style="display: none;" class="text-red-500 text-xs font-semibold mb-4">* Alasan pembatalan wajib diisi!</p>
 
-                <!-- Error Message -->
-                <p x-show="showReasonError" class="text-red-500 text-sm mb-4">*Bagian ini wajib diisi</p>
-
-                <!-- Buttons -->
-                <div class="flex gap-4">
-                    <button @click="showCancelModal = false; cancelReason = ''; showReasonError = false;" class="flex-1 py-3 rounded-full text-lg font-bold text-white bg-green-500 hover:bg-green-600 transition">
-                        Kembali ke halaman
+                <div class="flex gap-3 mt-4">
+                    <button @click="showCancelModal = false; cancelReason = ''; showReasonError = false;" class="flex-1 py-3 rounded-full text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+                        Kembali
                     </button>
-                    <button @click="confirmCancel()" class="flex-1 py-3 rounded-full text-lg font-bold text-white bg-red-500 hover:bg-red-600 transition">
-                        Batalkan Reservasi
+                    <button @click="confirmCancel()" class="flex-1 py-3 rounded-full text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition cursor-pointer">
+                        Ya, Batalkan
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Add fade-in animation -->
-        <style>
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: scale(0.95);
-                }
-                to {
-                    opacity: 1;
-                    transform: scale(1);
-                }
-            }
-            .animate-fade-in {
-                animation: fadeIn 0.3s ease-out;
-            }
-        </style>
     </div>
 </div>
 
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out;
+    }
+</style>
+
 <script>
-    function reservasiDetail() {
+    function reservasiDetail(reservationId) {
         return {
             showCancelModal: false,
             cancelReason: '',
             showReasonError: false,
+            resId: reservationId,
 
             confirmCancel() {
                 if (!this.cancelReason.trim()) {
                     this.showReasonError = true;
                     return;
                 }
+                this.showReasonError = false;
                 
-                // Redirect to new reservation page
-                window.location.href = '/customer/reservasi/new';
+                // 🌟 Tembak AJAX ke backend Flask untuk memproses pembatalan status di database
+                fetch(`/customer/reservasi/${this.resId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        reason: this.cancelReason
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Refresh halaman agar badge berubah jadi 'Dibatalkan' dan memunculkan feedback
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Gagal membatalkan reservasi.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi masalah koneksi ke server.');
+                });
             }
         };
     }
 
-    lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}
