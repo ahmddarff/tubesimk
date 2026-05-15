@@ -17,30 +17,32 @@ kasir_bp = Blueprint('kasir', __name__)
 @kasir_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # 1. Statistik Meja
+    # ==========================================
+    # 1. DATA STATISTIK (CARD ATAS)
+    # ==========================================
+    today = date.today()
+
+    # Statistik Meja (Hanya menghitung jumlahnya saja)
     total_meja = Table.query.count()
     meja_kosong = Table.query.filter_by(is_available=True).count()
-    
-    # 2. Statistik Pesanan (Hari Ini)
-    today = date.today()
+
+    # Statistik Pesanan Hari Ini
     pesanan_aktif = Order.query.filter(
         Order.order_status.in_(['pending', 'preparing', 'ready']),
         db.func.date(Order.created_at) == today
     ).count()
 
-    # Belum Lunas: status pembayaran unpaid
     belum_lunas = Order.query.filter(
         Order.payment_status == 'unpaid',
         db.func.date(Order.created_at) == today
     ).count()
 
-    # Selesai: Order status completed
     selesai = Order.query.filter(
         Order.order_status == 'served',
         db.func.date(Order.created_at) == today
     ).count()
 
-    # Gabungkan ke dalam satu dictionary agar loop di HTML tetap rapi
+    # Digabungkan untuk dipanggil di HTML loop
     stats_data = [
         ('Meja Kosong', f"{meja_kosong}/{total_meja}"),
         ('Pesanan Aktif', str(pesanan_aktif)),
@@ -48,18 +50,18 @@ def dashboard():
         ('Selesai', str(selesai))
     ]
     
-    # 1. Mengambil data menu
-    menus_db = Menu.query.all()
-
-    # MENGAMBIL DATA MEJA YANG TERSEDIA
+    # ==========================================
+    # 2. DATA TRANSAKSI (KERANJANG & KATALOG)
+    # ==========================================
+    # Mengambil objek meja yang tersedia untuk dropdown pilihan kasir
     tables_db = Table.query.filter_by(is_available=True).order_by(Table.table_number).all()
     
-    # 3. MENGHITUNG STATISTIK MEJA KOSONG (Data Nyata)
-    # Menghitung total baris di tabel Table yang mana is_available adalah True
-    total_meja_kosong = Table.query.filter_by(is_available=True).count()
-    
+    # Mengambil dan memformat data menu untuk katalog
+    menus_db = Menu.query.all()
     menu_list = []
+    
     for m in menus_db:
+        # Cek ketersediaan berdasarkan saklar is_available dan sisa stok
         if m.is_available and (m.stock is None or m.stock > 0):
             status_menu = 'tersedia'
         else:
@@ -73,13 +75,17 @@ def dashboard():
             "status": status_menu
         })
 
-    # Kirim variabel total_meja_kosong ke template
-    return render_template('kasir/dashboard.html', 
-                        menu=menu_list,
-                        stats=stats_data,
-                        segment='dashboard',
-                        role='kasir',
-                        tables=tables_db)
+    # ==========================================
+    # 3. RENDER TEMPLATE
+    # ==========================================
+    return render_template(
+        'kasir/dashboard.html', 
+        segment='dashboard',
+        role='kasir',
+        stats=stats_data,
+        tables=tables_db,
+        menu=menu_list
+    )
 
 # =========================
 # PESANAN AKTIF
@@ -87,57 +93,79 @@ def dashboard():
 @kasir_bp.route('/pesanan-aktif')
 @login_required
 def pesanan_aktif():
-    # Mengambil pesanan yang statusnya masih aktif (belum selesai)
-    status_aktif = ['pending', 'preparing', 'ready', 'served']
-    orders_db = Order.query.filter(Order.order_status.in_(status_aktif)).order_by(Order.created_at.desc()).all()
-    
     # ==========================================
-    # LOGIKA PERHITUNGAN STATISTIK
+    # 1. LOGIKA PERHITUNGAN STATISTIK (HARI INI)
     # ==========================================
-    # 1. Menghitung Meja (Kosong / Total)
+    today = date.today()
+
+    # Statistik Meja (Kosong / Total)
     total_meja = Table.query.count()
     meja_kosong = Table.query.filter_by(is_available=True).count()
-    format_meja = f"{meja_kosong}/{total_meja}"
 
-    # 2. Menghitung Pesanan Aktif
-    jumlah_pesanan_aktif = len(orders_db)
+    # Statistik Pesanan Aktif: yang sedang diproses dapur atau siap saji
+    pesanan_aktif_count = Order.query.filter(
+        Order.order_status.in_(['pending', 'preparing', 'ready']),
+        db.func.date(Order.created_at) == today
+    ).count()
 
-    # 3. Menghitung Pesanan Belum Lunas (dari pesanan yang sedang aktif)
-    belum_lunas = sum(1 for o in orders_db if o.payment_status == 'unpaid')
+    # Statistik Belum Lunas
+    belum_lunas_count = Order.query.filter(
+        Order.payment_status == 'unpaid',
+        db.func.date(Order.created_at) == today
+    ).count()
 
-    # 4. Menghitung Pesanan Selesai (semua pesanan yang berstatus 'completed')
-    # Catatan: Jika ingin dibatasi hanya hari ini, Anda bisa menambahkan filter tanggal
-    jumlah_selesai = Order.query.filter_by(order_status='completed').count()
+    # Statistik Selesai: menggunakan status 'served' (sudah disajikan)
+    selesai_count = Order.query.filter(
+        Order.order_status == 'served',
+        db.func.date(Order.created_at) == today
+    ).count()
 
-    # Mengemas statistik ke dalam bentuk daftar tuple untuk dikirim ke Jinja2
+    # Dikemas ke dalam list tuple untuk looping di HTML
     data_statistik = [
-        ('Meja Kosong', format_meja), 
-        ('Pesanan Aktif', str(jumlah_pesanan_aktif)), 
-        ('Belum Lunas', str(belum_lunas)), 
-        ('Selesai', str(jumlah_selesai))
+        ('Meja Kosong', f"{meja_kosong}/{total_meja}"),
+        ('Pesanan Aktif', str(pesanan_aktif_count)),
+        ('Belum Lunas', str(belum_lunas_count)),
+        ('Selesai', str(selesai_count))
     ]
+    
     # ==========================================
-
+    # 2. MENGAMBIL DAFTAR PESANAN UNTUK KARTU
+    # ==========================================
+    # Tampilkan pesanan jika memenuhi salah satu syarat ini:
+    # Syarat A: Statusnya masih diproses dapur (pending, preparing, ready)
+    # Syarat B: ATAU statusnya sudah disajikan (served) TAPI belum dibayar (unpaid)
+    orders_db = Order.query.filter(
+        db.or_(
+            Order.order_status.in_(['pending', 'preparing', 'ready']),
+            db.and_(Order.order_status == 'served', Order.payment_status == 'unpaid')
+        )
+    ).order_by(Order.created_at.asc()).all()
+    
     pesanan_aktif_data = []
     
     for order in orders_db:
-        # Menyiapkan item untuk detail pesanan
+        # Menyiapkan daftar menu per pesanan
         items_list = []
         for item in order.items:
             items_list.append({
-                'nama': item.menu.name if item.menu else 'Item',
+                'nama': item.menu.name if item.menu else 'Item Tidak Dikenal',
                 'qty': item.qty,
                 'harga': item.price_at_order,
                 'catatan': item.notes or ''
             })
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
-        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu Anonim")
+        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu")
+
+        # Menyiapkan waktu ISO untuk timer real-time di frontend
+        # Tambahkan 'Z' agar JavaScript mendeteksi ini sebagai waktu UTC (sesuai models.py)
+        waktu_iso_str = order.created_at.isoformat() + 'Z'
 
         pesanan_aktif_data.append({
             'id': order.order_number,
             'nama': nama_pelanggan,
-            'waktu': order.created_at.strftime('%H:%M'),
+            'waktu_asli': order.created_at.strftime('%H:%M'),
+            'waktu_iso': waktu_iso_str, # Digunakan oleh Alpine.js timeAgo()
             'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
             'status': str(order.order_status).upper(), 
@@ -146,7 +174,9 @@ def pesanan_aktif():
             'items': items_list
         })
 
-    # Mengirimkan variabel baru bernama 'statistik' ke templat HTML
+    # ==========================================
+    # 3. RENDER KE TEMPLATE
+    # ==========================================
     return render_template(
         'kasir/pesanan_aktif.html', 
         segment='pesanan_aktif', 
@@ -154,7 +184,6 @@ def pesanan_aktif():
         statistik=data_statistik,
         role='kasir' 
     )
-
 
 # =========================
 # RESERVASI

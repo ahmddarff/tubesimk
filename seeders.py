@@ -1,4 +1,4 @@
-from datetime import time, date, datetime
+from datetime import time, date, datetime, timedelta
 from werkzeug.security import generate_password_hash
 from app import app, db
 from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table, Reservation, ReservationTable
@@ -197,7 +197,7 @@ def run_seeders():
             
         print("✅ Berhasil: 5 Data Meja ditambahkan!")
 
-       # ==========================================
+        # ==========================================
         # 9. SEEDER ORDER & ORDER ITEMS 
         # ==========================================
         # Mengambil referensi pelanggan dan menu dari basis data
@@ -215,6 +215,9 @@ def run_seeders():
         # Fallback ID (Cadangan) jika menu di atas terhapus
         fallback_id = Menu.query.first().id if Menu.query.first() else 1
 
+        # MENGGUNAKAN WAKTU SEKARANG (UTC) AGAR SELALU TERBACA "HARI INI"
+        now_utc = datetime.utcnow()
+
         # Daftar 4 Pesanan dengan waktu (created_at) yang disimulasikan berbeda
         data_orders = [
             {
@@ -222,12 +225,13 @@ def run_seeders():
                 "user_id": customer_id,
                 "customer_name": None,
                 "table_id": meja_db.get("01"),
+                "table_number_snapshot": "01",
                 "order_type": "dine_in",
                 "order_status": "served",
                 "payment_method": "cash",
                 "payment_status": "paid",
                 "total_amount": 50000,
-                "created_at": datetime(2026, 5, 14, 10, 0, 0), # Datang pukul 10:00
+                "created_at": now_utc - timedelta(hours=2), # Datang 2 jam yang lalu
                 "items": [
                     {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served"}
@@ -238,12 +242,13 @@ def run_seeders():
                 "user_id": None,
                 "customer_name": "Tamu Anonim",
                 "table_id": meja_db.get("02"),
+                "table_number_snapshot": "02",
                 "order_type": "dine_in",
-                "order_status": "preparing",
+                "order_status": "ready",
                 "payment_method": "qris",
                 "payment_status": "paid",
                 "total_amount": 29000,
-                "created_at": datetime(2026, 5, 14, 10, 15, 0), # Datang pukul 10:15
+                "created_at": now_utc - timedelta(minutes=45),
                 "items": [
                     {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "preparing"},
                     {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "pending"}
@@ -254,12 +259,13 @@ def run_seeders():
                 "user_id": customer_id,
                 "customer_name": None,
                 "table_id": meja_db.get("04"),
+                "table_number_snapshot": "04",
                 "order_type": "dine_in",
-                "order_status": "pending",
+                "order_status": "preparing",
                 "payment_method": "cash",
                 "payment_status": "unpaid",
                 "total_amount": 45000,
-                "created_at": datetime(2026, 5, 14, 10, 30, 0), # Datang pukul 10:30
+                "created_at": now_utc - timedelta(minutes=15),
                 "items": [
                     {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus dimsum banyak", "status": "pending"}
                 ]
@@ -269,12 +275,13 @@ def run_seeders():
                 "user_id": None,
                 "customer_name": "Ojol Grab",
                 "table_id": None,
+                "table_number_snapshot": None,
                 "order_type": "take_away",
-                "order_status": "ready",
+                "order_status": "pending",
                 "payment_method": "cash",
                 "payment_status": "unpaid",
                 "total_amount": 30000,
-                "created_at": datetime(2026, 5, 14, 10, 45, 0), # Datang pukul 10:45
+                "created_at": now_utc - timedelta(minutes=5),
                 "items": [
                     {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "ready"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "ready"}
@@ -292,6 +299,7 @@ def run_seeders():
                     user_id=data["user_id"],
                     customer_name=data["customer_name"],
                     table_id=data["table_id"],
+                    table_number_snapshot=data.get("table_number_snapshot"),
                     order_type=data["order_type"],
                     order_status=data["order_status"],
                     payment_method=data["payment_method"],

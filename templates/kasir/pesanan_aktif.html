@@ -5,13 +5,13 @@
      @keydown.window="handlePhysicKey($event.key)"
      class="font-['Inter']" x-cloak>
 
-    <div class="grid grid-cols-4 gap-3 mb-6">
+    <div class="grid grid-cols-4 gap-4 mb-6">
         {% for title, val in statistik %}
-        <div class="bg-[#F7E190] p-3 rounded-lg shadow-sm border border-black/5">
-            <p class="text-[10px] uppercase tracking-wider font-semibold text-gray-700">
+        <div class="bg-[#F7E190] p-4 rounded-2xl shadow-sm border border-black/5 flex flex-col justify-center">
+            <p class="text-[10px] uppercase tracking-widest font-bold text-gray-700 mb-0.5">
                 {{ title }}
             </p>
-            <p class="text-lg font-bold">
+            <p class="text-2xl font-black text-gray-900 leading-none">
                 {{ val }}
             </p>
         </div>
@@ -28,11 +28,11 @@
         </div>
 
         <div class="flex gap-4 mb-6 flex-wrap">
-            <template x-for="stat in ['SEMUA', 'PENDING', 'READY', 'SERVED']" :key="stat">
+            <template x-for="stat in ['SEMUA', 'PENDING', 'PREPARING', 'READY', 'SERVED']" :key="stat">
                 <button 
                     @click="filterStatus = stat" 
-                    :class="filterStatus === stat ? 'bg-terralogBlue text-white' : 'border border-terralogBlue text-terralogBlue'"
-                    class="px-8 py-2 rounded-full font-bold text-sm transition"
+                    :class="filterStatus === stat ? 'bg-terralogBlue text-white shadow-md' : 'border-2 border-gray-100 text-gray-500 hover:border-terralogBlue hover:text-terralogBlue'"
+                    class="px-8 py-2 rounded-full font-bold text-sm transition-all"
                     x-text="stat"
                 ></button>
             </template>
@@ -40,50 +40,61 @@
 
         <div class="flex gap-4 mb-8 flex-wrap">
             <div class="relative flex-1 min-w-[250px]">
-                <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4 h-4 text-gray-400"></i>
                 <input 
                     type="text"
                     x-model="searchQuery"
-                    placeholder="Cari No. Pesanan atau Pelanggan..." 
-                    class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-terralogBlue"
+                    placeholder="Cari No. Pesanan atau Nama Pelanggan..." 
+                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-terralogBlue focus:bg-white transition-colors"
                 >
             </div>
 
-            <select x-model="filterTipe" class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white">
+            <select x-model="filterTipe" class="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 font-bold focus:outline-none focus:border-terralogBlue hover:border-gray-300 bg-white cursor-pointer transition-colors">
                 <option value="SEMUA">Semua Tipe</option>
                 <option value="DINE IN">Dine In</option>
                 <option value="TAKE AWAY">Take Away</option>
             </select>
 
-            <select x-model="filterPembayaran" class="border border-terralogBlue rounded-lg px-4 py-2 text-sm text-terralogBlue font-medium focus:outline-none bg-white">
+            <select x-model="filterPembayaran" class="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 font-bold focus:outline-none focus:border-terralogBlue hover:border-gray-300 bg-white cursor-pointer transition-colors">
                 <option value="SEMUA">Semua Pembayaran</option>
                 <option value="LUNAS">Lunas</option>
                 <option value="BELUM LUNAS">Belum Lunas</option>
             </select>
         </div>
 
-        <div class="grid grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <template x-for="p in filteredPesanan" :key="p.id">
                 <div 
                     @click="openDetail(p)"
-                    class="cursor-pointer relative rounded-xl px-3 py-2.5 shadow-sm border transition-all hover:shadow-md overflow-hidden flex flex-col justify-between"
+                    class="cursor-pointer relative rounded-2xl px-4 py-3 shadow-sm border transition-all hover:shadow-md hover:-translate-y-0.5 overflow-hidden flex flex-col justify-between"
                     :class="{
-                        'border-yellow-400 bg-yellow-50': p.status === 'PENDING' || p.status === 'PREPARING',
+                        'border-red-400 bg-red-50': p.status === 'PENDING',
+                        'border-yellow-400 bg-yellow-50': p.status === 'PREPARING',
                         'border-blue-500 bg-blue-50': p.status === 'READY',
                         'border-emerald-600 bg-emerald-50': p.status === 'SERVED'
                     }"
                 >
                     <div class="relative z-10">
-                        <div class="flex justify-between items-center mb-1.5">
+                        <div class="flex justify-between items-center mb-2">
                             <h3 class="font-black text-base text-gray-800 leading-none" x-text="p.id"></h3>
-                            <span class="text-[9px] font-bold text-gray-400" x-text="p.waktu"></span>
+                            <span class="text-[10px] font-bold tracking-wide" 
+                                  :class="{
+                                      'text-red-500': p.status === 'PENDING',
+                                      'text-yellow-600': p.status === 'PREPARING',
+                                      'text-blue-500': p.status === 'READY',
+                                      'text-emerald-600': p.status === 'SERVED'
+                                  }"
+                                  :title="'Dipesan pada ' + p.waktu_asli" 
+                                  x-text="timeAgo(p.waktu_iso)">
+                            </span>
                         </div>
 
-                        <div class="mb-2">
-                            <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                        <div class="mb-3">
+                            <span class="inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm"
                                 :class="{
-                                    'bg-yellow-400 text-black': p.status === 'PENDING' || p.status === 'PREPARING',
+                                    'bg-red-500 text-white': p.status === 'PENDING',
+                                    'bg-yellow-400 text-black': p.status === 'PREPARING',
                                     'bg-blue-500 text-white': p.status === 'READY',
                                     'bg-emerald-600 text-white': p.status === 'SERVED'
                                 }"
@@ -91,33 +102,39 @@
                             </span>
                         </div>
 
-                        <div class="flex justify-between items-center mb-2.5">
-                            <p class="text-[11px] font-bold text-gray-700 truncate max-w-[90px]" x-text="p.nama"></p>
+                        <div class="flex justify-between items-center mb-3">
+                            <p class="text-xs font-bold text-gray-800 truncate pr-2" x-text="p.nama"></p>
 
-                            <div class="flex items-center gap-1 text-blue-900 font-bold text-[10px]">
-                                <span x-show="p.tipe === 'DINE IN'">🍽️</span>
-                                <span x-show="p.tipe !== 'DINE IN'">🛍️</span>
-                                <span x-text="p.tipe === 'DINE IN' ? p.meja : 'TA'"></span>
+                            <div class="flex items-center gap-1.5 bg-white/60 px-2 py-1 rounded-md text-gray-800 font-black text-[10px] uppercase">
+                                <i x-show="p.tipe === 'DINE IN'" data-lucide="utensils" class="w-3 h-3 text-terralogBlue"></i>
+                                <i x-show="p.tipe !== 'DINE IN'" data-lucide="shopping-bag" class="w-3 h-3 text-terralogGold"></i>
+                                <span x-text="p.tipe === 'DINE IN' ? 'Meja ' + p.meja : 'Take Away'"></span>
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-between border-t border-gray-200/50 pt-2">
-                            <p class="text-sm font-black text-terralogBlue" x-text="'Rp ' + p.total.toLocaleString('id-ID')"></p>
-                            <button class="px-3 py-1 bg-[#E99817] text-white rounded-lg font-black text-[9px] uppercase hover:bg-[#CE7411] transition shadow-sm">
-                                Detail
+                        <div class="flex items-center justify-between border-t border-gray-900/10 pt-2.5 mt-auto">
+                            <p class="text-sm font-black text-gray-900" x-text="'Rp ' + p.total.toLocaleString('id-ID')"></p>
+                            
+                            <button class="bg-white/80 backdrop-blur-sm border border-gray-200 text-terralogBlue hover:bg-terralogBlue hover:text-white hover:border-terralogBlue px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm flex items-center gap-1">
+                                Detail <i data-lucide="chevron-right" class="w-3 h-3"></i>
                             </button>
                         </div>
                     </div>
                 </div>
             </template>
 
-            <div x-show="filteredPesanan.length === 0" class="col-span-4 text-center py-10 text-gray-400 font-medium">
-                Tidak ada pesanan yang sesuai dengan filter.
+            <div x-show="filteredPesanan.length === 0" class="col-span-1 md:col-span-2 lg:col-span-4 text-center py-16">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <i data-lucide="inbox" class="w-8 h-8 text-gray-300"></i>
+                </div>
+                <p class="text-gray-400 font-bold">Tidak ada pesanan yang sesuai dengan filter.</p>
             </div>
 
         </div>
 
     </div>
+    
+    {% include 'kasir/includes/modal_detail_pesanan.html' %}
 </div>
 
 <script id="data-pesanan" type="application/json">
@@ -127,13 +144,11 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('pesananAktif', () => ({
-        // State Filter
         filterStatus: 'SEMUA',
         filterTipe: 'SEMUA',
         filterPembayaran: 'SEMUA',
         searchQuery: '',
 
-        // State Modal & Data
         showDetail: false, 
         showPayment: false, 
         paymentMethod: 'CASH', 
@@ -141,22 +156,48 @@ document.addEventListener('alpine:init', () => {
         selectedOrder: {},
         showSuccess: false,
 
-        // Mengambil data dari backend
         pesanan: JSON.parse(document.getElementById('data-pesanan').textContent),
+
+        // Variabel untuk timer berjalan
+        now: new Date(),
+
+        init() {
+            // Re-render icon lucide jika ada icon baru
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
+            
+            // Interval agar waktu "X menit lalu" terus berdetak setiap 1 menit (60000 ms)
+            setInterval(() => {
+                this.now = new Date();
+            }, 60000);
+        },
+
+        // Fungsi menghitung selisih waktu
+        timeAgo(isoString) {
+            if (!isoString) return '-';
+            const orderTime = new Date(isoString);
+            const diffMs = this.now - orderTime;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 1) return 'Baru saja';
+            if (diffMins < 60) return diffMins + ' mnt';
+            
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            return hours + 'j ' + mins + 'm';
+        },
 
         get todayDate() {
             const today = new Date();
             const yyyy = today.getFullYear();
-            let mm = today.getMonth() + 1; // Bulan dimulai dari 0
+            let mm = today.getMonth() + 1;
             let dd = today.getDate();
             if (dd < 10) dd = '0' + dd;
             if (mm < 10) mm = '0' + mm;
             return dd + '/' + mm + '/' + yyyy;
         },
 
-        // Komputasi filter real-time
         get filteredPesanan() {
-            return this.pesanan.filter(p => {
+            let result = this.pesanan.filter(p => {
                 const matchStatus = this.filterStatus === 'SEMUA' || p.status === this.filterStatus;
                 const matchTipe = this.filterTipe === 'SEMUA' || p.tipe === this.filterTipe;
                 
@@ -170,6 +211,10 @@ document.addEventListener('alpine:init', () => {
                 
                 return matchStatus && matchTipe && matchPembayaran && matchSearch;
             });
+            
+            // Re-render icon setelah filter berubah (karena elemen baru masuk ke DOM)
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+            return result;
         },
 
         openDetail(orderData) {
@@ -183,8 +228,6 @@ document.addEventListener('alpine:init', () => {
             if (orderIndex !== -1) {
                 this.pesanan[orderIndex].status = newStatus;
             }
-            // Dalam implementasi nyata, Anda perlu mengirim request AJAX (fetch/axios) 
-            // ke Flask untuk memperbarui status di database permanen.
         },
 
         editOrder() {
