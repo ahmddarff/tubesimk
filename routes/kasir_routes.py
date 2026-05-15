@@ -1,4 +1,5 @@
-import os, random, string
+import os
+from utils import *
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
@@ -8,26 +9,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 kasir_bp = Blueprint('kasir', __name__)
-
-def generate_order_number():
-    # Ambil tanggal hari ini dengan format YYMMDD (contoh: 260515 untuk 15 Mei 2026)
-    prefix = datetime.now().strftime('%y%m%d')
-    search_pattern = f"ORD-{prefix}-%"
-    
-    # Cari pesanan terakhir yang dibuat pada hari ini berdasarkan prefix
-    last_order = Order.query.filter(Order.order_number.like(search_pattern))\
-                            .order_by(Order.id.desc()).first()
-    
-    if last_order:
-        # Jika ada, ambil 3 digit terakhir (XXX) lalu ubah jadi integer dan tambah 1
-        last_sequence = int(last_order.order_number.split('-')[-1])
-        new_sequence = last_sequence + 1
-    else:
-        # Jika belum ada pesanan sama sekali hari ini, mulai dari 1
-        new_sequence = 1
-        
-    # Format kembali menjadi string dengan padding 3 digit (001, 002, dst)
-    return f"ORD-{prefix}-{new_sequence:03d}"
 
 # =========================
 # DASHBOARD
