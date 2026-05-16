@@ -22,7 +22,6 @@ class User(db.Model, UserMixin):
     updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relasi ke transaksi & reservasi
-    orders      = db.relationship('Order', backref='user', lazy=True)
     reservations = db.relationship('Reservation', backref='user', lazy=True)
 
 class CafeSetting(db.Model):
@@ -134,6 +133,7 @@ class Order(db.Model):
     id              = db.Column(db.Integer, primary_key=True)
     order_number    = db.Column(db.String(50), unique=True, nullable=False)
     user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    cashier_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name   = db.Column(db.String(100), nullable=True)
     table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) # Nullable untuk Take Away
     table_number_snapshot = db.Column(db.String(20), nullable=True) # Snapshot nomor meja saat order dibuat (untuk histori)
@@ -149,6 +149,10 @@ class Order(db.Model):
 
     # Relasi ke item pesanan
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade="all, delete-orphan")
+
+    # Beri tahu SQLAlchemy mana ID untuk Customer, mana untuk Cashier
+    customer    = db.relationship('User', foreign_keys=[user_id], backref='my_orders')
+    cashier     = db.relationship('User', foreign_keys=[cashier_id], backref='handled_orders')
 
     # Constraint untuk memastikan setidaknya user_id atau customer_name harus diisi
     __table_args__ = (

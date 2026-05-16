@@ -117,7 +117,7 @@ def dashboard():
             
             edit_data = {
                 "order_number": order_to_edit.order_number,
-                "customer_name": order_to_edit.customer_name or (order_to_edit.user.name if order_to_edit.user else "Tamu"),
+                "customer_name": order_to_edit.customer_name or (order_to_edit.customer.name if order_to_edit.customer else "Tamu"),
                 "table_id": order_to_edit.table_id,
                 "order_type": "dine-in" if order_to_edit.order_type == "dine_in" else "takeaway",
                 "cart": cart_items,
@@ -209,7 +209,7 @@ def pesanan_aktif():
             })
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
-        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu")
+        nama_pelanggan = order.customer_name or (order.customer.name if order.customer else "Tamu")
         waktu_iso_str = order.created_at.isoformat() + 'Z'
 
         # AMBIL DATA METODE DARI DB (Ubah jadi huruf besar, default CASH jika kosong)
@@ -259,7 +259,7 @@ def reservasi():
         }
 
         # Menentukan nama pelanggan
-        nama_pelanggan = res.customer_name or (res.user.name if res.user else "Tanpa Nama")
+        nama_pelanggan = res.customer_name or (res.customer.name if res.customer else "Tanpa Nama")
 
         # Mengambil semua nomor meja dari tabel relasi
         meja_list = [rt.table_number_snapshot for rt in res.reserved_tables]
@@ -301,8 +301,13 @@ def reservasi():
 @kasir_bp.route('/riwayat-transaksi')
 @login_required
 def riwayat_transaksi():
-    # PERBAIKAN: Ambil semua pesanan yang sudah lunas (paid) ATAU dibatalkan (cancelled)
-    orders_db = Order.query.filter(Order.payment_status.in_(['paid', 'cancelled'])).order_by(Order.created_at.desc()).all()
+    # PERBAIKAN: Menerapkan logika bersyarat (PAID wajib SERVED, CANCELLED bebas)
+    orders_db = Order.query.filter(
+        db.or_(
+            db.and_(Order.payment_status == 'paid', Order.order_status == 'served'),
+            Order.payment_status == 'cancelled'
+        )
+    ).order_by(Order.created_at.desc()).all()
     
     data_transaksi = []
     
@@ -317,18 +322,21 @@ def riwayat_transaksi():
                 'note': item.notes or '' # ✅ SEKARANG MENGIRIM DATA NOTES RIIL
             })
 
-        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu")
+        nama_pelanggan = order.customer_name or (order.customer.name if order.customer else "Tamu")
         
         pm_raw = order.payment_method
         metode_bayar = str(pm_raw).upper() if pm_raw else '-'
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
 
+        # ✅ BENAR: Tarik nama dari tabel User melalui relasi cashier (atau 'Self-Service' jika pesan sendiri)
+        nama_kasir = order.cashier.name if order.cashier else 'Self-Service'
+
         data_transaksi.append({
             'id': order.order_number,
             'tanggal': order.created_at.strftime('%Y-%m-%d'),
             'waktu': order.created_at.strftime('%H:%M'),
-            'kasir': current_user.name if current_user else 'Kasir Terralog', # ✅ SEKARANG DINAMIS MENGGUNAKAN NAMA USER AKTIF
+            'kasir': nama_kasir,
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
             'total': order.total_amount,
@@ -464,7 +472,8 @@ def submit_order():
             payment_method=safe_payment_method,
             payment_status=pay_status,
             order_status='pending',
-            total_amount=data.get('total_amount', 0)
+            total_amount=data.get('total_amount', 0),
+            cashier_id=current_user.id,
         )
         
         db.session.add(new_order)
@@ -562,6 +571,7 @@ def update_order():
         order.customer_name = data.get('customer_name')
         order.order_type = new_order_type
         order.total_amount = data.get('total_amount', 0)
+        order.cashier_id = current_user.id  # catat kasir yang melakukan perubahan untuk histori
 
         # --- TAMBAHAN FIX PEMBAYARAN MODE EDIT ---
         payment_method_raw = data.get('payment_method')
@@ -640,6 +650,8 @@ def cancel_order():
         order.payment_status = 'cancelled'
         order.cancellation_reason = alasan
 
+        order.cashier_id = current_user.id  # catat kasir yg membatalkan utk histori
+
         # 2. LEPASKAN MEJA (Jika pesanan Dine-In dan sedang menempati meja)
         if order.table_id:
             table = db.session.get(Table, order.table_id)
@@ -681,6 +693,8 @@ def pay_order():
         # Proses pelunasan dan catat metodenya
         order.payment_status = 'paid'
         order.payment_method = payment_method.upper() if payment_method.upper() in ['CASH', 'QRIS'] else 'CASH'
+
+        order.cashier_id = current_user.id  # catat kasir yg menerima pembayaran utk histori
         
         db.session.commit()
         return jsonify({"success": True, "message": "Pembayaran berhasil!"})

@@ -43,6 +43,14 @@
         </div>
 
         <div class="w-48">
+            <select x-model="filterKasir" @change="currentPage = 1" class="w-full border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
+                <option value="SEMUA">Semua Kasir</option>
+                <option :value="currentUserName">Shift Saya Saja</option>
+                <option value="Self-Service">Pesanan Mandiri (QR)</option>
+            </select>
+        </div>
+
+        <div class="w-48">
             <select x-model="filterMethod" class="w-full border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
                 <option value="">Semua Metode</option>
                 <option value="CASH">CASH</option>
@@ -161,6 +169,8 @@ document.addEventListener('alpine:init', () => {
         searchQuery: '',
         filterMethod: '',
         filterDate: new Date().toISOString().split('T')[0], 
+        filterKasir: 'SEMUA', // Default tampilkan semua
+        currentUserName: '{{ current_user.name }}', // Jinja akan menyuntikkan nama akun yang sedang login
         
         showModal: false,
         selectedTrx: {},
@@ -212,7 +222,7 @@ document.addEventListener('alpine:init', () => {
         resetFilters() {
             this.searchQuery = '';
             this.filterMethod = '';
-            // Tanggal tidak ikut di-reset agar kasir tetap fokus pada hari ini
+            this.filterKasir = 'SEMUA'; // Reset juga kasirnya
             this.currentPage = 1;
             this.refreshIcons();
         },
@@ -226,7 +236,9 @@ document.addEventListener('alpine:init', () => {
         // 1. DATA KHUSUS STATISTIK (Hanya merespons filter kalender)
         get dailyTransactions() {
             return this.transactions.filter(t => {
-                return this.filterDate === '' || t.tanggal === this.filterDate;
+                const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
+                const matchKasir = this.filterKasir === 'SEMUA' || t.kasir === this.filterKasir;
+                return matchDate && matchKasir;
             });
         },
 
@@ -236,7 +248,9 @@ document.addEventListener('alpine:init', () => {
                 const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
                 const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
                 const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
-                return matchName && matchMethod && matchDate;
+                const matchKasir = this.filterKasir === 'SEMUA' || t.kasir === this.filterKasir;
+                
+                return matchName && matchMethod && matchDate && matchKasir;
             });
         },
 
