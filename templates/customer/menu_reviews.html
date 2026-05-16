@@ -46,8 +46,12 @@
                 {% for review in reviews %}
                     <div class="bg-blue-50 rounded-lg p-5 border border-blue-100 hover:shadow-md transition">
                         <div class="flex gap-4">
-                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-bold text-white text-lg flex-shrink-0">
-                                {{ review.nama[0].upper() }}
+                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-bold text-white text-lg flex-shrink-0 overflow-hidden">
+                                {% if review.photo %}
+                                    <img src="{{ review.photo }}" alt="{{ review.nama }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    {{ review.nama[0].upper() }}
+                                {% endif %}
                             </div>
                             
                             <div class="flex-1 min-w-0">

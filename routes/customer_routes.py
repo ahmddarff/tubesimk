@@ -49,11 +49,13 @@ def menu_detail(menu_id):
             nama_pelanggan = "Pelanggan Anonim"
             if item.order.user:
                 nama_pelanggan = item.order.user.name
+                foto_pelanggan = item.order.user.photo
             elif item.order.customer_name:
                 nama_pelanggan = item.order.customer_name
                 
             reviews.append({
                 'nama': nama_pelanggan,
+                'photo': foto_pelanggan,
                 'date': item.review.created_at.strftime('%d %b %Y'),
                 'rating': item.review.rating,
                 'text': item.review.comment
@@ -90,11 +92,13 @@ def menu_reviews(menu_id):
             nama_pelanggan = "Pelanggan Anonim"
             if item.order.user:
                 nama_pelanggan = item.order.user.name
+                foto_pelanggan = item.order.user.photo
             elif item.order.customer_name:
                 nama_pelanggan = item.order.customer_name
                 
             reviews.append({
                 'nama': nama_pelanggan,
+                'photo': foto_pelanggan,
                 'date': item.review.created_at.strftime('%d %b %Y'),
                 'rating': item.review.rating,
                 'text': item.review.comment

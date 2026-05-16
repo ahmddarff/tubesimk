@@ -103,11 +103,11 @@ def run_seeders():
         # 5. SEEDER AKUN CUSTOMER (TOTAL 5 CUSTOMER)
         # ==========================================
         data_customers = [
-            {'name': 'Budi Pelanggan', 'username': 'customer', 'email': 'budi@gmail.com', 'phone': '0812-9999-8888'},
-            {'name': 'Shen Ricky', 'username': 'ricky', 'email': 'ricky@gmail.com', 'phone': '0812-1111-2222'},
-            {'name': 'Han Yujin', 'username': 'yujin', 'email': 'yujin@gmail.com', 'phone': '0812-3333-4444'},
-            {'name': 'Kim Gyuvin', 'username': 'gyuvin', 'email': 'gyuvin@gmail.com', 'phone': '0812-5555-6666'},
-            {'name': 'Yoo Seungeon', 'username': 'seungeon', 'email': 'seungeon@gmail.com', 'phone': '0812-7777-8888'}
+            {'name': 'Budi Pelanggan', 'username': 'customer', 'email': 'budi@gmail.com', 'phone': '0812-9999-8888', 'photo': None},
+            {'name': 'Shen Ricky', 'username': 'ricky', 'email': 'ricky@gmail.com', 'phone': '0812-1111-2222', 'photo': 'https://i.pinimg.com/736x/3c/12/ae/3c12ae53e5d577d803c80499009a6c2d.jpg'},
+            {'name': 'Han Yujin', 'username': 'yujin', 'email': 'yujin@gmail.com', 'phone': '0812-3333-4444', 'photo': 'https://i.pinimg.com/736x/fb/b0/37/fbb037596d2b9f48b624c073e756a64f.jpg'},
+            {'name': 'Kim Gyuvin', 'username': 'gyuvin', 'email': 'gyuvin@gmail.com', 'phone': '0812-5555-6666', 'photo': 'https://i.pinimg.com/736x/c0/dd/21/c0dd2130f3cea13b6a2b01e071d9ed4c.jpg'},
+            {'name': 'Yoo Seungeon', 'username': 'seungeon', 'email': 'seungeon@gmail.com', 'phone': '0812-7777-8888', 'photo': 'https://i.pinimg.com/736x/0f/6d/83/0f6d83a38e05b52edf9e63d18d0c53eb.jpg'}
         ]
 
         for cust in data_customers:
@@ -120,6 +120,7 @@ def run_seeders():
                     email=cust['email'],
                     password=hashed_password,
                     phone=cust['phone'],
+                    photo=cust.get('photo'),
                     role='customer',
                     is_active=True
                 )
