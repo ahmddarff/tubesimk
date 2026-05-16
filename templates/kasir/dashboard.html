@@ -15,271 +15,10 @@
 {% endblock %}
 
 {% block content %}
-<div x-data="{ 
-    openModal: false, showPayment: false, showSuccess: false,
-    activeCard: null, isDeleteMode: false, editingIndex: null,
-    selectedItem: {}, qty: 1, note: '', 
-    cart: [], selectedItems: [],
-    orderType: 'dine-in', searchQuery: '', selectedCategory: 'all', filterStatusMenu: 'SEMUA',
-    paymentMethod: 'CASH', receivedAmount: '0',
-    customerName: '', selectedTable: '',
-
-    // --- VARIABEL BARU UNTUK MODE EDIT ---
-    editingOrderNumber: null,
-    isEditLunas: false,
-    isAccountOrder: false,
-
-    init() {
-        const rawData = document.getElementById('edit-data').textContent;
-        const editData = JSON.parse(rawData);
-        
-        if (editData) {
-            this.editingOrderNumber = editData.order_number;
-            this.customerName = editData.customer_name || '';
-            
-            // --- FIX MEJA: Ubah menjadi String agar cocok dengan dropdown HTML ---
-            this.selectedTable = editData.table_id ? String(editData.table_id) : ''; 
-            
-            this.orderType = editData.order_type || 'dine-in';
-            this.cart = editData.cart || [];
-            this.isEditLunas = editData.lunas;
-            this.isAccountOrder = editData.has_account || false;
-        }
-    },
-
-    addToCart() {
-        if (this.editingIndex !== null) {
-            // LOGIKA EDIT ITEM
-            if (this.qty === 0) {
-                // Jika qty 0, hapus item dari keranjang
-                this.cart.splice(this.editingIndex, 1);
-            } else {
-                // Cek apakah notes baru sama dengan item lain di keranjang (Pencarian pakai ID agar lebih akurat)
-                let matchIdx = this.cart.findIndex((c, i) => i !== this.editingIndex && c.id === this.selectedItem.id && c.note === this.note);
-                
-                if (matchIdx !== -1) {
-                    this.cart[matchIdx].qty += this.qty;
-                    this.cart.splice(this.editingIndex, 1);
-                } else {
-                    // Update data item yang ada
-                    this.cart[this.editingIndex].qty = this.qty;
-                    this.cart[this.editingIndex].note = this.note;
-                }
-            }
-            this.editingIndex = null;
-        } else {
-            // LOGIKA TAMBAH BARU (Hanya jika qty > 0)
-            if (this.qty > 0) {
-                let existing = this.cart.find(c => c.id === this.selectedItem.id && c.note === this.note);
-                if (existing) { 
-                    existing.qty += this.qty; 
-                } else { 
-                    this.cart.push({ 
-                        id: this.selectedItem.id,  // <-- ID Menu
-                        nama: this.selectedItem.nama, 
-                        harga: this.selectedItem.harga, 
-                        qty: this.qty, 
-                        note: this.note, 
-                        img: this.selectedItem.img 
-                    }); 
-                }
-            }
-        }
-        this.openModal = false; this.qty = 1; this.note = ''; this.activeCard = null;
-    },
-
-    editItem(index) {
-        let item = this.cart[index];
-        this.editingIndex = index;
-        this.selectedItem = { id: item.id, nama: item.nama, harga: item.harga, img: item.img }; 
-        this.qty = item.qty;
-        this.note = item.note || '';
-        this.openModal = true;
-    },
-
-    // 1. FUNGSI HELPER UNTUK VALIDASI
-    validateOrder() {
-        if (this.cart.length === 0) { 
-            showToast('Keranjang masih kosong!', 'error'); 
-            return false; 
-        }
-        if (!this.customerName || this.customerName.trim() === '') { 
-            showToast('Nama pelanggan wajib diisi!', 'error'); 
-            return false; 
-        }
-        if (this.orderType === 'dine-in' && !this.selectedTable) { 
-            showToast('Pilih nomor meja terlebih dahulu!', 'error'); 
-            return false; 
-        }
-        return true; // Lolos semua pengecekan
-    },
-
-    // 2. FUNGSI UNTUK MEMBUKA MODAL PEMBAYARAN
-    openPaymentModal() {
-        if (this.validateOrder()) {
-            this.showPayment = true;
-        }
-    },
-
-    // 3. FUNGSI SUBMIT KE DATABASE (BAYAR LUNAS)
-    submitOrderToDB() {
-        // 1. Cek validasi dasar (nama, meja, cart kosong)
-        if (!this.validateOrder()) return; 
-
-        // 2. VALIDASI UANG KURANG (KHUSUS CASH)
-        if (this.paymentMethod === 'CASH') {
-            // Ubah string ke integer untuk dibandingkan
-            let bayar = parseInt(this.receivedAmount);
-            if (bayar < this.subtotal || isNaN(bayar)) {
-                showToast('Uang yang diterima kurang dari total tagihan!', 'error');
-                return; // Hentikan proses, jangan kirim ke database
-            }
-        }
-
-        const payload = {
-            customer_name: this.customerName,
-            table_id: this.selectedTable,
-            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
-            payment_method: this.paymentMethod,
-            total_amount: this.subtotal,
-            cart: this.cart
-        };
-
-        fetch('/kasir/api/submit-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Tutup modal bayar, buka modal sukses
-                this.showPayment = false;
-                this.showSuccess = true;
-                
-                // PENTING: Jangan ada this.cart = [] di sini! 
-                // Biarkan data tetap ada agar struk dan kembalian bisa dihitung.
-                // Reset keranjang hanya dilakukan saat tombol 'Selesai' di modal sukses ditekan.
-
-            } else {
-                showToast('Gagal simpan pesanan: ' + data.message, 'error');
-            }
-        })
-        .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
-    },
-
-    // 4. FUNGSI SIMPAN (HOLD ORDER)
-    saveOrder() { 
-        if (!this.validateOrder()) return; 
-
-        const payload = {
-            customer_name: this.customerName,
-            table_id: this.selectedTable,
-            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
-            payment_method: null, 
-            total_amount: this.subtotal,
-            cart: this.cart
-        };
-
-        fetch('/kasir/api/submit-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Pesanan berhasil disimpan (Hold Order)!', 'success');
-                
-                // --- PERBAIKAN UX DARI RICHARD ---
-                // Beri jeda 1 detik agar animasi Toast sukses terlihat,
-                // lalu lempar kasir ke halaman antrean pesanan aktif.
-                // (Ini otomatis membuat keranjang kosong karena halamannya di-refresh/pindah)
-                setTimeout(() => {
-                    window.location.href = '/kasir/pesanan-aktif';
-                }, 1000);
-                // ---------------------------------
-                
-            } else {
-                showToast('Gagal menyimpan pesanan: ' + data.message, 'error');
-            }
-        })
-        .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
-    },
-
-    updateOrder() {
-        if (!this.validateOrder()) return;
-
-        const payload = {
-            order_number: this.editingOrderNumber,
-            customer_name: this.customerName,
-            table_id: this.selectedTable,
-            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
-            total_amount: this.subtotal,
-            cart: this.cart
-        };
-
-        fetch('/kasir/api/update-order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('Pesanan berhasil diperbarui!', 'success');
-                // Beri jeda 1 detik lalu kembalikan kasir ke layar pesanan aktif
-                setTimeout(() => {
-                    window.location.href = '/kasir/pesanan-aktif';
-                }, 1000);
-            } else {
-                showToast('Gagal memperbarui data: ' + data.message, 'error');
-            }
-        })
-        .catch(err => showToast('Terjadi gangguan koneksi ke server.', 'error'));
-    },
-
-    confirmDelete() {
-        if (this.selectedItems.length > 0) {
-            if (confirm(`Hapus ${this.selectedItems.length} item terpilih?`)) {
-                this.selectedItems.sort((a, b) => b - a).forEach(idx => this.cart.splice(idx, 1));
-                this.cancelDelete();
-            }
-        } else { showToast('Pilih item yang ingin dihapus dulu!'); }
-    }, 
-
-    cancelDelete() { this.isDeleteMode = false; this.selectedItems = []; },
-    clearSelection() { this.selectedItems = []; },
-    clearCart() { 
-        if(this.cart.length > 0) {
-            // Ambil hanya item yang statusnya sudah dikunci (preparing, ready, served)
-            const lockedItems = this.cart.filter(item => item.status && item.status !== 'pending');
-            
-            // Cegah jika ternyata semua item di keranjang sudah terkunci
-            if (lockedItems.length === this.cart.length) {
-                showToast('Semua item sudah diproses dapur dan tidak bisa dihapus.', 'error');
-                this.cancelDelete();
-                return;
-            }
-
-            if(confirm('Yakin ingin menghapus semua item yang belum diproses dapur?')) {
-                // Timpa keranjang hanya dengan item yang terkunci
-                this.cart = lockedItems; 
-                this.cancelDelete();
-            }
-        }
-    },
-
-    get subtotal() { return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0); },
-    removeItem(index) { this.cart.splice(index, 1); },
-    printReceipt() { window.print(); },
-
-    handlePhysicKey(key) {
-        if (!this.showPayment || this.paymentMethod !== 'CASH') return;
-        if (!isNaN(key)) { this.receivedAmount === '0' ? this.receivedAmount = key : this.receivedAmount += key; } 
-        else if (key === 'Backspace') { this.receivedAmount = this.receivedAmount.length > 1 ? this.receivedAmount.slice(0, -1) : '0'; }
-    }
-}" @keydown.window="handlePhysicKey($event.key)" class="flex gap-6 font-['Inter'] h-[calc(100vh-110px)]">
+<div x-data="dashboardPOS()" 
+    @keydown.window="handlePhysicKey($event.key)" 
+    class="flex gap-6 font-['Inter'] h-[calc(100vh-110px)]" 
+    x-cloak>
     
     <div class="flex-1 max-w-[70%] flex flex-col h-full overflow-hidden">
         <div class="flex-none">
@@ -384,4 +123,278 @@
         {{ edit_data | tojson | safe if edit_data else 'null' }}
     </script>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('dashboardPOS', () => ({
+        // 1. STATE & VARIABLES
+        openModal: false, 
+        showPayment: false, 
+        showSuccess: false,
+        activeCard: null, 
+        isDeleteMode: false, 
+        editingIndex: null,
+        selectedItem: {}, 
+        qty: 1, 
+        note: '', 
+        cart: [], 
+        selectedItems: [],
+        orderType: 'dine-in', 
+        searchQuery: '', 
+        selectedCategory: 'all', 
+        filterStatusMenu: 'SEMUA',
+        paymentMethod: 'CASH', 
+        receivedAmount: '0',
+        customerName: '', 
+        selectedTable: '',
+
+        // VARIABEL UNTUK MODE EDIT
+        editingOrderNumber: null,
+        isEditLunas: false,
+        isAccountOrder: false,
+
+        // 2. SIKLUS HIDUP (INIT)
+        init() {
+            const rawData = document.getElementById('edit-data').textContent;
+            const editData = JSON.parse(rawData);
+            
+            if (editData) {
+                this.editingOrderNumber = editData.order_number;
+                this.customerName = editData.customer_name || '';
+                this.selectedTable = editData.table_id ? String(editData.table_id) : ''; 
+                this.orderType = editData.order_type || 'dine-in';
+                this.cart = editData.cart || [];
+                this.isEditLunas = editData.lunas;
+                this.isAccountOrder = editData.has_account || false;
+            }
+        },
+
+        // 3. LOGIKA KERANJANG (CART OPERATIONS)
+        addToCart() {
+            if (this.editingIndex !== null) {
+                if (this.qty === 0) {
+                    this.cart.splice(this.editingIndex, 1);
+                } else {
+                    let matchIdx = this.cart.findIndex((c, i) => i !== this.editingIndex && c.id === this.selectedItem.id && c.note === this.note);
+                    
+                    if (matchIdx !== -1) {
+                        this.cart[matchIdx].qty += this.qty;
+                        this.cart.splice(this.editingIndex, 1);
+                    } else {
+                        this.cart[this.editingIndex].qty = this.qty;
+                        this.cart[this.editingIndex].note = this.note;
+                    }
+                }
+                this.editingIndex = null;
+            } else {
+                if (this.qty > 0) {
+                    let existing = this.cart.find(c => c.id === this.selectedItem.id && c.note === this.note);
+                    if (existing) { 
+                        existing.qty += this.qty; 
+                    } else { 
+                        this.cart.push({ 
+                            id: this.selectedItem.id,
+                            nama: this.selectedItem.nama, 
+                            harga: this.selectedItem.harga, 
+                            qty: this.qty, 
+                            note: this.note, 
+                            img: this.selectedItem.img 
+                        }); 
+                    }
+                }
+            }
+            this.openModal = false; this.qty = 1; this.note = ''; this.activeCard = null;
+        },
+
+        editItem(index) {
+            let item = this.cart[index];
+            this.editingIndex = index;
+            this.selectedItem = { id: item.id, nama: item.nama, harga: item.harga, img: item.img }; 
+            this.qty = item.qty;
+            this.note = item.note || '';
+            this.openModal = true;
+        },
+
+        removeItem(index) { 
+            this.cart.splice(index, 1); 
+        },
+
+        confirmDelete() {
+            if (this.selectedItems.length > 0) {
+                if (confirm(`Hapus ${this.selectedItems.length} item terpilih?`)) {
+                    this.selectedItems.sort((a, b) => b - a).forEach(idx => this.cart.splice(idx, 1));
+                    this.cancelDelete();
+                }
+            } else { 
+                showToast('Pilih item yang ingin dihapus dulu!', 'error'); 
+            }
+        }, 
+
+        cancelDelete() { 
+            this.isDeleteMode = false; 
+            this.selectedItems = []; 
+        },
+
+        clearCart() { 
+            if(this.cart.length > 0) {
+                const lockedItems = this.cart.filter(item => item.status && item.status !== 'pending');
+                
+                if (lockedItems.length === this.cart.length) {
+                    showToast('Semua item sudah diproses dapur dan tidak bisa dihapus.', 'error');
+                    this.cancelDelete();
+                    return;
+                }
+
+                if(confirm('Yakin ingin menghapus semua item yang belum diproses dapur?')) {
+                    this.cart = lockedItems; 
+                    this.cancelDelete();
+                }
+            }
+        },
+
+        // 4. VALIDASI & GETTER COMPUTED
+        validateOrder() {
+            if (this.cart.length === 0) { 
+                showToast('Keranjang masih kosong!', 'error'); 
+                return false; 
+            }
+            if (!this.customerName || this.customerName.trim() === '') { 
+                showToast('Nama pelanggan wajib diisi!', 'error'); 
+                return false; 
+            }
+            if (this.orderType === 'dine-in' && !this.selectedTable) { 
+                showToast('Pilih nomor meja terlebih dahulu!', 'error'); 
+                return false; 
+            }
+            return true;
+        },
+
+        get subtotal() { 
+            return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0); 
+        },
+
+        // 5. MODAL & AJAX SUBMIT API
+        openPaymentModal() {
+            if (this.validateOrder()) {
+                this.showPayment = true;
+            }
+        },
+
+        submitOrderToDB() {
+            if (!this.validateOrder()) return; 
+
+            if (this.paymentMethod === 'CASH') {
+                let bayar = parseInt(this.receivedAmount);
+                if (bayar < this.subtotal || isNaN(bayar)) {
+                    showToast('Uang yang diterima kurang dari total tagihan!', 'error');
+                    return;
+                }
+            }
+
+            const payload = {
+                customer_name: this.customerName,
+                table_id: this.selectedTable,
+                order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+                payment_method: this.paymentMethod,
+                total_amount: this.subtotal,
+                cart: this.cart
+            };
+
+            fetch('/kasir/api/submit-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.showPayment = false;
+                    this.showSuccess = true;
+                } else {
+                    showToast('Gagal simpan pesanan: ' + data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
+        },
+
+        saveOrder() { 
+            if (!this.validateOrder()) return; 
+
+            const payload = {
+                customer_name: this.customerName,
+                table_id: this.selectedTable,
+                order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+                payment_method: null, 
+                total_amount: this.subtotal,
+                cart: this.cart
+            };
+
+            fetch('/kasir/api/submit-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Pesanan berhasil disimpan (Hold Order)!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/kasir/pesanan-aktif';
+                    }, 1000);
+                } else {
+                    showToast('Gagal menyimpan pesanan: ' + data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
+        },
+
+        updateOrder() {
+            if (!this.validateOrder()) return;
+
+            const payload = {
+                order_number: this.editingOrderNumber,
+                customer_name: this.customerName,
+                table_id: this.selectedTable,
+                order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+                total_amount: this.subtotal,
+                cart: this.cart
+            };
+
+            fetch('/kasir/api/update-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('Pesanan berhasil diperbarui!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/kasir/pesanan-aktif';
+                    }, 1000);
+                } else {
+                    showToast('Gagal memperbarui data: ' + data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi gangguan koneksi ke server.', 'error'));
+        },
+
+        // 6. UTILITIES
+        printReceipt() { 
+            window.print(); 
+        },
+
+        handlePhysicKey(key) {
+            if (!this.showPayment || this.paymentMethod !== 'CASH') return;
+            if (!isNaN(key)) { 
+                this.receivedAmount === '0' ? this.receivedAmount = key : this.receivedAmount += key; 
+            } else if (key === 'Backspace') { 
+                this.receivedAmount = this.receivedAmount.length > 1 ? this.receivedAmount.slice(0, -1) : '0'; 
+            }
+        }
+    }));
+});
+</script>
 {% endblock %}
