@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="pesananAktifApp()" @load="$watch('items', () => lucide.createIcons())" x-cloak>
-    <div class="max-w-6xl mx-auto">
+    <div>
         
         <div class="mb-8">
             <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
@@ -20,7 +20,7 @@
             <div class="lg:col-span-2 space-y-6">
                 
                 <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
-                    <h2 class="text-lg font-black text-slate-800 mb-5 flex items-center gap-2">
+                    <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                         <i data-lucide="info" class="w-5 h-5 text-terralogBlue"></i> Informasi Pesanan
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -41,7 +41,7 @@
 
                 <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
                     <div class="flex justify-between items-end mb-5">
-                        <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <i data-lucide="shopping-bag" class="w-5 h-5 text-terralogBlue"></i> Daftar Menu
                         </h2>
                         <span class="text-sm font-bold text-terralogBlue bg-blue-50 px-3 py-1 rounded-full" x-text="`${items.length} Item`"></span>
@@ -58,7 +58,7 @@
                                     <div class="flex items-start justify-between mb-1">
                                         <div>
                                             <h4 class="font-bold text-slate-900 text-base" x-text="item.nama"></h4>
-                                            <p class="font-black text-terralogBlue text-sm" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                            <p class="font-bold text-terralogBlue text-sm" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
                                         </div>
                                         <span class="bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-sm" x-text="`${item.qty}x`"></span>
                                     </div>
@@ -80,7 +80,7 @@
                         <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-4 ring-4 ring-white shadow-sm">
                             <i data-lucide="clock" class="w-10 h-10 text-terralogBlue animate-pulse"></i>
                         </div>
-                        <h3 class="text-slate-900 font-black text-lg mb-1 uppercase tracking-wide" x-text="order.order_status || 'Menunggu Konfirmasi'"></h3>
+                        <h3 class="text-slate-900 font-bold text-lg mb-1 uppercase tracking-wide" x-text="order.order_status || 'Menunggu Konfirmasi'"></h3>
                         <p class="text-slate-500 text-xs font-medium">Pesanan Anda sedang diproses oleh tim kami.</p>
                     </div>
 
@@ -100,7 +100,7 @@
                     <div class="border-t border-slate-100 pt-4 mb-6">
                         <div class="flex justify-between items-end">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Akhir</span>
-                            <span class="text-2xl font-black text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`"></span>
+                            <span class="text-2xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`"></span>
                         </div>
                     </div>
 
