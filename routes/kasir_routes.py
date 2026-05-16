@@ -322,14 +322,20 @@ def riwayat_transaksi():
         metode_map = {'cash': 'TUNAI', 'qris': 'QRIS'}
         metode_bayar = metode_map.get(order.payment_method, str(order.payment_method).upper())
 
+        # TAMBAHAN: Mapping tipe pesanan agar sesuai dengan kondisi di struk HTML
+        tipe_map = {'dine_in': 'dine-in', 'take_away': 'takeaway'}
+
         data_transaksi.append({
             'id': order.order_number,
             'tanggal': order.created_at.strftime('%Y-%m-%d'),
-            'waktu': order.created_at.strftime('%H.%M'),
-            'kasir': 'Kasir Terralog', # Sesuaikan jika Anda mencatat relasi kasir di DB
+            'waktu': order.created_at.strftime('%H:%M'),
+            'kasir': 'Kasir Terralog', 
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
             'total': order.total_amount,
+            # TAMBAHAN: Kirimkan data tipe dan meja ke frontend
+            'tipe': tipe_map.get(order.order_type, 'dine-in'),
+            'meja': order.table_number_snapshot or '-',
             'items': items_list
         })
 

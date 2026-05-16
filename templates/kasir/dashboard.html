@@ -149,6 +149,13 @@ document.addEventListener('alpine:init', () => {
         isEditLunas: false,
         isAccountOrder: false,
 
+        // TAMBAHKAN 2 VARIABEL INI UNTUK STRUK
+        createdOrderNumber: '', 
+        receiptData: {
+            no: '', date: '', customer: '', type: '', table: '',
+            items: [], total: 0, isPaid: false, paymentMethod: '', receivedAmount: 0
+        },
+
         // 2. LIFECYCLE INITIALIZATION
         init() {
             const rawData = document.getElementById('edit-data').textContent;
@@ -325,6 +332,7 @@ document.addEventListener('alpine:init', () => {
                 if (data.success) {
                     this.showPayment = false;
                     this.showSuccess = true;
+                    this.createdOrderNumber = data.order_number || this.editingOrderNumber || '-';
                 } else {
                     showToast('Gagal memproses pembayaran: ' + data.message, 'error');
                 }
@@ -405,7 +413,27 @@ document.addEventListener('alpine:init', () => {
 
         // 6. HARDWARE & PRINT HANDLERS
         printReceipt() { 
-            window.print(); 
+            // Ambil waktu saat ini
+            const dateObj = new Date();
+            const timeStr = String(dateObj.getHours()).padStart(2, '0') + ':' + String(dateObj.getMinutes()).padStart(2, '0');
+            const dateStr = dateObj.toLocaleDateString('id-ID');
+
+            // Susun data untuk dilempar ke master struk_print.html
+            this.receiptData = {
+                no: this.createdOrderNumber,
+                date: dateStr + ' ' + timeStr,
+                customer: this.customerName || 'Tamu',
+                type: this.orderType,
+                table: this.selectedTable,
+                items: this.cart, // Cart di dashboard sudah memiliki struktur {nama, harga, qty, note}
+                total: this.subtotal,
+                isPaid: true, // Modal sukses pasti lunas
+                paymentMethod: this.paymentMethod,
+                receivedAmount: this.paymentMethod === 'CASH' ? parseInt(this.receivedAmount) : this.subtotal
+            };
+
+            showToast('Menyiapkan struk cetak...', 'success');
+            setTimeout(() => { window.print(); }, 300);
         },
 
         handlePhysicKey(key) {

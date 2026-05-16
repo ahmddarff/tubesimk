@@ -136,7 +136,7 @@
     
     {% include 'kasir/includes/modal_detail_pesanan.html' %}
     {% include 'kasir/includes/modal_batal_pesanan.html' %}
-    {% include 'kasir/includes/struk_print_aktif.html' %}
+    {% include 'kasir/includes/struk_print.html' %}
 </div>
 
 <script id="data-pesanan" type="application/json">
@@ -159,6 +159,40 @@ document.addEventListener('alpine:init', () => {
         showSuccess: false,
         showCancelModal: false,
         cancelReason: '',
+
+        // ==========================================
+        // OBJEK DATA STANDAR UNTUK STRUK
+        // ==========================================
+        receiptData: {
+            no: '', date: '', customer: '', type: '', table: '',
+            items: [], total: 0, isPaid: false, paymentMethod: '', receivedAmount: 0
+        },
+
+        // ==========================================
+        // FUNGSI CETAK STRUK PESANAN AKTIF
+        // ==========================================
+        printActiveOrder() {
+            this.receiptData = {
+                no: this.selectedOrder.id,
+                date: this.formatWaktuLokal(this.selectedOrder.waktu_iso) + ' (Jam Pesan)',
+                customer: this.selectedOrder.nama,
+                type: this.selectedOrder.tipe,
+                table: this.selectedOrder.meja,
+                items: (this.selectedOrder.items || []).map(item => ({
+                    nama: item.nama,
+                    harga: item.harga,
+                    qty: item.qty,
+                    note: item.catatan || ''
+                })),
+                total: this.selectedOrder.total,
+                isPaid: this.selectedOrder.lunas, // Dinamis: TRUE jika lunas, FALSE jika belum
+                paymentMethod: 'CASH', // Atau biarkan kosong
+                receivedAmount: this.selectedOrder.total
+            };
+
+            showToast('Menyiapkan struk cetak...', 'success');
+            setTimeout(() => { window.print(); }, 300);
+        },
 
         pesanan: JSON.parse(document.getElementById('data-pesanan').textContent),
 
