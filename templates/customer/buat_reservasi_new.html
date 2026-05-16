@@ -3,44 +3,58 @@
 {% block title %}Buat Reservasi - Terralog{% endblock %}
 
 {% block content %}
-<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="buatReservasiApp()">
+<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="buatReservasiApp()" x-cloak>
     <div class="max-w-6xl">
-        <!-- Breadcrumb -->
         <div class="mb-6 flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap">
             <a href="/customer/buat-reservasi" class="text-terralogBlue hover:text-blue-900 transition">Reservasi Saya</a>
             <span class="text-terralogBlue/60">›</span>
-            <span class="text-terralogBlue">Buat Reservasi</span>
+            <span class="text-black">Buat Reservasi</span>
         </div>
 
-        <!-- Info Card -->
         <div class="bg-white rounded-[28px] border-2 border-[#D6E4FF] shadow-sm p-8 mb-10">
             <div class="space-y-6">
-                <!-- Nama Pemesan -->
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-semibold text-slate-600">Nama Pemesan</p>
                     <p class="text-base font-bold text-slate-900">{{ current_user.name }}</p>
                 </div>
                 
-                <!-- No Handphone -->
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
-                    <p class="text-sm font-semibold text-slate-600">No Handphone</p>
-                    <p class="text-base font-bold text-slate-900">{{ current_user.phone if current_user.phone else '-' }}</p>
+                    <p class="text-sm font-semibold text-slate-600">No Handphone <span class="text-red-500">*</span></p>
+                    <input type="text" x-model="telepon" placeholder="Contoh: 0812..." 
+                           class="border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white text-right w-1/2 md:w-1/3 font-bold" required>
                 </div>
                 
-                <!-- Meja -->
-                <div class="flex justify-between items-center">
-                    <p class="text-sm font-semibold text-slate-600">Meja</p>
-                    <select x-model="meja" class="border border-slate-200 rounded-2xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white">
-                        <option value="">Pilih Meja</option>
-                        {% for table in tables %}
-                        <option value="{{ table.id }}">Meja {{ table.table_number }} (Kapasitas: {{ table.capacity }} Orang)</option>
-                        {% endfor %}
-                    </select>
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-sm font-semibold text-slate-600">Meja Reservasi <span class="text-red-500">*</span></p>
+                        <button type="button" @click="addMeja()" class="text-xs font-bold text-terralogBlue hover:text-blue-800 flex items-center gap-1 transition-colors">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Meja
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <template x-for="(m, index) in mejas" :key="index">
+                            <div class="flex items-center gap-3">
+                                <select x-model="m.id" class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white cursor-pointer">
+                                    <option value="">Pilih Meja</option>
+                                    <template x-for="tbl in tablesData" :key="tbl.id">
+                                        <option :value="tbl.id" 
+                                                :disabled="isTableSelected(tbl.id, index)" 
+                                                x-text="`Meja ${tbl.table_number} (Kapasitas: ${tbl.capacity} Orang)`">
+                                        </option>
+                                    </template>
+                                </select>
+                                <button type="button" x-show="mejas.length > 1" @click="removeMeja(index)" 
+                                        class="p-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-colors">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Detail Reservasi -->
         <div class="bg-white rounded-[32px] shadow-lg p-8">
             <div class="mb-8">
                 <h3 class="text-3xl font-bold text-slate-900 mb-2">Detail Reservasi</h3>
@@ -48,123 +62,227 @@
             </div>
 
             <form id="reservasiForm" @submit.prevent="submitReservasi" class="space-y-8">
-                <div class="grid grid-cols-3 gap-6">
-                    <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 text-center">
-                        <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                            <i data-lucide="calendar" class="w-8 h-8 text-terralogBlue"></i>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-5 text-center">
+                        <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                            <i data-lucide="calendar" class="w-5 h-5 text-terralogBlue"></i>
                         </div>
-                        <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-3">Tanggal Reservasi</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Tanggal</p>
                         <div class="relative">
-                            <i data-lucide="calendar" class="absolute left-4 top-3.5 w-5 h-5 text-terralogBlue pointer-events-none"></i>
-                            <input type="date" name="tanggal" x-model="tanggal" min="2026-05-14" required class="w-full border border-slate-200 rounded-3xl pl-12 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm" />
+                            <input type="date" x-model="tanggal" required 
+                                   class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-semibold bg-white" />
                         </div>
                     </div>
 
-                    <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 text-center">
-                        <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                            <i data-lucide="clock" class="w-8 h-8 text-terralogBlue"></i>
+                    <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-5 text-center">
+                        <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                            <i data-lucide="clock" class="w-5 h-5 text-terralogBlue"></i>
                         </div>
-                        <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-3">Waktu Reservasi</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jam Mulai</p>
                         <div class="relative">
-                            <i data-lucide="clock" class="absolute left-4 top-3.5 w-5 h-5 text-terralogBlue pointer-events-none"></i>
-                            <select name="waktu" x-model="waktu" required class="w-full border border-slate-200 rounded-3xl pl-12 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm appearance-none bg-white">
-                                <option value="">Pilih Waktu</option>
-                                <template x-for="time in availableTimes" :key="time.value">
-                                    <option :value="time.value" x-text="time.label"></option>
-                                </template>
-                            </select>
+                            <input type="time" x-model="jamMulai" required 
+                                   class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-semibold bg-white" />
                         </div>
                     </div>
 
-                    <div class="rounded-[28px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 text-center">
-                        <div class="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-white shadow-sm mx-auto mb-5">
-                            <i data-lucide="users" class="w-8 h-8 text-terralogBlue"></i>
+                    <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-5 text-center">
+                        <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                            <i data-lucide="clock" class="w-5 h-5 text-terralogBlue"></i>
                         </div>
-                        <p class="text-sm text-slate-500 uppercase tracking-[0.15em] mb-3">Jumlah Tamu</p>
-                        <input type="number" name="jumlah_tamu" x-model.number="jumlahTamu" placeholder="Masukkan jumlah tamu" min="1" max="100" required class="w-full border border-slate-200 rounded-3xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm" />
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jam Selesai</p>
+                        <div class="relative">
+                            <input type="time" x-model="jamSelesai" required 
+                                   class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-semibold bg-white" />
+                        </div>
+                    </div>
+
+                    <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-5 text-center">
+                        <div class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-sm mx-auto mb-4">
+                            <i data-lucide="users" class="w-5 h-5 text-terralogBlue"></i>
+                        </div>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Jumlah Tamu</p>
+                        <input type="number" x-model.number="jumlahTamu" placeholder="0" min="1" required 
+                               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-center text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-semibold bg-white" />
                     </div>
                 </div>
 
-                <input type="hidden" name="meja" x-model="meja">
+                <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 mt-6 text-left">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Catatan (Opsional)</p>
+                    <textarea x-model="notes" rows="3" placeholder="Contoh: Tolong sediakan kursi tinggi untuk anak-anak..." 
+                              class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-medium bg-white"></textarea>
+                </div>
 
                 <div class="mt-10 flex justify-center">
-                    <button type="submit" :disabled="!isFormValid" class="w-full max-w-sm py-4 rounded-full text-lg font-bold transition shadow-lg" :class="isFormValid ? 'bg-terralogBlue hover:bg-blue-900 text-white cursor-pointer' : 'bg-slate-300 text-slate-600 cursor-not-allowed'">
+                    <button type="submit" class="w-full max-w-sm py-4 bg-terralogBlue hover:bg-blue-900 text-white rounded-full text-lg font-bold transition shadow-lg active:scale-95">
                         Ajukan Reservasi
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <div x-show="showCapacityWarning" class="fixed inset-0 z-[150] flex items-center justify-center p-4" x-cloak>
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showCapacityWarning = false"></div>
+        <div x-transition:enter="transition ease-out duration-300 transform scale-95 opacity-0" 
+             x-transition:enter-end="scale-100 opacity-100" 
+             class="relative bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center">
+            
+            <div class="w-16 h-16 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-5 border-4 border-white shadow-sm">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+            
+            <h3 class="text-xl font-black text-slate-900 mb-2">Kapasitas Meja Kurang</h3>
+            <p class="text-sm font-medium text-slate-500 mb-8 leading-relaxed">
+                Jumlah tamu yang Anda masukkan melebihi total kapasitas meja yang dipilih. Apakah Anda yakin tidak ingin menambah meja?
+            </p>
+            
+            <div class="flex gap-3">
+                <button type="button" @click="showCapacityWarning = false" 
+                        class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition">
+                    Batal, Tambah Meja
+                </button>
+                <button type="button" @click="capacityConfirmed = true; executeSubmit(calculateDuration())" 
+                        class="flex-1 py-3.5 bg-terralogBlue text-white rounded-xl font-bold text-sm hover:bg-blue-900 shadow-md transition">
+                    Ya, Lanjutkan
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script id="data-tables" type="application/json">
+    [
+        {% for t in tables %}
+            {"id": "{{ t.id }}", "table_number": "{{ t.table_number }}", "capacity": {{ t.capacity }}}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+</script>
 
 <script>
     function buatReservasiApp() {
         return {
-            meja: '',
+            mejas: [{ id: '' }],
             tanggal: '',
-            waktu: '',
+            jamMulai: '',
+            jamSelesai: '',
             jumlahTamu: '',
+            telepon: '{{ current_user.phone if current_user.phone else "" }}',
             notes: '',
+            
+            showCapacityWarning: false,
+            capacityConfirmed: false,
 
-            get availableTimes() {
-                // All time slots throughout the day
-                const times = [];
-                for (let hour = 10; hour <= 22; hour++) {
-                    const timeStr = String(hour).padStart(2, '0') + ':00';
-                    const endHour = (hour + 2) % 24;
-                    const endTimeStr = String(endHour).padStart(2, '0') + ':00';
-                    const label = `${timeStr} - ${endTimeStr} WIB`;
-                    times.push({ value: timeStr, label: label });
+            // Mengambil data tabel yang telah diinjeksi
+            tablesData: [],
+
+            init() {
+                try {
+                    this.tablesData = JSON.parse(document.getElementById('data-tables').textContent);
+                } catch (e) {
+                    console.error("Gagal mengurai data meja:", e);
                 }
-                return times;
             },
 
-            get isFormValid() {
-                return this.meja && this.tanggal && this.waktu && this.jumlahTamu && this.jumlahTamu > 0;
+            addMeja() {
+                this.mejas.push({ id: '' });
+            },
+            removeMeja(index) {
+                this.mejas.splice(index, 1);
+            },
+            isTableSelected(tableId, currentIndex) {
+                return this.mejas.some((m, idx) => m.id === tableId && idx !== currentIndex);
+            },
+
+            calculateDuration() {
+                if (!this.jamMulai || !this.jamSelesai) return 0;
+                const [h1, m1] = this.jamMulai.split(':').map(Number);
+                const [h2, m2] = this.jamSelesai.split(':').map(Number);
+                
+                let totalMinMulai = h1 * 60 + m1;
+                let totalMinSelesai = h2 * 60 + m2;
+                
+                if (totalMinSelesai <= totalMinMulai) {
+                    totalMinSelesai += 24 * 60;
+                }
+                return totalMinSelesai - totalMinMulai;
+            },
+
+            calculateTotalCapacity() {
+                let total = 0;
+                this.mejas.forEach(m => {
+                    if (m.id) {
+                        const table = this.tablesData.find(t => t.id == m.id);
+                        if (table) total += table.capacity;
+                    }
+                });
+                return total;
             },
 
             submitReservasi() {
-                if (!this.isFormValid) {
-                    alert('Mohon lengkapi semua field!');
+                if (!this.telepon.trim()) {
+                    alert('Nomor telepon wajib diisi!');
                     return;
                 }
 
-                const reservasiData = {
-                        meja: this.meja,
-                        tanggal: this.tanggal,
-                        waktu: this.waktu,
-                        jumlahTamu: this.jumlahTamu,
-                        notes: this.notes || '' 
-                    };
+                const selectedTables = this.mejas.filter(m => m.id !== '');
+                if (selectedTables.length === 0) {
+                    alert('Mohon pilih setidaknya satu meja!');
+                    return;
+                }
 
-                // Tembak URL backend menggunakan Fetch API dengan header JSON
+                const durasi = this.calculateDuration();
+                if (durasi <= 0) {
+                    alert('Jam selesai harus diatur dengan benar!');
+                    return;
+                }
+
+                const totalCap = this.calculateTotalCapacity();
+                if (this.jumlahTamu > totalCap && !this.capacityConfirmed) {
+                    this.showCapacityWarning = true;
+                    return;
+                }
+
+                this.executeSubmit(durasi);
+            },
+
+            executeSubmit(durasi) {
+                this.showCapacityWarning = false;
+                
+                const reservasiData = {
+                    meja_ids: this.mejas.map(m => m.id).filter(id => id !== ''),
+                    tanggal: this.tanggal,
+                    waktu: this.jamMulai,
+                    durasi: durasi,
+                    jumlahTamu: this.jumlahTamu,
+                    telepon: this.telepon,
+                    notes: this.notes
+                };
+
                 fetch('/customer/buat-reservasi/submit', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(reservasiData)
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success) {
-                            window.location.href = '/customer/buat-reservasi';
-                        } else {
-                            alert(result.message);
-                        }
-                    })
-                .catch(error => {
-                        console.error('Error:', error);
-                        alert('Terjadi kesalahan koneksi server.');
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reservasiData)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        window.location.href = '/customer/buat-reservasi'; 
+                    } else {
+                        alert(result.message || 'Terjadi kesalahan saat membuat reservasi.');
+                    }
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert('Terjadi kesalahan koneksi ke server.');
                 });
             }
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        });
+    document.addEventListener('alpine:init', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
 </script>
 {% endblock %}

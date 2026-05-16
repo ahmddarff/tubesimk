@@ -94,36 +94,51 @@ def submit_buat_reservasi():
         if not data:
             return jsonify({"success": False, "message": "Data kosong"}), 400
 
-        table_id = data.get('meja')
+        # Mengambil data dari payload JSON yang baru
+        meja_ids = data.get('meja_ids', []) # Sekarang berupa array (list)
         tanggal_str = data.get('tanggal')
         waktu_str = data.get('waktu')
+        durasi = data.get('durasi', 120)
         jumlah_tamu = data.get('jumlahTamu')
+        telepon = data.get('telepon')
         notes = data.get('notes', '')
 
-        if not all([table_id, tanggal_str, waktu_str, jumlah_tamu]):
-            return jsonify({"success": False, "message": "Mohon lengkapi semua data utama!"}), 400
-
-        # Cari data meja untuk mengambil nomor meja sebagai snapshot
-        target_table = Table.query.get(int(table_id))
-        if not target_table:
-            return jsonify({"success": False, "message": "Meja tidak ditemukan!"}), 404
+        # Validasi wajib isi
+        if not all([meja_ids, tanggal_str, waktu_str, jumlah_tamu, telepon]):
+            return jsonify({"success": False, "message": "Mohon lengkapi semua data utama yang diwajibkan!"}), 400
 
         # Parsing Date dan Time objek
         reservation_date = datetime.strptime(tanggal_str, '%Y-%m-%d').date()
         reservation_time = datetime.strptime(waktu_str, '%H:%M').time()
 
-        # Buat kode reservation_number unik (Contoh: RSV-AB12CD)
-        random_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-        reservation_number = f"RSV-{random_code}"
+        # Buat kode reservation_number dengan format RSV-YYYYMMDD-XXX
+        today_str = datetime.today().strftime('%Y%m%d')
+        prefix = f"RSV-{today_str}-"
+        
+        # Mencari reservasi terakhir yang dibuat pada hari ini
+        last_reservation = Reservation.query.filter(
+            Reservation.reservation_number.like(f"{prefix}%")
+        ).order_by(Reservation.id.desc()).first()
+        
+        if last_reservation:
+            # Mengambil 3 digit terakhir dan menambahkannya dengan 1
+            last_seq = int(last_reservation.reservation_number.split('-')[-1])
+            new_seq = last_seq + 1
+        else:
+            # Jika belum ada reservasi hari ini, mulai dari 1
+            new_seq = 1
+            
+        # Memformat nomor urut agar selalu 3 digit (contoh: 001, 002)
+        reservation_number = f"{prefix}{new_seq:03d}"
 
         # 1. Simpan data induk ke tabel 'reservations'
         new_reservation = Reservation(
             reservation_number=reservation_number,
             user_id=current_user.id,
             customer_name=current_user.name,
-            phone=current_user.phone or '-',
+            phone=telepon,
             guest_qty=int(jumlah_tamu),
-            duration=120, # Default durasi 120 menit (2 jam) sesuai frontend Anda
+            duration=int(durasi),
             notes=notes,
             reservation_date=reservation_date,
             reservation_time=reservation_time,
@@ -132,13 +147,16 @@ def submit_buat_reservasi():
         db.session.add(new_reservation)
         db.session.flush() # Ambil ID reservasi yang baru dibuat tanpa commit dulu
 
-        # 2. Simpan data anak ke tabel pivot 'reservation_tables'
-        new_res_table = ReservationTable(
-            reservation_id=new_reservation.id,
-            table_id=target_table.id,
-            table_number_snapshot=target_table.table_number
-        )
-        db.session.add(new_res_table)
+        # 2. Simpan relasi banyak meja ke tabel 'reservation_tables'
+        for m_id in meja_ids:
+            target_table = Table.query.get(int(m_id))
+            if target_table:
+                new_res_table = ReservationTable(
+                    reservation_id=new_reservation.id,
+                    table_id=target_table.id,
+                    table_number_snapshot=target_table.table_number
+                )
+                db.session.add(new_res_table)
         
         # Commit seluruh rangkaian transaksi database
         db.session.commit()
