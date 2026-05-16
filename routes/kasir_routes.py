@@ -4,12 +4,21 @@ from utils import *
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Category,Menu, Reservation, Order, OrderItem, Table
+from models import Category,Menu, Reservation, Order, OrderItem, Table, CafeSetting
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 kasir_bp = Blueprint('kasir', __name__)
+
+# ==========================================
+# CONTEXT PROCESSOR (GLOBAL VARIABLES UNTUK TEMPLATE)
+# ==========================================
+@kasir_bp.context_processor
+def inject_cafe_setting():
+    # Ambil data pengaturan kafe baris pertama (biasanya hanya ada 1 baris pengaturan)
+    cafe = CafeSetting.query.first()
+    return dict(cafe_setting=cafe)
 
 # =========================
 # DASHBOARD

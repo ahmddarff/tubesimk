@@ -19,18 +19,18 @@
     <div class="border-b-2 border-dashed border-black mb-3"></div>
 
     <div class="flex justify-between text-[10px] mb-1">
-        <span>Tgl: <span x-text="todayDate || new Date().toLocaleDateString('id-ID')"></span></span>
-        <span>Kasir: {{ current_user.name if current_user else 'Admin' }}</span>
+        <span>No: <span x-text="selectedOrder.id"></span></span>
+        <span>Kasir: {{ current_user.name if current_user else 'Kasir' }}</span>
     </div>
     <div class="flex justify-between text-[10px] mb-3">
-        <span>Pelanggan: <span x-text="customerName || 'Tamu'"></span></span>
-        <span x-text="orderType === 'dine-in' ? 'Meja ' + (selectedTable || '-') : 'Take Away'"></span>
+        <span>Pelanggan: <span x-text="selectedOrder.nama || 'Tamu'"></span></span>
+        <span x-text="selectedOrder.tipe === 'DINE IN' ? 'Meja ' + (selectedOrder.meja || '-') : 'Take Away'"></span>
     </div>
 
     <div class="border-b-2 border-dashed border-black mb-3"></div>
 
     <div class="mb-3">
-        <template x-for="(item, index) in cart" :key="index">
+        <template x-for="(item, index) in selectedOrder.items" :key="index">
             <div class="mb-2">
                 <div class="flex justify-between font-bold">
                     <span x-text="item.nama"></span>
@@ -39,38 +39,29 @@
                 <div class="flex justify-between text-[10px]">
                     <span x-text="item.qty + 'x @ ' + item.harga.toLocaleString('id-ID')"></span>
                 </div>
-                <div x-show="item.note" class="text-[10px] italic">
-                    <span x-text="'- ' + item.note"></span>
-                </div>
+                <template x-if="item.catatan">
+                    <div class="text-[10px] italic">
+                        <span x-text="'- ' + item.catatan"></span>
+                    </div>
+                </template>
             </div>
         </template>
     </div>
 
     <div class="border-b-2 border-dashed border-black mb-3"></div>
-
-    <div class="flex justify-between mb-1">
-        <span>Subtotal</span>
-        <span x-text="subtotal.toLocaleString('id-ID')"></span>
-    </div>
     
     <div class="flex justify-between font-black text-sm my-2">
         <span>TOTAL</span>
-        <span x-text="subtotal.toLocaleString('id-ID')"></span>
+        <span x-text="'Rp ' + (selectedOrder.total || 0).toLocaleString('id-ID')"></span>
     </div>
 
     <div class="flex justify-between text-[10px] mb-1">
-        <span x-text="'Dibayar (' + paymentMethod + ')'"></span>
-        <span x-text="parseInt(receivedAmount || 0).toLocaleString('id-ID')"></span>
-    </div>
-    
-    <div class="flex justify-between text-[10px] mb-4">
-        <span>Kembali</span>
-        <span x-text="Math.max(0, parseInt(receivedAmount || 0) - subtotal).toLocaleString('id-ID')"></span>
+        <span>Status</span>
+        <span class="font-bold" x-text="selectedOrder.lunas ? 'LUNAS' : 'BELUM BAYAR'"></span>
     </div>
 
     <div class="text-center mt-6">
         <p class="font-bold text-[10px]">TERIMA KASIH</p>
         <p class="text-[9px]">Silakan berkunjung kembali</p>
-        <p class="text-[9px] mt-2">Wifi: Terralog_Guest / Pass: kopienak</p>
     </div>
 </div>
