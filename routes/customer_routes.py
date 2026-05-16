@@ -612,7 +612,7 @@ def checkout():
 
     return render_template(
         'customer/checkout.html',
-        segment='checkout',
+        segment='daftar_menu',
         role='customer',
         order=order,
         tables=tables
