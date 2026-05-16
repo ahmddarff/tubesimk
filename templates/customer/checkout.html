@@ -3,112 +3,195 @@
 {% block title %}Checkout - Terralog{% endblock %}
 
 {% block content %}
-<!-- Store pre-filled items in window object -->
-<!-- <script>
-    // noinspection JSUnusedAssignment
-    window.preFilledItems = {{ pre_filled_items|tojson if pre_filled_items else '[]' }};
-</script> -->
-<div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="checkoutApp()">
-    <div class="max-w-5xl">
-        <!-- Breadcrumb & Summary Header -->
-        <div class="mb-8 flex items-center justify-between">
-            <div class="flex items-center gap-2 text-gray-600">
-                <a href="/customer/daftar-menu" class="hover:text-terralogBlue">Daftar Menu</a>
-                <span class="text-gray-400">›</span>
-                <span class="text-gray-800 font-semibold">Checkout</span>
-            </div>
-            <div class="bg-yellow-400 text-gray-800 font-bold px-6 py-3 rounded-2xl text-right">
-                <div class="text-sm" x-text="`${items.length} item dipesan`"></div>
-                <div class="text-2xl" x-text="`${total.toLocaleString('id-ID')}`"></div>
-            </div>
+<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="checkoutApp()" x-cloak>
+    <div>
+        
+        <div class="mb-8 flex flex-wrap items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+                    <a href="/customer/daftar-menu" class="text-terralogBlue hover:text-blue-900 transition">Daftar Menu</a>
+                    <span>›</span>
+                    <span class="text-gray-800">Checkout</span>
+                </div>
+                    <p class="text-gray-500 font-medium text-sm">Selesaikan pesanan Anda</p>            </div>
+            <a href="/customer/daftar-menu" class="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold px-6 py-3 rounded-xl transition shadow-sm text-sm">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                Tambah Menu
+            </a>
         </div>
 
-        <div class="flex gap-8">
-            <!-- Main Content -->
-            <div class="flex-1">
-                <!-- Customer Info & Meja Header -->
-                <div class="bg-white rounded-2xl p-6 mb-8">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between gap-4">
-                                <div>
-                                    <label class="text-gray-700 text-sm font-semibold block mb-2">Nama pemesan</label>
-                                    <div class="flex items-center gap-3">
-                                        <input type="text" x-model="nama" :disabled="!editingName" class="border border-gray-300 rounded-lg px-4 py-2 text-gray-800" :class="editingName ? 'bg-white' : 'bg-gray-50'">
-                                        <button @click="editingName = !editingName" class="text-terralogBlue hover:text-blue-700 transition">
-                                            <i data-lucide="edit-2" class="w-5 h-5"></i>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
+                    <h2 class="text-lg font-black text-slate-800 mb-5 flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-terralogBlue"></i> Informasi Pemesan
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Nama Pemesan</label>
+                            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-terralogBlue transition">
+                                <input type="text" x-model="nama" :disabled="!editingName" class="w-full bg-transparent text-sm font-bold text-slate-800 focus:outline-none" :class="editingName ? 'opacity-100' : 'opacity-80'">
+                                <button @click="editingName = !editingName" class="text-slate-400 hover:text-terralogBlue transition">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Pilih Meja</label>
+                            <div class="relative">
+                                <select x-model="meja" class="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-terralogBlue cursor-pointer transition">
+                                    <option value="" disabled selected>-- Pilih Meja Anda --</option>
+                                    {% for table in tables %}
+                                    <option value="{{ table.id }}">
+                                        Meja {{ table.table_number }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
+                    <div class="flex justify-between items-end mb-5">
+                        <h2 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                            <i data-lucide="shopping-bag" class="w-5 h-5 text-terralogBlue"></i> Pesanan Anda
+                        </h2>
+                        <span class="text-sm font-bold text-terralogBlue bg-blue-50 px-3 py-1 rounded-full" x-text="`${items.length} Item`"></span>
+                    </div>
+
+                    <div x-show="items.length === 0" class="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                            <i data-lucide="shopping-cart" class="w-8 h-8 text-slate-300"></i>
+                        </div>
+                        <p class="text-slate-500 font-semibold mb-4">Keranjang lu masih kosong nih.</p>
+                        <a href="/customer/daftar-menu" class="inline-block bg-terralogBlue text-white font-bold px-6 py-2 rounded-full text-sm hover:bg-blue-800 transition">Lihat Menu</a>
+                    </div>
+
+                    <div x-show="items.length > 0" class="space-y-4">
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="rounded-2xl p-5 border border-slate-100 hover:border-blue-100 transition bg-white shadow-sm">
+                                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+                                    <div class="flex-1">
+                                        <h4 class="text-base font-bold text-slate-900 mb-1" x-text="item.nama"></h4>
+                                        <p class="font-black text-terralogBlue" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+                                        <div class="flex items-center bg-slate-50 rounded-xl border border-slate-200 p-1">
+                                            <button @click="decrementItem(index)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:shadow-sm transition">
+                                                <i data-lucide="minus" class="w-4 h-4"></i>
+                                            </button>
+                                            <span class="w-10 text-center font-bold text-sm text-slate-800" x-text="item.qty"></span>
+                                            <button @click="incrementItem(index)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-400 text-yellow-900 hover:bg-yellow-500 transition shadow-sm">
+                                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <button @click="deleteItem(index)" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus">
+                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
                                         </button>
                                     </div>
                                 </div>
+                                
+                                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        <label class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Catatan (Opsional)</label>
+                                    </div>
+                                    <input type="text" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none text-sm text-slate-700 focus:ring-0 p-0 placeholder-slate-400 font-medium">
+                                </div>
                             </div>
-                        </div>
-                        <div class="text-right">
-                            <label class="text-gray-700 text-sm font-semibold block mb-2">Meja</label>
-                            <select x-model="meja" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-terralogBlue">
-                                {% for table in tables %}
-                                <option value="{{ table.id }}">
-                                    {{ table.table_number }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                        </template>
                     </div>
                 </div>
 
-                <!-- Orders -->
-                <div class="bg-white rounded-2xl p-6 mb-8">
-                    <h3 class="text-lg font-bold text-gray-800 mb-6">Pesanan Anda</h3>
-
-                    <template x-for="(item, index) in items" :key="index">
-                        <div class="rounded-xl p-6 mb-6 border-2 bg-blue-50 border-blue-200">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1">
-                                    <h4 class="text-lg font-bold text-gray-800 mb-2" x-text="item.nama"></h4>
-                                    <p class="font-semibold text-lg text-gray-600" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
-                                </div>
-                                <div class="flex gap-2 items-center">
-                                    <button @click="decrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-1 rounded-lg transition w-8">−</button>
-                                    <div class="px-3 py-1 border border-gray-300 rounded-lg text-center min-w-12" x-text="item.qty"></div>
-                                    <button @click="incrementItem(index)" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 font-bold px-3 py-1 rounded-lg transition w-8">+</button>
-                                </div>
-                                <button @click="deleteItem(index)" class="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-lg transition ml-4 flex items-center gap-2">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                    Hapus
-                                </button>
-                            </div>
-                            <div>
-                                <label class="text-gray-700 font-semibold text-sm mb-2 block">Catatan:</label>
-                                <textarea placeholder="Masukkan catatan pesanan ini..." @input="updateNote(index, $event.target.value)" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none text-gray-700 focus:ring-2 focus:ring-blue-400" rows="2" :value="item.note"></textarea>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-
-                <!-- Payment Method -->
-                <div class="bg-white rounded-2xl p-6 mb-8">
-                    <h3 class="text-lg font-bold text-gray-800 mb-6">Metode Pembayaran</h3>
-                    <div class="flex gap-8">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" x-model="paymentMethod" value="cash" class="w-5 h-5 text-terralogBlue">
-                            <span class="text-gray-800 font-semibold">Tunai</span>
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
+                    <h2 class="text-lg font-black text-slate-800 mb-5 flex items-center gap-2">
+                        <i data-lucide="wallet" class="w-5 h-5 text-terralogBlue"></i> Metode Pembayaran
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-2xl border bg-white p-4 shadow-sm focus:outline-none transition-all"
+                               :class="paymentMethod === 'cash' ? 'border-terralogBlue ring-1 ring-terralogBlue bg-blue-50/30' : 'border-slate-200 hover:border-blue-200'">
+                            <input type="radio" x-model="paymentMethod" value="cash" class="sr-only">
+                            <span class="flex flex-1 items-center gap-4">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                    <i data-lucide="banknote" class="w-5 h-5"></i>
+                                </span>
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-bold text-slate-900">Tunai di Kasir</span>
+                                    <span class="block text-xs font-medium text-slate-500">Bayar langsung saat di restoran</span>
+                                </span>
+                            </span>
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-terralogBlue absolute right-4 top-4" x-show="paymentMethod === 'cash'"></i>
                         </label>
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input type="radio" x-model="paymentMethod" value="qris" class="w-5 h-5 text-terralogBlue">
-                            <span class="text-gray-800 font-semibold">Non Tunai</span>
+
+                        <label class="relative flex cursor-pointer rounded-2xl border bg-white p-4 shadow-sm focus:outline-none transition-all"
+                               :class="paymentMethod === 'qris' ? 'border-terralogBlue ring-1 ring-terralogBlue bg-blue-50/30' : 'border-slate-200 hover:border-blue-200'">
+                            <input type="radio" x-model="paymentMethod" value="qris" class="sr-only">
+                            <span class="flex flex-1 items-center gap-4">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                                    <i data-lucide="qr-code" class="w-5 h-5"></i>
+                                </span>
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-bold text-slate-900">QRIS / Non-Tunai</span>
+                                    <span class="block text-xs font-medium text-slate-500">E-Wallet, M-Banking, dll</span>
+                                </span>
+                            </span>
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-terralogBlue absolute right-4 top-4" x-show="paymentMethod === 'qris'"></i>
                         </label>
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <div class="flex justify-center mb-12">
-                    <button @click="submitOrder()" :disabled="items.length === 0" class="transition text-lg shadow-lg py-4 px-24 rounded-full text-white font-bold" :class="items.length === 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-terralogBlue hover:bg-blue-800'">
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-[24px] shadow-lg border border-slate-100 p-6 sticky top-28">
+                    <h3 class="text-lg font-black text-slate-900 mb-6">Ringkasan Pesanan</h3>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex justify-between text-sm font-semibold text-slate-500">
+                            <span>Subtotal</span>
+                            <span class="text-slate-800" x-text="`Rp ${subtotal.toLocaleString('id-ID')}`"></span>
+                        </div>
+                        <div class="flex justify-between text-sm font-semibold text-slate-500">
+                            <span>Pajak (PB1) <span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded ml-1">10%</span></span>
+                            <span class="text-slate-800" x-text="`Rp ${pajak.toLocaleString('id-ID')}`"></span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-dashed border-slate-200 pt-4 mb-8">
+                        <div class="flex justify-between items-end">
+                            <span class="text-sm font-bold text-slate-500 uppercase tracking-wider">Total Pembayaran</span>
+                            <span class="text-2xl font-black text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`"></span>
+                        </div>
+                    </div>
+
+                    <button @click="submitOrder()" :disabled="items.length === 0 || !meja" 
+                            class="w-full py-4 rounded-xl text-white font-bold text-lg transition-all flex justify-center items-center gap-2 shadow-md hover:shadow-lg active:scale-95" 
+                            :class="items.length === 0 || !meja ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-terralogBlue hover:bg-blue-900'">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
                         Pesan Sekarang
                     </button>
+                    
+                    <p x-show="!meja && items.length > 0" class="text-red-500 text-xs font-bold text-center mt-3 flex items-center justify-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Jangan lupa pilih meja dulu ya!
+                    </p>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
 
 <script>
     function checkoutApp() {
@@ -118,9 +201,14 @@
             nama: '{{ current_user.name }}',
             editingName: false,
             paymentMethod: 'cash',
+            
             async init() {
                 await this.loadCart()
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
             },
+            
             async loadCart() {
                 try {
                     const response = await fetch('/customer/api/cart')
@@ -132,89 +220,74 @@
             },
 
             get subtotal() {
-                return this.items.reduce(
-                    (sum, item) => sum + (item.harga * item.qty),
-                    0
-                )
+                return this.items.reduce((sum, item) => sum + (item.harga * item.qty), 0)
             },
 
+            // Tambahin dummy hitungan pajak biar UI-nya mirip sama desain yang bagus
+            get pajak() {
+                return this.subtotal * 0.1 
+            },
+
+            // Total sekarang = Subtotal + Pajak
             get total() {
-                return this.subtotal
+                return this.subtotal + this.pajak
             },
 
             async incrementItem(index) {
                 const item = this.items[index]
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        item_id: item.id,
-                        qty: item.qty + 1
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
                 })
                 await this.loadCart()
             },
 
             async decrementItem(index) {
                 const item = this.items[index]
-                // Jika qty = 1 dan dikurang, jalankan fungsi deleteItem
                 if (item.qty <= 1) {
                     await this.deleteItem(index);
                     return;
                 }
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        item_id: item.id,
-                        qty: item.qty - 1
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
                 })
                 await this.loadCart()
             },
 
             async deleteItem(index) {
                 const item = this.items[index]
-                await fetch(`/customer/api/cart/remove/${item.id}`, {
-                    method: 'DELETE'
-                })
+                await fetch(`/customer/api/cart/remove/${item.id}`, { method: 'DELETE' })
                 await this.loadCart()
             },
 
             async updateNote(index, value) {
-
                 const item = this.items[index]
                 item.note = value
-                
                 await fetch('/customer/api/cart/note', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-
-                    body: JSON.stringify({
-                        item_id: item.id,
-                        note: value
-                    })
-
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id, note: value })
                 })
             },
 
             async submitOrder() {
                 if(this.items.length === 0){
-                    alert('Keranjang kosong')
+                    alert('Keranjang lu masih kosong bro/sis!')
+                    return
+                }
+                if(!this.meja){
+                    alert('Pilih meja dulu dong biar pesanan bisa dianter!')
                     return
                 }
                 try {
+                    // Balikin ngirim total tanpa pajak (sesuai logic backend lu awalnya), 
+                    // kalau backend lu butuh nerima total + pajak, lu harus adjust logic di app.py nya
                     const response = await fetch('/customer/submit-order', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             nama: this.nama,
                             table_id: this.meja,
@@ -226,11 +299,9 @@
 
                     if(result.success){
                         if(this.paymentMethod === 'qris'){
-                            window.location.href =
-                                `/customer/pembayaran-nontunai/${result.order_id}`
+                            window.location.href = `/customer/pembayaran-nontunai/${result.order_id}`
                         } else {
-                            window.location.href =
-                                `/customer/pesanan/${result.order_id}`
+                            window.location.href = `/customer/pesanan/${result.order_id}`
                         }
                     } else {
                         alert(result.message)
@@ -238,12 +309,10 @@
 
                 } catch(error){
                     console.error(error)
-                    alert('Terjadi kesalahan')
+                    alert('Wah, ada error koneksi nih.')
                 }
             }
         }
     }
-
-    lucide.createIcons();
 </script>
 {% endblock %}
