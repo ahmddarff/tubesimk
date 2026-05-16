@@ -732,12 +732,12 @@ def pengaturan():
 
         try:
             db.session.commit()
-            flash('Profil berhasil diperbarui!', 'success')
+            # PERUBAHAN: Mengembalikan JSON sukses (bukan flash & redirect)
+            return jsonify({"success": True, "message": "Profil berhasil diperbarui!"})
         except Exception:
             db.session.rollback()
-            flash('Gagal memperbarui profil. Username/Email mungkin sudah digunakan.', 'danger')
-        
-        return redirect(url_for('customer.pengaturan'))
+            # PERUBAHAN: Mengembalikan JSON gagal
+            return jsonify({"success": False, "message": "Gagal memperbarui profil. Username/Email mungkin sudah digunakan."})
 
     return render_template('customer/pengaturan.html', segment='pengaturan', role='customer', user=current_user)
 

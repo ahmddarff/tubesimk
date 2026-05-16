@@ -1,4 +1,4 @@
-{% extends 'layouts/layout_customer.html' %}
+{% extends 'layout.html' %}
 
 {% block content %}
 <div class="customer-page-shell w-full" x-data="{ cart: JSON.parse(localStorage.getItem('cart')) || [], goToCheckout() { if (this.cart.length === 0) return; window.location.href = '/customer/checkout'; } }">

@@ -2,40 +2,70 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Dashboard{% endblock %} - Terralog</title>
-
+    <title>{% block title %}Terralog{% endblock %} - Point of Sale</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
         body { font-family: 'Inter', sans-serif; }
 
-        /* Style Toggle Switch (Masih dipakai di Pengaturan) */
+        /* ==========================================
+           1. CSS UNTUK CETAK STRUK (DARI KASIR)
+           ========================================== */
+        #receipt-print { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-print, #receipt-print * { visibility: visible; }
+            #receipt-print {
+                display: block !important;
+                position: absolute; left: 0; top: 0;
+                width: 80mm; padding: 4mm;
+                background: white; color: black !important;
+                font-size: 10pt; line-height: 1.4;
+            }
+            @page { size: 80mm auto; margin: 0; }
+            html, body { margin: 0; padding: 0; }
+        }
+
+        /* ==========================================
+           2. CSS UNTUK TOGGLE & MODAL LAMA (DARI OWNER)
+           ========================================== */
         .toggle-switch input { display: none; }
         .toggle-slider { position: absolute; inset: 0; background: #CBD5E0; border-radius: 50px; transition: 0.3s; }
         .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
         .toggle-switch input:checked + .toggle-slider { background: #0022AA; }
         .toggle-switch input:checked + .toggle-slider::before { transform: translateX(22px); }
 
-        /* Animasi Modal & Toast */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
         .modal-overlay.active .modal-box { animation: slideUp 0.25s ease; }
 
+        /* ==========================================
+           3. CSS ANIMASI TOAST GLOBAL
+           ========================================== */
         @keyframes toastIn  { from { transform: translateY(-80px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-80px); opacity: 0; } }
         .toast.show { animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .toast.hide { animation: toastOut 0.3s ease forwards; }
+
+        /* ==========================================
+           4. CSS KHUSUS HALAMAN CUSTOMER
+           ========================================== */
+        .customer-page-shell {
+            padding: 0 !important;
+            box-sizing: border-box;
+            width: 100%;
+        }
     </style>
 
     <script>
@@ -58,7 +88,7 @@
 
 <body class="bg-[#F5F7FF] font-sans">
 
-    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all">
+    <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[3000] opacity-0 -translate-y-20 pointer-events-none transition-all">
         <i id="toast-icon" class="fa-solid text-base"></i>
         <span id="toast-message">Berhasil!</span>
     </div>
@@ -79,10 +109,14 @@
         </div>
     </div>
 
+    {% include 'includes/modal_konfirmasi.html' %}
+
     <script>
+        // 1. Inisialisasi Icon Lucide
         document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
-        
-        // Modal Fungsionalitas
+        document.addEventListener('alpine:navigated', () => { lucide.createIcons(); });
+
+        // 2. Fungsionalitas Modal Klasik (Lama) milik Owner
         function openModal(id) {
             const el = document.getElementById(id);
             if(el) { el.classList.remove('hidden'); el.classList.add('active'); }
@@ -95,17 +129,35 @@
             overlay.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
         });
 
-        // Toast Fungsionalitas
-        // Toast Fungsionalitas Upgrade
+        // 3. Alpine Global Store untuk Modal Konfirmasi Universal
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('confirmModal', {
+                show: false, title: 'Konfirmasi', message: 'Apakah Anda yakin?',
+                confirmText: 'Ya', cancelText: 'Batal', type: 'danger', onConfirmCallback: null,
+                open(options) {
+                    this.title = options.title || 'Konfirmasi';
+                    this.message = options.message || 'Apakah Anda yakin?';
+                    this.confirmText = options.confirmText || 'Ya';
+                    this.cancelText = options.cancelText || 'Batal';
+                    this.type = options.type || 'danger';
+                    this.onConfirmCallback = options.action || null;
+                    this.show = true;
+                },
+                execute() {
+                    if (typeof this.onConfirmCallback === 'function') this.onConfirmCallback();
+                    this.show = false;
+                }
+            });
+        });
+
+        // 4. Fungsi Toast Global
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const msg   = document.getElementById('toast-message');
             const icon  = document.getElementById('toast-icon');
 
             msg.textContent = message;
-
-            // Reset classes
-            toast.className = 'toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[2000] opacity-0 -translate-y-20 pointer-events-none transition-all';
+            toast.className = 'toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[3000] opacity-0 -translate-y-20 pointer-events-none transition-all';
             
             if (type === 'success') {
                 toast.classList.add('border-green-500');
@@ -119,8 +171,26 @@
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); toast.classList.add('hide'); }, 3500);
         }
-    </script>
 
+        // 5. Penangkapan Pesan Flash dari Flask
+        document.addEventListener('DOMContentLoaded', () => {
+            const flashContainer = document.getElementById('flash-messages');
+            
+            if (flashContainer) {
+                // Parse data JSON dari Flask
+                const messages = JSON.parse(flashContainer.textContent);
+                
+                // Looping menggunakan JavaScript murni (VS Code jadi tenang!)
+                messages.forEach(([category, message]) => {
+                    setTimeout(() => {
+                        let toastType = category === 'danger' ? 'error' : 'success';
+                        showToast(message, toastType);
+                    }, 100); // Jeda 100ms agar DOM siap
+                });
+            }
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -1,88 +1,52 @@
-{% extends 'layouts/layout_customer.html' %} {% block content %}
-<div 
-    x-data="{
-        activeTab: 'akun',
-        showPasswordModal: false,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+{% extends 'layout.html' %} 
 
-        savePassword(endpointUrl) {
-            if (!this.currentPassword) { alert('Kata sandi saat ini wajib diisi!'); return; }
-            if (this.newPassword.length < 8) { alert('Kata sandi baru minimal 8 karakter!'); return; }
-            if (this.newPassword !== this.confirmPassword) { alert('Konfirmasi kata sandi tidak cocok!'); return; }
+{% block content %}
+<div x-data="pengaturanAkun()" class="customer-page-shell p-5 min-h-screen font-['Inter']" x-cloak>
 
-            fetch(endpointUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    password_lama: this.currentPassword, 
-                    password_baru: this.newPassword 
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    this.currentPassword = '';
-                    this.newPassword = '';
-                    this.confirmPassword = '';
-                } else {
-                    alert(data.message); 
-                }
-            })
-            .catch(err => {
-                alert('Terjadi kesalahan sistem saat menghubungi server.');
-            });
-        }
-    }"
-    x-init="$nextTick(() => lucide.createIcons())"
-    class="customer-page-shell p-5 min-h-screen font-['Inter']"
->
-
-    <div class="mb-4">
-        <h1 class="text-3xl font-bold text-terralogBlue tracking-tight">Pengaturan Akun</h1>
-        <p class="text-gray-500 mt-1 text-sm">Kelola profil dan keamanan akun Anda</p>
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Pengaturan</h1>
+        <p class="text-gray-500 mt-1 text-sm">Kelola data profil dan keamanan akun Anda</p>
     </div>
 
     <div class="flex flex-wrap gap-3 mb-6">
-        <button @click="activeTab = 'akun'; showPasswordModal = false; $nextTick(() => lucide.createIcons())"
+        <button @click="switchTab('akun')"
             :class="activeTab === 'akun' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
             <i data-lucide="user" class="w-4 h-4"></i> Profil Akun
         </button>
 
-        <button @click="activeTab = 'keamanan'; showPasswordModal = false; $nextTick(() => lucide.createIcons())"
+        <button @click="switchTab('keamanan')"
             :class="activeTab === 'keamanan' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
             <i data-lucide="shield-check" class="w-4 h-4"></i> Keamanan
         </button>
     </div>
 
-    <div class="bg-white rounded-[1.8rem] shadow-sm border border-gray-100 p-6">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
         <div x-show="activeTab === 'akun'" x-transition>
-            
-            <form action="{{ url_for('customer.pengaturan') }}" method="POST" enctype="multipart/form-data">
+            <form @submit.prevent="saveProfile($event)" enctype="multipart/form-data">
+                
                 <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
                     <div class="relative">
                         <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
                             
                             <img id="userPhotoPreview" 
-                                src="{% if user.photo %}{{ url_for('static', filename=user.photo) }}{% endif %}" 
-                                class="w-full h-full object-cover {% if not user.photo %}hidden{% endif %}"
-                                onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
+                                 src="{% if user.photo %}{{ url_for('static', filename=user.photo) }}{% endif %}" 
+                                 class="w-full h-full object-cover {% if not user.photo %}hidden{% endif %}"
+                                 onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
                             
                             <span id="userInitial" class="{% if user.photo %}hidden{% endif %}">{{ user.name[:2] }}</span>
                         </div>
 
-                        <input type="file" name="photo" id="inputFotoAkun" class="hidden" accept="image/*" onchange="previewFotoAkun(this)">
+                        <input type="file" name="photo" id="inputPhotoAkun" class="hidden" accept="image/*" @change="previewPhoto($event)">
 
-                        <button type="button" onclick="document.getElementById('inputFotoAkun').click()"
+                        <button type="button" @click="triggerPhotoInput()"
                             class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">
                             <i data-lucide="camera" class="w-4 h-4"></i>
                         </button>
                     </div>
+
                     <div>
                         <h2 class="text-2xl font-black text-gray-800">{{ user.name }}</h2>
                         <p class="text-gray-400 font-medium mt-1 text-sm capitalize">{{ user.role }}</p>
@@ -107,14 +71,15 @@
                         <input name="phone" type="text" value="{{ user.phone if user.phone else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                 </div>
+
                 <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
                     <button type="submit" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
                         Simpan Perubahan
                     </button>
                 </div>
             </form>
-        </div>
-
+        </div> 
+        
         <div x-show="activeTab === 'keamanan'" x-transition>
             <div class="max-w-sm">
                 <h3 class="text-base font-bold text-terralogBlue mb-5">Ubah Kata Sandi</h3>
@@ -147,7 +112,7 @@
                     <p class="text-xs text-gray-400 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
 
                     <div class="flex mt-2">
-                        <button @click="savePassword('{{ url_for(role ~ '.update_password') }}')"
+                        <button @click="savePassword('{{ url_for('customer.update_password') }}')"
                                 class="w-full py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-[0.98]">
                             Perbarui Kata Sandi
                         </button>
@@ -157,24 +122,98 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
-    function previewFotoAkun(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById('userPhotoPreview');
-                const initial = document.getElementById('userInitial');
-                img.src = e.target.result;
-                img.classList.remove('hidden');
-                initial.classList.add('hidden');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pengaturanAkun', () => ({
+        activeTab: 'akun',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
 
-    document.addEventListener('alpine:init', () => {
-        lucide.createIcons();
-    });
+        init() {
+            this.renderIcons();
+        },
+
+        switchTab(tabName) {
+            this.activeTab = tabName;
+            this.renderIcons();
+        },
+
+        triggerPhotoInput() {
+            document.getElementById('inputPhotoAkun').click();
+        },
+
+        previewPhoto(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('userPhotoPreview');
+                    const initial = document.getElementById('userInitial');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    initial.classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        },
+
+        saveProfile(event) {
+            const formData = new FormData(event.target);
+
+            // Perhatikan URL menggunakan rute customer
+            fetch("{{ url_for('customer.pengaturan') }}", {
+                method: 'POST',
+                body: formData 
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => { window.location.reload(); }, 1200);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Gagal terhubung ke server.', 'error'));
+        },
+
+        savePassword(endpointUrl) {
+            if (!this.currentPassword) { showToast('Kata sandi saat ini wajib diisi!', 'error'); return; }
+            if (this.newPassword.length < 8) { showToast('Kata sandi baru minimal 8 karakter!', 'error'); return; }
+            if (this.newPassword !== this.confirmPassword) { showToast('Konfirmasi kata sandi tidak cocok!', 'error'); return; }
+
+            fetch(endpointUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password_lama: this.currentPassword, 
+                    password_baru: this.newPassword 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    this.currentPassword = '';
+                    this.newPassword = '';
+                    this.confirmPassword = '';
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi kesalahan sistem.', 'error'));
+        },
+
+        renderIcons() {
+            this.$nextTick(() => {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            });
+        }
+    }));
+});
 </script>
 {% endblock %}
