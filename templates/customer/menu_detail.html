@@ -88,12 +88,11 @@
 
     <!-- Bottom: Ulasan Full Width -->
     <div class="border-t border-gray-200 pt-6">
-        <!-- Rating Header Row -->
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                {% if menu.rating %}
+                {% if avg_rating > 0 %}
                     <div class="inline-flex items-center gap-1 bg-terralogBlue text-white px-2 py-1 rounded font-bold text-xs">
-                        <span>★ {{ menu.rating }}</span>
+                        <span>★ {{ avg_rating }}</span>
                     </div>
                 {% else %}
                     <div class="inline-flex items-center gap-1 bg-gray-300 text-gray-600 px-2 py-1 rounded font-bold text-xs">
@@ -102,8 +101,8 @@
                 {% endif %}
                 <span class="text-gray-700 text-sm font-semibold">
                     Ulasan
-                    {% if menu.review_count %}
-                        ({{ menu.review_count }}rb ulasan)
+                    {% if review_count > 0 %}
+                        ({{ review_count }} ulasan)
                     {% else %}
                         (belum ada ulasan)
                     {% endif %}
@@ -112,25 +111,21 @@
             <a href="/customer/menu/{{ menu.id }}/ulasan" class="text-terralogBlue font-bold text-xs hover:underline">Lihat Semua ›</a>
         </div>
 
-        <!-- Reviews List -->
-        {% if menu.reviews and menu.reviews|length > 0 %}
+        {% if reviews and reviews|length > 0 %}
             <div class="grid grid-cols-2 gap-4">
-                {% for review in menu.reviews %}
+                {% for review in reviews %}
                     <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
                         <div class="flex gap-3">
-                            <!-- Avatar -->
                             <div class="w-10 h-10 rounded-full bg-terralogBlue flex items-center justify-center font-bold text-white flex-shrink-0 text-sm">
                                 {{ review.nama[0].upper() }}
                             </div>
                             
                             <div class="flex-1 min-w-0">
-                                <!-- Name and Date -->
                                 <div class="flex items-center justify-between mb-1">
-                                    <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
-                                    <span class="text-gray-400 text-xs">{{ review.date }}</span>
+                                    <p class="font-bold text-gray-800 text-sm truncate">{{ review.nama }}</p>
+                                    <span class="text-gray-400 text-xs whitespace-nowrap">{{ review.date }}</span>
                                 </div>
                                 
-                                <!-- Rating Stars -->
                                 <div class="flex gap-0.5 mb-2">
                                     {% for i in range(5) %}
                                         {% if i < review.rating %}
@@ -141,7 +136,6 @@
                                     {% endfor %}
                                 </div>
 
-                                <!-- Review Text -->
                                 <p class="text-gray-700 text-xs leading-relaxed">{{ review.text }}</p>
                             </div>
                         </div>

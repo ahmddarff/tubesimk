@@ -36,8 +36,80 @@ def menu_detail(menu_id):
     # Mengambil data menu dari basis data berdasarkan ID
     menu = Menu.query.get_or_404(menu_id)
     
+    # Menyaring semua item pesanan dari menu ini
+    order_items = OrderItem.query.filter_by(menu_id=menu.id).all()
+    
+    reviews = []
+    total_rating = 0
+    
+    for item in order_items:
+        # Jika item pesanan ini memiliki ulasan
+        if item.review:
+            # Menentukan nama pelanggan
+            nama_pelanggan = "Pelanggan Anonim"
+            if item.order.user:
+                nama_pelanggan = item.order.user.name
+            elif item.order.customer_name:
+                nama_pelanggan = item.order.customer_name
+                
+            reviews.append({
+                'nama': nama_pelanggan,
+                'date': item.review.created_at.strftime('%d %b %Y'),
+                'rating': item.review.rating,
+                'text': item.review.comment
+            })
+            total_rating += item.review.rating
+            
+    # Kalkulasi statistik ulasan
+    review_count = len(reviews)
+    avg_rating = round(total_rating / review_count, 1) if review_count > 0 else 0
+    
     return render_template('customer/menu_detail.html', 
-            menu=menu, 
+            menu=menu,
+            reviews=reviews,          # Kirim data array ulasan
+            avg_rating=avg_rating,    # Kirim nilai rata-rata rating
+            review_count=review_count,# Kirim total jumlah ulasan
+            segment='daftar_menu', 
+            role='customer')
+
+@customer_bp.route('/menu/<int:menu_id>/ulasan')
+def menu_reviews(menu_id):
+    # Mengambil data menu dari basis data
+    menu = Menu.query.get_or_404(menu_id)
+    
+    # Menyaring semua item pesanan dari menu ini
+    order_items = OrderItem.query.filter_by(menu_id=menu.id).all()
+    
+    reviews = []
+    total_rating = 0
+    
+    for item in order_items:
+        # Jika item pesanan ini memiliki ulasan
+        if item.review:
+            # Menentukan nama pelanggan
+            nama_pelanggan = "Pelanggan Anonim"
+            if item.order.user:
+                nama_pelanggan = item.order.user.name
+            elif item.order.customer_name:
+                nama_pelanggan = item.order.customer_name
+                
+            reviews.append({
+                'nama': nama_pelanggan,
+                'date': item.review.created_at.strftime('%d %b %Y'),
+                'rating': item.review.rating,
+                'text': item.review.comment
+            })
+            total_rating += item.review.rating
+            
+    # Kalkulasi statistik ulasan
+    review_count = len(reviews)
+    avg_rating = round(total_rating / review_count, 1) if review_count > 0 else 0
+    
+    return render_template('customer/menu_reviews.html', 
+            menu=menu,
+            reviews=reviews,          # Kirim data array ulasan
+            avg_rating=avg_rating,    # Kirim nilai rata-rata rating
+            review_count=review_count,# Kirim total jumlah ulasan
             segment='daftar_menu', 
             role='customer')
 
@@ -45,16 +117,6 @@ def menu_detail(menu_id):
 # =========================
 # RESERVASI
 # =========================
-
-@customer_bp.route('/menu/<int:menu_id>/ulasan')
-def menu_reviews(menu_id):
-    # Mengambil data menu dari basis data berdasarkan ID
-    menu = Menu.query.get_or_404(menu_id)
-    
-    return render_template('customer/menu_reviews.html', 
-                           menu=menu, 
-                           segment='daftar_menu', 
-                           role='customer')
 
 # Halaman List Reservasi Aktif & Riwayat
 @customer_bp.route('/buat-reservasi')

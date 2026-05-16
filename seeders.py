@@ -1,7 +1,7 @@
 from datetime import time, date, datetime, timedelta
 from werkzeug.security import generate_password_hash
 from app import app, db
-from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table, Reservation, ReservationTable
+from models import User, CafeSetting, OperationalHour, Category, Menu, Order, OrderItem, Table, Reservation, ReservationTable, Review
 
 def run_seeders():
     # Gunakan app_context agar SQLAlchemy tahu database mana yang dipakai
@@ -38,7 +38,7 @@ def run_seeders():
                 {"day": "Kamis",  "is_open": True,  "open": time(9, 0), "close": time(22, 0)},
                 {"day": "Jumat",  "is_open": True,  "open": time(9, 0), "close": time(22, 0)},
                 {"day": "Sabtu",  "is_open": True,  "open": time(9, 0), "close": time(22, 0)},
-                {"day": "Minggu", "is_open": False, "open": time(10, 0), "close": time(20, 0)}, # Contoh Minggu tutup/buka beda
+                {"day": "Minggu", "is_open": False, "open": time(10, 0), "close": time(20, 0)},
             ]
             
             for jadwal in jadwal_awal:
@@ -73,7 +73,7 @@ def run_seeders():
             )
             db.session.add(new_owner)
             db.session.commit()
-            print("✅ Berhasil: Akun Owner (Oscar Piastri) ditambahkan!")
+            print("✅ Berhasil: Akun Owner ditambahkan!")
         else:
             print("ℹ️ Lewati: Akun Owner sudah ada.")
 
@@ -83,7 +83,7 @@ def run_seeders():
         kasir_exist = User.query.filter_by(role='kasir').first()
         
         if not kasir_exist:
-            hashed_password = generate_password_hash('kasir123') # Password untuk login
+            hashed_password = generate_password_hash('kasir123')
             new_kasir = User(
                 name='Zhang Hao',
                 username='kasir',
@@ -95,36 +95,42 @@ def run_seeders():
             )
             db.session.add(new_kasir)
             db.session.commit()
-            print("✅ Berhasil: Akun Kasir (Zhang Hao) ditambahkan!")
+            print("✅ Berhasil: Akun Kasir ditambahkan!")
         else:
             print("ℹ️ Lewati: Akun Kasir sudah ada.")
 
         # ==========================================
-        # 5. SEEDER AKUN CUSTOMER
+        # 5. SEEDER AKUN CUSTOMER (TOTAL 5 CUSTOMER)
         # ==========================================
-        customer_exist = User.query.filter_by(role='customer').first()
+        data_customers = [
+            {'name': 'Budi Pelanggan', 'username': 'customer', 'email': 'budi@gmail.com', 'phone': '0812-9999-8888'},
+            {'name': 'Shen Ricky', 'username': 'ricky', 'email': 'ricky@gmail.com', 'phone': '0812-1111-2222'},
+            {'name': 'Han Yujin', 'username': 'yujin', 'email': 'yujin@gmail.com', 'phone': '0812-3333-4444'},
+            {'name': 'Kim Gyuvin', 'username': 'gyuvin', 'email': 'gyuvin@gmail.com', 'phone': '0812-5555-6666'},
+            {'name': 'Yoo Seungeon', 'username': 'seungeon', 'email': 'seungeon@gmail.com', 'phone': '0812-7777-8888'}
+        ]
+
+        for cust in data_customers:
+            cust_exist = User.query.filter_by(username=cust['username']).first()
+            if not cust_exist:
+                hashed_password = generate_password_hash('customer123')
+                new_customer = User(
+                    name=cust['name'],
+                    username=cust['username'],
+                    email=cust['email'],
+                    password=hashed_password,
+                    phone=cust['phone'],
+                    role='customer',
+                    is_active=True
+                )
+                db.session.add(new_customer)
         
-        if not customer_exist:
-            hashed_password = generate_password_hash('customer123') # Password untuk login
-            new_customer = User(
-                name='Budi Pelanggan',
-                username='customer',
-                email='budi.customer@gmail.com',
-                password=hashed_password,
-                phone='0812-9999-8888',
-                role='customer',
-                is_active=True
-            )
-            db.session.add(new_customer)
-            db.session.commit()
-            print("✅ Berhasil: Akun Customer (Budi Pelanggan) ditambahkan!")
-        else:
-            print("ℹ️ Lewati: Akun Customer sudah ada.")
+        db.session.commit()
+        print(f"✅ Berhasil: Data Akun Customer dipastikan tersedia!")
             
         # ==========================================
         # 6. SEEDER KATEGORI MENU
         # ==========================================
-        # Daftar kategori yang dibutuhkan berdasarkan mock data Anda
         daftar_kategori = ['Food', 'Snack', 'Coffee', 'Non Coffee']
         
         for nama_kategori in daftar_kategori:
@@ -133,17 +139,13 @@ def run_seeders():
                 kategori_baru = Category(name=nama_kategori)
                 db.session.add(kategori_baru)
                 
-        # Commit kategori agar kita bisa mendapatkan ID-nya untuk tabel Menu
         db.session.commit()
-        print("✅ Berhasil: Data Kategori dipastikan tersedia!")
 
         # ==========================================
         # 7. SEEDER MENU
         # ==========================================
-        # Mengambil data kategori dari database untuk mendapatkan ID-nya
         kategori_db = {k.name: k.id for k in Category.query.all()}
 
-        # Data menu awal yang akan di-seed
         data_menu = [
             {"nama": "Ayam Geprek", "kategori": "Food", "harga": 20000, "deskripsi": "Ayam geprek pedas dengan sambal bawang", "stok": None, "image_url": "https://thumbs.dreamstime.com/b/ayam-geprek-indonesian-food-crispy-fried-chicken-hot-spicy-sambal-chili-sauce-currently-found-indonesia-215159626.jpg"},
             {"nama": "Indomie Kuah", "kategori": "Food", "harga": 12000, "deskripsi": "Indomie rebus dengan telur dan sayur", "stok": None, "image_url": "https://www.jagel.id/api/listimage/v/IndomieRebus-0-17531161553185a8fcddf4cd3e4.79623077.png"},
@@ -158,7 +160,7 @@ def run_seeders():
             if not menu_exist:
                 menu_baru = Menu(
                     name=item['nama'],
-                    category_id=kategori_db[item['kategori']], # Mengambil ID kategori berdasarkan namanya
+                    category_id=kategori_db[item['kategori']],
                     price=item['harga'],
                     description=item['deskripsi'],
                     stock=item['stok'],
@@ -174,14 +176,13 @@ def run_seeders():
         # 8. SEEDER MEJA (TABLE) 
         # ==========================================
         data_meja = [
-            {"nomor": "01", "kapasitas": 4, "tersedia": False}, # Sedang dipakai
-            {"nomor": "02", "kapasitas": 2, "tersedia": False}, # Sedang dipakai
-            {"nomor": "03", "kapasitas": 4, "tersedia": True},  # Kosong
-            {"nomor": "04", "kapasitas": 6, "tersedia": False}, # Sedang dipakai
-            {"nomor": "05", "kapasitas": 2, "tersedia": True}   # Kosong
+            {"nomor": "01", "kapasitas": 4, "tersedia": False},
+            {"nomor": "02", "kapasitas": 2, "tersedia": False},
+            {"nomor": "03", "kapasitas": 4, "tersedia": True}, 
+            {"nomor": "04", "kapasitas": 6, "tersedia": False},
+            {"nomor": "05", "kapasitas": 2, "tersedia": True}  
         ]
         
-        # Dictionary untuk menyimpan ID meja yang baru dibuat agar mudah dipanggil oleh Order
         meja_db = {}
         for meja in data_meja:
             m = Table.query.filter_by(table_number=meja["nomor"]).first()
@@ -194,17 +195,12 @@ def run_seeders():
                 db.session.add(m)
                 db.session.commit()
             meja_db[meja["nomor"]] = m.id
-            
-        print("✅ Berhasil: 5 Data Meja ditambahkan!")
 
         # ==========================================
         # 9. SEEDER ORDER & ORDER ITEMS 
         # ==========================================
-        # Mengambil referensi pelanggan dan menu dari basis data
-        customer = User.query.filter_by(role='customer').first()
-        customer_id = customer.id if customer else 1
+        customers_db = User.query.filter_by(role='customer').all()
         
-        # Mengambil menu_id untuk mengisi order item
         menu_ayam = Menu.query.filter_by(name="Ayam Geprek").first()
         menu_kentang = Menu.query.filter_by(name="Kentang Goreng").first()
         menu_indomie = Menu.query.filter_by(name="Indomie Kuah").first()
@@ -212,17 +208,14 @@ def run_seeders():
         menu_dimsum = Menu.query.filter_by(name="Dimsum").first()
         menu_americano = Menu.query.filter_by(name="Americano").first()
         
-        # Fallback ID (Cadangan) jika menu di atas terhapus
         fallback_id = Menu.query.first().id if Menu.query.first() else 1
-
-        # MENGGUNAKAN WAKTU SEKARANG (UTC) AGAR SELALU TERBACA "HARI INI"
         now_utc = datetime.utcnow()
 
-        # Daftar 4 Pesanan dengan waktu (created_at) yang disimulasikan berbeda
+        # Daftar Pesanan (Ditambah pesanan Ayam Geprek untuk kebutuhan Review)
         data_orders = [
             {
                 "order_number": "ORD-20260514-001",
-                "user_id": customer_id,
+                "user_id": customers_db[0].id if len(customers_db) > 0 else 1,
                 "customer_name": None,
                 "table_id": meja_db.get("01"),
                 "table_number_snapshot": "01",
@@ -231,7 +224,7 @@ def run_seeders():
                 "payment_method": "cash",
                 "payment_status": "paid",
                 "total_amount": 50000,
-                "created_at": now_utc - timedelta(hours=2), # Datang 2 jam yang lalu
+                "created_at": now_utc - timedelta(hours=2),
                 "items": [
                     {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served"}
@@ -256,7 +249,7 @@ def run_seeders():
             },
             {
                 "order_number": "ORD-20260514-003",
-                "user_id": customer_id,
+                "user_id": customers_db[0].id if len(customers_db) > 0 else 1,
                 "customer_name": None,
                 "table_id": meja_db.get("04"),
                 "table_number_snapshot": "04",
@@ -286,14 +279,61 @@ def run_seeders():
                     {"menu_id": menu_americano.id if menu_americano else fallback_id, "qty": 1, "price": 15000, "notes": "Less ice", "status": "pending"},
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "pending"}
                 ]
+            },
+            # --- TIGA PESANAN TAMBAHAN UNTUK KEBUTUHAN REVIEW AYAM GEPREK ---
+            {
+                "order_number": "ORD-20260513-005",
+                "user_id": customers_db[1].id if len(customers_db) > 1 else 1,
+                "customer_name": None,
+                "table_id": meja_db.get("03"),
+                "table_number_snapshot": "03",
+                "order_type": "dine_in",
+                "order_status": "served",
+                "payment_method": "qris",
+                "payment_status": "paid",
+                "total_amount": 20000,
+                "created_at": now_utc - timedelta(days=1),
+                "items": [
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Sambal dipisah", "status": "served"}
+                ]
+            },
+            {
+                "order_number": "ORD-20260512-006",
+                "user_id": customers_db[2].id if len(customers_db) > 2 else 1,
+                "customer_name": None,
+                "table_id": meja_db.get("05"),
+                "table_number_snapshot": "05",
+                "order_type": "dine_in",
+                "order_status": "served",
+                "payment_method": "cash",
+                "payment_status": "paid",
+                "total_amount": 40000,
+                "created_at": now_utc - timedelta(days=2),
+                "items": [
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 2, "price": 20000, "notes": "Satu pedas, satu sedang", "status": "served"}
+                ]
+            },
+            {
+                "order_number": "ORD-20260511-007",
+                "user_id": customers_db[3].id if len(customers_db) > 3 else 1,
+                "customer_name": None,
+                "table_id": meja_db.get("01"),
+                "table_number_snapshot": "01",
+                "order_type": "dine_in",
+                "order_status": "served",
+                "payment_method": "qris",
+                "payment_status": "paid",
+                "total_amount": 20000,
+                "created_at": now_utc - timedelta(days=3),
+                "items": [
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Dada mentok", "status": "served"}
+                ]
             }
         ]
 
-        # Proses memasukkan (insert) data Order dan OrderItem ke basis data
         for data in data_orders:
             order_exist = Order.query.filter_by(order_number=data["order_number"]).first()
             if not order_exist:
-                # Membuat Pesanan (Order) dengan memasukkan created_at secara spesifik
                 pesanan_baru = Order(
                     order_number=data["order_number"],
                     user_id=data["user_id"],
@@ -305,12 +345,11 @@ def run_seeders():
                     payment_method=data["payment_method"],
                     payment_status=data["payment_status"],
                     total_amount=data["total_amount"],
-                    created_at=data["created_at"]  # <-- Injeksi waktu pembuatan di sini
+                    created_at=data["created_at"]
                 )
                 db.session.add(pesanan_baru)
-                db.session.commit() # Disimpan agar pesanan_baru.id terbentuk
+                db.session.commit()
                 
-                # Membuat Detail Item Pesanan (OrderItem)
                 for item in data["items"]:
                     item_baru = OrderItem(
                         order_id=pesanan_baru.id,
@@ -323,17 +362,17 @@ def run_seeders():
                     db.session.add(item_baru)
                     
                 db.session.commit()
-        print("✅ Berhasil: 4 Data Order (dengan rentang waktu berbeda) dan 7 Data Order Item ditambahkan!")
+        print("✅ Berhasil: Data Order & Detail Item ditambahkan!")
 
         # ==========================================
         # 10. SEEDER RESERVASI
         # ==========================================
-        customer = User.query.filter_by(role='customer').first()
+        customer = customers_db[0] if customers_db else None
         customer_id = customer.id if customer else 1
         customer_phone = customer.phone if customer and customer.phone else "081299998888"
 
-        meja_db = {m.table_number: m.id for m in Table.query.all()}
-        fallback_table = list(meja_db.values())[0] if meja_db else 1
+        meja_db_id = {m.table_number: m.id for m in Table.query.all()}
+        fallback_table = list(meja_db_id.values())[0] if meja_db_id else 1
 
         data_reservasi = [
             {
@@ -341,9 +380,9 @@ def run_seeders():
                 "reservation_number": "RES-20260515-001",
                 "customer_name": None,
                 "phone": customer_phone,
-                "guest_qty": 2, # Kolom Baru
-                "duration": 90, # Kolom Baru (menit)
-                "tables": [meja_db.get("02", fallback_table)], # Diubah menjadi list untuk mendukung multi-meja
+                "guest_qty": 2,
+                "duration": 90,
+                "tables": [meja_db_id.get("02", fallback_table)],
                 "notes": None,
                 "cancellation_reason": None,
                 "reservation_date": date(2026, 5, 15),
@@ -357,7 +396,7 @@ def run_seeders():
                 "phone": customer_phone,
                 "guest_qty": 4,
                 "duration": 120,
-                "tables": [meja_db.get("01", fallback_table)],
+                "tables": [meja_db_id.get("01", fallback_table)],
                 "notes": "Tolong siapkan kursi tinggi untuk balita.",
                 "cancellation_reason": None,
                 "reservation_date": date(2026, 5, 16),
@@ -371,7 +410,7 @@ def run_seeders():
                 "phone": "081999888777",
                 "guest_qty": 8,
                 "duration": 150,
-                "tables": [meja_db.get("03", fallback_table), meja_db.get("04", fallback_table)], # Contoh penggabungan 2 meja
+                "tables": [meja_db_id.get("03", fallback_table), meja_db_id.get("04", fallback_table)],
                 "notes": "Acara keluarga",
                 "cancellation_reason": None,
                 "reservation_date": date(2026, 5, 14),
@@ -386,7 +425,6 @@ def run_seeders():
             ).first()
 
             if not reservasi_exist:
-                # 1. Simpan data ke tabel Reservation
                 reservasi_baru = Reservation(
                     user_id=data["user_id"],
                     reservation_number=data["reservation_number"],
@@ -401,9 +439,8 @@ def run_seeders():
                     status=data["status"]
                 )
                 db.session.add(reservasi_baru)
-                db.session.commit() # Dicommit agar mendapatkan reservasi_baru.id
+                db.session.commit()
                 
-                # 2. Simpan relasi meja ke tabel ReservationTable
                 for t_id in data["tables"]:
                     table_obj = Table.query.get(t_id)
                     snapshot = table_obj.table_number if table_obj else "Unknown"
@@ -416,9 +453,38 @@ def run_seeders():
                 db.session.commit()
         
         print("✅ Berhasil: Data Reservasi & Relasi Meja ditambahkan!")
-        
+
+        # ==========================================
+        # 11. SEEDER REVIEW (AYAM GEPREK)
+        # ==========================================
+        if menu_ayam:
+            # Mengambil 4 OrderItem untuk menu Ayam Geprek yang sudah selesai (served)
+            ayam_items = OrderItem.query.filter_by(menu_id=menu_ayam.id, item_status='served').limit(4).all()
+            
+            reviews_data = [
+                {"rating": 5, "comment": "Ayamnya sangat krispi dan sambalnya mantap luar biasa!"},
+                {"rating": 4, "comment": "Porsinya cukup besar, rasanya enak tapi kurang pedas buat saya."},
+                {"rating": 5, "comment": "Bumbu meresap sampai ke dalam, dagingnya empuk banget. Recommended!"},
+                {"rating": 4, "comment": "Enak, harganya juga terjangkau. Pelayanan sangat cepat."}
+            ]
+            
+            for i, item in enumerate(ayam_items):
+                if i < len(reviews_data):
+                    review_exist = Review.query.filter_by(order_item_id=item.id).first()
+                    if not review_exist:
+                        new_review = Review(
+                            order_item_id=item.id,
+                            rating=reviews_data[i]["rating"],
+                            comment=reviews_data[i]["comment"]
+                        )
+                        db.session.add(new_review)
+            
+            db.session.commit()
+            print("✅ Berhasil: 4 Data Review untuk Ayam Geprek ditambahkan!")
+        else:
+            print("ℹ️ Lewati: Menu Ayam Geprek tidak ditemukan untuk diberikan ulasan.")
+            
         print("--- SEEDER SELESAI ---\n")
 
-# Ini memungkinkan file dijalankan langsung via terminal
 if __name__ == '__main__':
     run_seeders()

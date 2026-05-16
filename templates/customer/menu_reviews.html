@@ -2,17 +2,15 @@
 
 {% block content %}
 <div class="customer-page-shell w-full" x-data="{ cart: JSON.parse(localStorage.getItem('cart')) || [], goToCheckout() { if (this.cart.length === 0) return; window.location.href = '/customer/checkout'; } }">
-    <!-- Breadcrumb & Cart Badge -->
     <div class="mb-8 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-gray-600 text-sm">
-            <a href="/customer/daftar-menu" class="hover:text-terralogBlue transition">Daftar Menu</a>
+        <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap">
+            <a href="/customer/daftar-menu" class="text-terralogBlue hover:text-blue-900 transition">Daftar Menu</a>
             <span>›</span>
             <a href="/customer/menu/{{ menu.id }}" class="hover:text-terralogBlue transition">{{ menu.name }}</a>
             <span>›</span>
-            <span class="text-gray-800 font-semibold">Ulasan</span>
+            <span class="text-gray-800">Ulasan</span>
         </div>
         
-        <!-- Cart Badge -->
         <button @click="goToCheckout()" class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm hover:bg-yellow-500 transition" :disabled="cart.length === 0">
             <span x-text="cart.length">0</span>
             <span>item dipilih</span>
@@ -21,34 +19,43 @@
         </button>
     </div>
 
-    <!-- Reviews Header -->
     <div class="mb-8">
         <div class="flex items-center gap-4 mb-6">
-            <div class="inline-flex items-center gap-1 bg-terralogBlue text-white px-3 py-2 rounded-lg font-bold text-sm">
-                <span>★ {{ menu.rating }}</span>
-            </div>
-            <span class="text-gray-700 text-sm font-semibold">Ulasan ({{ menu.review_count }}rb ulasan)</span>
+            {% if avg_rating > 0 %}
+                <div class="inline-flex items-center gap-1 bg-terralogBlue text-white px-3 py-2 rounded-lg font-bold text-sm">
+                    <span>★ {{ avg_rating }}</span>
+                </div>
+            {% else %}
+                <div class="inline-flex items-center gap-1 bg-gray-300 text-gray-600 px-3 py-2 rounded-lg font-bold text-sm">
+                    <span>★</span>
+                </div>
+            {% endif %}
+            
+            <span class="text-gray-700 text-sm font-semibold">
+                Ulasan 
+                {% if review_count > 0 %}
+                    ({{ review_count }} ulasan)
+                {% else %}
+                    (belum ada ulasan)
+                {% endif %}
+            </span>
         </div>
 
-        <!-- Reviews List -->
-        {% if menu.reviews %}
+        {% if reviews and reviews|length > 0 %}
             <div class="space-y-4">
-                {% for review in menu.reviews %}
+                {% for review in reviews %}
                     <div class="bg-blue-50 rounded-lg p-5 border border-blue-100 hover:shadow-md transition">
                         <div class="flex gap-4">
-                            <!-- Avatar -->
                             <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center font-bold text-white text-lg flex-shrink-0">
                                 {{ review.nama[0].upper() }}
                             </div>
                             
                             <div class="flex-1 min-w-0">
-                                <!-- Name and Date -->
                                 <div class="flex items-center gap-2 mb-2">
                                     <p class="font-bold text-gray-800 text-sm">{{ review.nama }}</p>
                                     <span class="text-gray-500 text-xs">{{ review.date }}</span>
                                 </div>
                                 
-                                <!-- Rating Stars -->
                                 <div class="flex gap-0.5 mb-3">
                                     {% for i in range(5) %}
                                         {% if i < review.rating %}
@@ -59,7 +66,6 @@
                                     {% endfor %}
                                 </div>
 
-                                <!-- Review Text -->
                                 <p class="text-gray-700 text-sm leading-relaxed">{{ review.text }}</p>
                             </div>
                         </div>
