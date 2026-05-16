@@ -1,11 +1,11 @@
 {% extends 'layout.html' %} 
 
 {% block content %}
-<div x-data="pengaturanAkun()" class="customer-page-shell p-5 min-h-screen font-['Inter']" x-cloak>
+<div x-data="pengaturanAkun()" class="customer-page-shell w-full" x-cloak>
 
-    <div class="mb-6">
-        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Pengaturan</h1>
-        <p class="text-gray-500 mt-1 text-sm">Kelola data profil dan keamanan akun Anda</p>
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-terralogBlue mb-1">Pengaturan</h1>
+        <p class="text-gray-500 text-sm">Kelola data profil dan keamanan akun Anda</p>
     </div>
 
     <div class="flex flex-wrap gap-3 mb-6">
@@ -29,7 +29,7 @@
                 
                 <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
                     <div class="relative">
-                        <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
+                        <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-bold shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
                             
                             <img id="userPhotoPreview" 
                                  src="{% if user.photo %}{{ url_for('static', filename=user.photo) }}{% endif %}" 
@@ -48,32 +48,32 @@
                     </div>
 
                     <div>
-                        <h2 class="text-2xl font-black text-gray-800">{{ user.name }}</h2>
-                        <p class="text-gray-400 font-medium mt-1 text-sm capitalize">{{ user.role }}</p>
+                        <h2 class="text-2xl font-bold text-gray-800">{{ user.name }}</h2>
+                        <p class="text-gray-500 mt-1 text-sm capitalize">{{ user.role }}</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
                     <div>
-                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Lengkap</label>
+                        <label class="block mb-1 text-sm font-semibold text-gray-800">Nama Lengkap</label>
                         <input name="name" type="text" value="{{ user.name }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
-                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Username</label>
+                        <label class="block mb-1 text-sm font-semibold text-gray-800">Username</label>
                         <input name="username" type="text" value="{{ user.username }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
-                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Email</label>
+                        <label class="block mb-1 text-sm font-semibold text-gray-800">Email</label>
                         <input name="email" type="email" value="{{ user.email if user.email else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
-                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">No. Telepon</label>
+                        <label class="block mb-1 text-sm font-semibold text-gray-800">No. Telepon</label>
                         <input name="phone" type="text" value="{{ user.phone if user.phone else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                 </div>
 
                 <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
-                    <button type="submit" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
+                    <button type="submit" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold transition shadow-md hover:shadow-lg active:scale-95 text-sm">
                         Simpan Perubahan
                     </button>
                 </div>
@@ -82,7 +82,7 @@
         
         <div x-show="activeTab === 'keamanan'" x-transition>
             <div class="max-w-sm">
-                <h3 class="text-base font-bold text-terralogBlue mb-5">Ubah Kata Sandi</h3>
+                <h3 class="text-lg font-bold text-gray-800 mb-5">Ubah Kata Sandi</h3>
 
                 <div class="flex flex-col gap-4">
                     <div class="flex flex-col gap-1">
@@ -109,7 +109,7 @@
                         </div>
                     </div>
 
-                    <p class="text-xs text-gray-400 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
+                    <p class="text-xs text-gray-500 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
 
                     <div class="flex mt-2">
                         <button @click="savePassword('{{ url_for('customer.update_password') }}')"
@@ -164,7 +164,6 @@ document.addEventListener('alpine:init', () => {
         saveProfile(event) {
             const formData = new FormData(event.target);
 
-            // Perhatikan URL menggunakan rute customer
             fetch("{{ url_for('customer.pengaturan') }}", {
                 method: 'POST',
                 body: formData 
