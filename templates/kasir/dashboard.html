@@ -150,12 +150,12 @@ document.addEventListener('alpine:init', () => {
         customerName: '', 
         selectedTable: '',
 
-        // VARIABEL UNTUK MODE EDIT
+        // VARIABEL DATA UNTUK MODE EDIT
         editingOrderNumber: null,
         isEditLunas: false,
         isAccountOrder: false,
 
-        // 2. SIKLUS HIDUP (INIT)
+        // 2. LIFECYCLE INITIALIZATION
         init() {
             const rawData = document.getElementById('edit-data').textContent;
             const editData = JSON.parse(rawData);
@@ -171,7 +171,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // 3. LOGIKA KERANJANG (CART OPERATIONS)
+        // 3. CORE CART OPERATIONS
         addToCart() {
             if (this.editingIndex !== null) {
                 if (this.qty === 0) {
@@ -254,7 +254,7 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // 4. VALIDASI & GETTER COMPUTED
+        // 4. COMPUTED TARGET VALUES & VALIDATIONS
         validateOrder() {
             if (this.cart.length === 0) { 
                 showToast('Keranjang masih kosong!', 'error'); 
@@ -275,7 +275,7 @@ document.addEventListener('alpine:init', () => {
             return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0); 
         },
 
-        // 5. MODAL & AJAX SUBMIT API
+        // 5. SERVER API CALLS & PERSISTENCE
         openPaymentModal() {
             if (this.validateOrder()) {
                 this.showPayment = true;
@@ -317,6 +317,20 @@ document.addEventListener('alpine:init', () => {
                 }
             })
             .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
+        },
+
+        closeSuccessAndRedirect() {
+            // 1. Sembunyikan modal sukses
+            this.showSuccess = false;
+            
+            // 2. Reset total state input keranjang
+            this.receivedAmount = '0';
+            this.cart = [];
+            this.customerName = '';
+            this.selectedTable = '';
+            
+            // 3. Pindahkan halaman ke Pesanan Aktif
+            window.location.href = '/kasir/pesanan-aktif';
         },
 
         saveOrder() { 
@@ -381,7 +395,7 @@ document.addEventListener('alpine:init', () => {
             .catch(err => showToast('Terjadi gangguan koneksi ke server.', 'error'));
         },
 
-        // 6. UTILITIES
+        // 6. HARDWARE & PRINT HANDLERS
         printReceipt() { 
             window.print(); 
         },
