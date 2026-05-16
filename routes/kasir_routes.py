@@ -347,6 +347,7 @@ def riwayat_transaksi():
 @login_required
 def pengaturan():
     if request.method == 'POST':
+        # Menggunakan request.form karena dikirim melalui FormData dari Fetch API
         current_user.name = request.form.get('name')
         current_user.username = request.form.get('username')
         current_user.email = request.form.get('email')
@@ -360,7 +361,7 @@ def pengaturan():
                 if not os.path.exists(upload_path):
                     os.makedirs(upload_path)
 
-                # Hapus foto lama
+                # Hapus foto lama jika ada
                 if current_user.photo:
                     old_path = os.path.join(current_app.root_path, 'static', current_user.photo)
                     if not os.path.exists(old_path) and not current_user.photo.startswith('uploads/'):
@@ -375,17 +376,17 @@ def pengaturan():
                 
                 file.save(os.path.join(upload_path, unique_filename))
                 
-                # Simpan beserta alamat path relatifnya ke database
+                # Simpan path relatifnya ke database
                 current_user.photo = f"uploads/profile/{unique_filename}"
 
         try:
             db.session.commit()
-            flash('Profil berhasil diperbarui!', 'success')
+            # KODE BARU: Mengembalikan JSON sukses tanpa flash & redirect
+            return jsonify({"success": True, "message": "Profil berhasil diperbarui!"})
         except Exception as e:
             db.session.rollback()
-            flash('Gagal memperbarui profil. Username atau email mungkin sudah digunakan.', 'danger')
-        
-        return redirect(url_for('kasir.pengaturan'))
+            # KODE BARU: Mengembalikan JSON gagal
+            return jsonify({"success": False, "message": "Gagal memperbarui profil. Username atau email mungkin sudah digunakan."})
 
     return render_template('kasir/pengaturan.html', segment='pengaturan', role='kasir', user=current_user)
 
