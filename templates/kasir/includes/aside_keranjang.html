@@ -15,7 +15,12 @@
     <div class="grid grid-cols-3 gap-3 mb-4 text-[11px] font-bold">
         <div class="col-span-2">
             <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Nama Pelanggan</label>
-            <input type="text" x-model="customerName" placeholder="Nama..." class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-terralogBlue outline-none font-medium">
+            <input type="text" 
+                x-model="customerName" 
+                :disabled="editingOrderNumber && isAccountOrder"
+                :class="editingOrderNumber && isAccountOrder ? 'bg-gray-200 text-gray-400 cursor-not-allowed font-bold' : 'bg-gray-50 focus:bg-white focus:border-terralogBlue'"
+                placeholder="Nama..." 
+                class="w-full p-2.5 border border-gray-200 rounded-xl outline-none font-medium transition-all">
         </div>
         <div x-show="orderType === 'dine-in'">
             <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Meja</label>
@@ -89,7 +94,8 @@
                 <i :data-lucide="isDeleteMode ? 'trash-2' : 'trash'" class="w-3.5 h-3.5"></i>
                 <span x-text="isDeleteMode ? 'Clear All' : 'Hapus'"></span>
             </button>
-            <button @click="isDeleteMode ? cancelDelete() : (editingOrderNumber ? alert('Fungsi Update API belum dibuat') : saveOrder())" :disabled="cart.length === 0" 
+            <button @click="isDeleteMode ? cancelDelete() : (editingOrderNumber ? updateOrder() : saveOrder())" 
+                    :disabled="cart.length === 0" 
                     :class="isDeleteMode ? 'border-gray-200 text-gray-500 bg-gray-50' : 'border-blue-100 text-terralogBlue'"
                     class="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center justify-center gap-1.5 disabled:opacity-40">
                 <i :data-lucide="isDeleteMode ? 'x-circle' : 'bookmark'" class="w-3.5 h-3.5"></i>

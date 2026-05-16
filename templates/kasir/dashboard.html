@@ -20,15 +20,15 @@
     activeCard: null, isDeleteMode: false, editingIndex: null,
     selectedItem: {}, qty: 1, note: '', 
     cart: [], selectedItems: [],
-    orderType: 'dine-in', searchQuery: '', selectedCategory: 'all',
+    orderType: 'dine-in', searchQuery: '', selectedCategory: 'all', filterStatusMenu: 'SEMUA',
     paymentMethod: 'CASH', receivedAmount: '0',
     customerName: '', selectedTable: '',
 
     // --- VARIABEL BARU UNTUK MODE EDIT ---
     editingOrderNumber: null,
     isEditLunas: false,
+    isAccountOrder: false,
 
-    // --- FUNGSI INIT ---
     init() {
         const rawData = document.getElementById('edit-data').textContent;
         const editData = JSON.parse(rawData);
@@ -36,10 +36,14 @@
         if (editData) {
             this.editingOrderNumber = editData.order_number;
             this.customerName = editData.customer_name || '';
-            this.selectedTable = editData.table_id || '';
+            
+            // --- FIX MEJA: Ubah menjadi String agar cocok dengan dropdown HTML ---
+            this.selectedTable = editData.table_id ? String(editData.table_id) : ''; 
+            
             this.orderType = editData.order_type || 'dine-in';
             this.cart = editData.cart || [];
             this.isEditLunas = editData.lunas;
+            this.isAccountOrder = editData.has_account || false;
         }
     },
 
@@ -166,14 +170,13 @@
 
     // 4. FUNGSI SIMPAN (HOLD ORDER)
     saveOrder() { 
-        // Langsung gunakan helper validasi
         if (!this.validateOrder()) return; 
 
         const payload = {
             customer_name: this.customerName,
             table_id: this.selectedTable,
             order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
-            payment_method: null, // Dikirim null agar statusnya unpaid
+            payment_method: null, 
             total_amount: this.subtotal,
             cart: this.cart
         };
@@ -187,11 +190,53 @@
         .then(data => {
             if (data.success) {
                 showToast('Pesanan berhasil disimpan (Hold Order)!', 'success');
+                
+                // --- PERBAIKAN UX DARI RICHARD ---
+                // Beri jeda 1 detik agar animasi Toast sukses terlihat,
+                // lalu lempar kasir ke halaman antrean pesanan aktif.
+                // (Ini otomatis membuat keranjang kosong karena halamannya di-refresh/pindah)
+                setTimeout(() => {
+                    window.location.href = '/kasir/pesanan-aktif';
+                }, 1000);
+                // ---------------------------------
+                
             } else {
                 showToast('Gagal menyimpan pesanan: ' + data.message, 'error');
             }
         })
         .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
+    },
+
+    updateOrder() {
+        if (!this.validateOrder()) return;
+
+        const payload = {
+            order_number: this.editingOrderNumber,
+            customer_name: this.customerName,
+            table_id: this.selectedTable,
+            order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
+            total_amount: this.subtotal,
+            cart: this.cart
+        };
+
+        fetch('/kasir/api/update-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Pesanan berhasil diperbarui!', 'success');
+                // Beri jeda 1 detik lalu kembalikan kasir ke layar pesanan aktif
+                setTimeout(() => {
+                    window.location.href = '/kasir/pesanan-aktif';
+                }, 1000);
+            } else {
+                showToast('Gagal memperbarui data: ' + data.message, 'error');
+            }
+        })
+        .catch(err => showToast('Terjadi gangguan koneksi ke server.', 'error'));
     },
 
     confirmDelete() {
@@ -212,7 +257,7 @@
             
             // Cegah jika ternyata semua item di keranjang sudah terkunci
             if (lockedItems.length === this.cart.length) {
-                alert('Semua item sudah diproses dapur dan tidak bisa dihapus secara massal.');
+                showToast('Semua item sudah diproses dapur dan tidak bisa dihapus.', 'error');
                 this.cancelDelete();
                 return;
             }
@@ -254,10 +299,23 @@
                 </div>
                 <div class="flex gap-3">
                     <div class="relative w-64">
-                        <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-gray-400"></i>
+                        <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
                         <input type="text" x-model="searchQuery" placeholder="Cari menu..." 
-                               class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:border-terralogBlue shadow-sm outline-none transition">
+                               class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
                     </div>
+
+                    <select x-model="selectedCategory" class="border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
+                        <option value="all">Semua Kategori</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select x-model="filterStatusMenu" class="border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
+                        <option value="SEMUA">Semua Status</option>
+                        <option value="tersedia">Tersedia</option>
+                        <option value="habis">Stok Habis</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -265,12 +323,15 @@
         <div class="flex-1 overflow-y-auto custom-scrollbar pr-3 pb-6 pt-2 -mr-3">
             <div class="grid grid-cols-3 lg:grid-cols-4 gap-4">
                 {% for item in menu %}
-                <div {% if item.status == 'tersedia' %}
+                <div x-show="(searchQuery === '' || '{{ item.nama | lower }}'.includes(searchQuery.toLowerCase())) && (filterStatusMenu === 'SEMUA' || filterStatusMenu === '{{ item.status }}') && (selectedCategory === 'all' || selectedCategory === '{{ item.category_id }}')"
+                     x-transition.opacity.duration.300ms
+                     
+                    {% if item.status == 'tersedia' %}
                     @click="openModal = true; selectedItem = { id: {{ item.id }}, nama: '{{ item.nama }}', harga: {{ item.harga }}, img: '{{ item.img }}' }; qty = 1; note = ''; editingIndex = null;" 
                     class="cursor-pointer bg-white rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md hover:border-terralogBlue/30 overflow-hidden flex flex-col relative"
-                {% else %}
+                    {% else %}
                     class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col relative overflow-hidden opacity-60 grayscale-[0.5]"
-                {% endif %}>
+                    {% endif %}>
                     
                     <template x-if="cart.find(c => c.id === {{ item.id }})">
                         <div class="absolute top-2 left-2 bg-terralogBlue text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg z-20 font-black text-xs border-2 border-white" 

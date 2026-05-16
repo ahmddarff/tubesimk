@@ -141,6 +141,7 @@ class Order(db.Model):
     order_status    = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='order_status'), default='pending')
     payment_method  = db.Column(db.Enum('cash', 'qris', name='payment_method'), nullable=True)
     payment_status  = db.Column(db.Enum('unpaid', 'paid', 'cancelled', name='payment_status'), default='unpaid')
+    cancellation_reason = db.Column(db.Text, nullable=True)
     total_amount    = db.Column(db.Integer, nullable=False, default=0)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

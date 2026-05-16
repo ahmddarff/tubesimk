@@ -4,7 +4,7 @@ from utils import *
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Menu, Reservation, Order, OrderItem, Table
+from models import Category,Menu, Reservation, Order, OrderItem, Table
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -53,15 +53,15 @@ def dashboard():
     # ==========================================
     # 2. DATA TRANSAKSI (KERANJANG & KATALOG)
     # ==========================================
-    # Mengambil objek meja yang tersedia untuk dropdown pilihan kasir
     tables_db = Table.query.filter_by(is_available=True).order_by(Table.table_number).all()
     
-    # Mengambil dan memformat data menu untuk katalog
+    # 1. Ambil semua kategori untuk tombol filter
+    categories_db = Category.query.order_by(Category.name).all()
+    
     menus_db = Menu.query.all()
     menu_list = []
     
     for m in menus_db:
-        # Cek ketersediaan berdasarkan saklar is_available dan sisa stok
         if m.is_available and (m.stock is None or m.stock > 0):
             status_menu = 'tersedia'
         else:
@@ -72,7 +72,9 @@ def dashboard():
             "nama": m.name,
             "harga": m.price,
             "img": m.image_url if m.image_url else "gambar.png", 
-            "status": status_menu
+            "status": status_menu,
+            # 2. Sisipkan nama kategori ke dalam data menu
+            "category_id": str(m.category_id),
         })
 
     # ==========================================
@@ -84,6 +86,14 @@ def dashboard():
     if edit_order_id:
         order_to_edit = Order.query.filter_by(order_number=edit_order_id).first()
         if order_to_edit:
+            # Masukkan meja yang sedang dipakai pesanan ini ke dalam daftar dropdown
+            if order_to_edit.table_id:
+                meja_sekarang = db.session.get(Table, order_to_edit.table_id)
+                if meja_sekarang and meja_sekarang not in tables_db:
+                    tables_db.append(meja_sekarang)
+                    # Urutkan ulang agar urutan nomor meja di dropdown tetap rapi
+                    tables_db.sort(key=lambda x: str(x.table_number))
+            # -------------------------
             cart_items = []
             for item in order_to_edit.items:
                 cart_items.append({
@@ -98,11 +108,12 @@ def dashboard():
             
             edit_data = {
                 "order_number": order_to_edit.order_number,
-                "customer_name": order_to_edit.customer_name,
+                "customer_name": order_to_edit.customer_name or (order_to_edit.user.name if order_to_edit.user else "Tamu"),
                 "table_id": order_to_edit.table_id,
                 "order_type": "dine-in" if order_to_edit.order_type == "dine_in" else "takeaway",
                 "cart": cart_items,
-                "lunas": True if order_to_edit.payment_status == 'paid' else False
+                "lunas": True if order_to_edit.payment_status == 'paid' else False,
+                "has_account": True if order_to_edit.user_id is not None else False
             }
 
     # ==========================================
@@ -114,6 +125,7 @@ def dashboard():
         role='kasir',
         stats=stats_data,
         tables=tables_db,
+        categories=categories_db,
         menu=menu_list,
         edit_data=edit_data
     )
@@ -166,6 +178,7 @@ def pesanan_aktif():
     # Syarat A: Statusnya masih diproses dapur (pending, preparing, ready)
     # Syarat B: ATAU statusnya sudah disajikan (served) TAPI belum dibayar (unpaid)
     orders_db = Order.query.filter(
+        Order.payment_status != 'cancelled',
         db.or_(
             Order.order_status.in_(['pending', 'preparing', 'ready']),
             db.and_(Order.order_status == 'served', Order.payment_status == 'unpaid')
@@ -482,6 +495,144 @@ def submit_order():
             "message": "Pesanan berhasil dibuat!", 
             "order_number": order_number
         })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@kasir_bp.route('/api/update-order', methods=['POST'])
+@login_required
+def update_order():
+    data = request.json
+    order_number = data.get('order_number')
+    cart = data.get('cart', [])
+    
+    if not order_number:
+        return jsonify({"success": False, "message": "Nomor pesanan tidak valid!"})
+        
+    try:
+        # 1. VALIDASI: Cari pesanan asli di database
+        order = Order.query.filter_by(order_number=order_number).first()
+        if not order:
+            return jsonify({"success": False, "message": "Pesanan tidak ditemukan!"})
+            
+        # 2. SATPAM KEAMANAN: Jika sudah lunas, blokir akses edit via URL/API
+        if order.payment_status == 'paid':
+            return jsonify({"success": False, "message": "Pesanan yang sudah lunas tidak dapat diubah!"})
+            
+        # 3. LOGIKA PINDAH MEJA / PERUBAHAN TIPE
+        new_order_type = data.get('order_type')
+        new_table_id = data.get('table_id') if new_order_type == 'dine_in' else None
+        
+        # Jika ada perubahan meja atau beralih ke takeaway
+        if order.table_id != new_table_id:
+            # Lepaskan status terpakai pada meja lama (jika ada)
+            if order.table_id:
+                old_table = db.session.get(Table, order.table_id)
+                if old_table:
+                    old_table.is_available = True
+            
+            # Tempati meja baru jika tipenya Dine In
+            table_snapshot = None
+            if new_table_id:
+                new_table = db.session.get(Table, new_table_id)
+                if new_table:
+                    new_table.is_available = False
+                    table_snapshot = new_table.table_number
+            
+            order.table_id = new_table_id
+            order.table_number_snapshot = table_snapshot
+            
+        # Perbarui data dasar pesanan
+        order.customer_name = data.get('customer_name')
+        order.order_type = new_order_type
+        order.total_amount = data.get('total_amount', 0)
+        
+        # 4. SINKRONISASI DAFTAR MENU (Hanya memproses level 'pending')
+        # Tarik semua item lama berstatus pending untuk direstorasi stoknya dan dihapus dari DB
+        pending_items = OrderItem.query.filter_by(order_id=order.id, item_status='pending').all()
+        for p_item in pending_items:
+            if p_item.menu and p_item.menu.stock is not None:
+                p_item.menu.stock += p_item.qty
+            db.session.delete(p_item)
+        
+        # Masukkan kembali item pending hasil filter/tambahan baru dari frontend
+        for item in cart:
+            status_item = item.get('status')
+            
+            # Lewati item yang sudah diproses dapur (preparing, ready, served) karena tidak dihapus
+            if status_item in ['preparing', 'ready', 'served']:
+                continue
+                
+            menu_asli = db.session.get(Menu, item['id'])
+            if not menu_asli:
+                db.session.rollback()
+                return jsonify({"success": False, "message": f"Menu '{item['nama']}' tidak ditemukan!"})
+                
+            # Validasi pengaman sisa stok item baru
+            if menu_asli.stock is not None:
+                if menu_asli.stock < item['qty']:
+                    db.session.rollback()
+                    return jsonify({"success": False, "message": f"Stok untuk '{menu_asli.name}' tidak mencukupi!"})
+                menu_asli.stock -= item['qty']
+                
+            # Buat baris baru untuk item pending / item tambahan baru
+            new_order_item = OrderItem(
+                order_id=order.id,
+                menu_id=item['id'],
+                qty=item['qty'],
+                price_at_order=menu_asli.price,
+                notes=item.get('note', ''),
+                item_status='pending'
+            )
+            db.session.add(new_order_item)
+            
+        db.session.commit()
+        return jsonify({"success": True, "message": "Pesanan berhasil diperbarui!"})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    
+# ── Pesanan Aktif APIs ─────────────────────────────────────────
+@kasir_bp.route('/api/cancel-order', methods=['POST'])
+@login_required
+def cancel_order():
+    data = request.json
+    order_id = data.get('order_id')
+    alasan = data.get('alasan', 'Dibatalkan oleh kasir') # Menangkap alasan batal jika ada
+
+    if not order_id:
+        return jsonify({"success": False, "message": "ID Pesanan tidak valid!"})
+
+    try:
+        order = Order.query.filter_by(order_number=order_id).first()
+        
+        if not order:
+            return jsonify({"success": False, "message": "Pesanan tidak ditemukan!"})
+
+        if order.payment_status == 'paid':
+            return jsonify({"success": False, "message": "Pesanan lunas tidak dapat dibatalkan!"})
+
+        # 1. UBAH STATUS MENJADI CANCELLED
+        order.payment_status = 'cancelled'
+        order.cancellation_reason = alasan
+
+        # 2. LEPASKAN MEJA (Jika pesanan Dine-In dan sedang menempati meja)
+        if order.table_id:
+            table = db.session.get(Table, order.table_id)
+            if table:
+                table.is_available = True
+            # Jangan hapus table_number_snapshot agar histori tetap tahu pesanan ini dulu di meja berapa
+            order.table_id = None 
+
+        # 3. KEMBALIKAN STOK FISIK (Hanya untuk item yang belum dimasak / pending)
+        for item in order.items:
+            if item.item_status == 'pending' and item.menu and item.menu.stock is not None:
+                item.menu.stock += item.qty
+
+        db.session.commit()
+        return jsonify({"success": True, "message": f"Pesanan {order_id} berhasil dibatalkan."})
 
     except Exception as e:
         db.session.rollback()

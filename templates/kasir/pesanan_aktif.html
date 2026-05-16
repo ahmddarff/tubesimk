@@ -40,22 +40,22 @@
 
         <div class="flex gap-4 mb-8 flex-wrap">
             <div class="relative flex-1 min-w-[250px]">
-                <i data-lucide="search" class="absolute left-3.5 top-2.5 w-4 h-4 text-gray-400"></i>
+                <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
                 <input 
                     type="text"
                     x-model="searchQuery"
                     placeholder="Cari No. Pesanan atau Nama Pelanggan..." 
-                    class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-terralogBlue focus:bg-white transition-colors"
+                    class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition-all"
                 >
             </div>
 
-            <select x-model="filterTipe" class="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 font-bold focus:outline-none focus:border-terralogBlue hover:border-gray-300 bg-white cursor-pointer transition-colors">
+            <select x-model="filterTipe" class="border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
                 <option value="SEMUA">Semua Tipe</option>
                 <option value="DINE IN">Dine In</option>
                 <option value="TAKE AWAY">Take Away</option>
             </select>
 
-            <select x-model="filterPembayaran" class="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 font-bold focus:outline-none focus:border-terralogBlue hover:border-gray-300 bg-white cursor-pointer transition-colors">
+            <select x-model="filterPembayaran" class="border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
                 <option value="SEMUA">Semua Pembayaran</option>
                 <option value="LUNAS">Lunas</option>
                 <option value="BELUM LUNAS">Belum Lunas</option>
@@ -135,6 +135,7 @@
     </div>
     
     {% include 'kasir/includes/modal_detail_pesanan.html' %}
+    {% include 'kasir/includes/modal_batal_pesanan.html' %}
 </div>
 
 <script id="data-pesanan" type="application/json">
@@ -155,6 +156,8 @@ document.addEventListener('alpine:init', () => {
         receivedAmount: '0',
         selectedOrder: {},
         showSuccess: false,
+        showCancelModal: false,
+        cancelReason: '',
 
         pesanan: JSON.parse(document.getElementById('data-pesanan').textContent),
 
@@ -252,14 +255,48 @@ document.addEventListener('alpine:init', () => {
             // 3. Jika semua item sudah diantar, otomatis ubah status pesanan utama menjadi SERVED
             if (semuaSelesai) {
                 this.updateStatus('SERVED');
-                this.showDetail = false; // Tutup modal karena pesanan sudah beres
-                alert("Semua item telah diantar. Status pesanan otomatis menjadi SERVED!");
+                this.showDetail = false; 
+                showToast('Semua item telah diantar. Status menjadi SERVED!', 'success');
             }
         },
 
         editOrder() {
             window.location.href = '/kasir/dashboard?edit=' + this.selectedOrder.id;
         }, 
+
+        openCancelModal() {
+            this.showCancelModal = true;
+            this.cancelReason = '';
+        },
+
+        confirmCancelOrder() {
+            if (!this.selectedOrder || !this.selectedOrder.id) return;
+
+            fetch('/kasir/api/cancel-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    order_id: this.selectedOrder.id,
+                    alasan: this.cancelReason
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.showCancelModal = false;
+                    this.showDetail = false;
+                    showToast(data.message, 'success');
+                    
+                    // Refresh halaman untuk memperbarui daftar kartu pesanan aktif
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi gangguan koneksi.', 'error'));
+        },
         
         handlePhysicKey(key) {
             if (!this.showPayment || this.paymentMethod !== 'CASH') return;
