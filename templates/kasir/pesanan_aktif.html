@@ -136,6 +136,8 @@
     
     {% include 'kasir/includes/modal_detail_pesanan.html' %}
     {% include 'kasir/includes/modal_batal_pesanan.html' %}
+    {% include 'kasir/includes/modal_pembayaran.html' %}
+    {% include 'kasir/includes/modal_sukses.html' %}
     {% include 'kasir/includes/struk_print.html' %}
 </div>
 
@@ -171,7 +173,7 @@ document.addEventListener('alpine:init', () => {
         // ==========================================
         // FUNGSI CETAK STRUK PESANAN AKTIF
         // ==========================================
-        printActiveOrder() {
+        printReceipt() {
             this.receiptData = {
                 no: this.selectedOrder.id,
                 date: this.formatWaktuLokal(this.selectedOrder.waktu_iso) + ' (Jam Pesan)',
@@ -186,7 +188,7 @@ document.addEventListener('alpine:init', () => {
                 })),
                 total: this.selectedOrder.total,
                 isPaid: this.selectedOrder.lunas, // Dinamis: TRUE jika lunas, FALSE jika belum
-                paymentMethod: 'CASH', // Atau biarkan kosong
+                paymentMethod: this.selectedOrder.metode || 'CASH',
                 receivedAmount: this.selectedOrder.total
             };
 
@@ -195,6 +197,59 @@ document.addEventListener('alpine:init', () => {
         },
 
         pesanan: JSON.parse(document.getElementById('data-pesanan').textContent),
+
+        // ==========================================
+        // FUNGSI & STATE MODAL PEMBAYARAN
+        // ==========================================
+        get subtotal() {
+            return this.selectedOrder.total || 0;
+        },
+
+        openPaymentModal() {
+            this.showDetail = false; // Tutup modal detail pesanan
+            this.showPayment = true; // Buka modal bayar
+            this.paymentMethod = 'CASH'; // Reset ke metode default
+            this.receivedAmount = '0'; // Reset nominal uang
+        },
+
+        submitOrderToDB() {
+            // 1. Validasi Uang Pas jika menggunakan CASH
+            if (this.paymentMethod === 'CASH') {
+                let bayar = parseInt(this.receivedAmount);
+                if (bayar < this.subtotal || isNaN(bayar)) {
+                    showToast('Uang yang diterima kurang dari total tagihan!', 'error');
+                    return;
+                }
+            }
+
+            // 2. Tembak API Pelunasan di Backend
+            fetch('/kasir/api/pay-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    order_number: this.selectedOrder.id,
+                    payment_method: this.paymentMethod
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    this.showPayment = false;
+                    this.showSuccess = true;
+                    // Update tampilan data lokal menjadi lunas agar siap dicetak!
+                    this.selectedOrder.lunas = true;
+                    this.selectedOrder.metode = this.paymentMethod;
+                } else {
+                    showToast('Gagal memproses pembayaran: ' + data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi kesalahan koneksi server.', 'error'));
+        },
+
+        closeSuccessAndRedirect() {
+            this.showSuccess = false;
+            window.location.reload(); // Refresh halaman agar pesanan lunas ini hilang dari daftar/statusnya update
+        },
 
         // Variabel untuk timer berjalan
         now: new Date(),

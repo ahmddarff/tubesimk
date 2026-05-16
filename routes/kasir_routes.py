@@ -210,21 +210,23 @@ def pesanan_aktif():
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
         nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu")
-
-        # Menyiapkan waktu ISO untuk timer real-time di frontend
-        # Tambahkan 'Z' agar JavaScript mendeteksi ini sebagai waktu UTC (sesuai models.py)
         waktu_iso_str = order.created_at.isoformat() + 'Z'
+
+        # AMBIL DATA METODE DARI DB (Ubah jadi huruf besar, default CASH jika kosong)
+        pm_raw = order.payment_method
+        metode_bayar = str(pm_raw).upper() if pm_raw else 'CASH'
 
         pesanan_aktif_data.append({
             'id': order.order_number,
             'nama': nama_pelanggan,
             'waktu_asli': order.created_at.strftime('%H:%M'),
-            'waktu_iso': waktu_iso_str, # Digunakan oleh Alpine.js timeAgo()
+            'waktu_iso': waktu_iso_str,
             'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
             'status': str(order.order_status).upper(), 
             'total': order.total_amount,
             'lunas': True if order.payment_status == 'paid' else False,
+            'metode': metode_bayar, # <--- TAMBAHAN BARU
             'items': items_list
         })
 
@@ -318,9 +320,9 @@ def riwayat_transaksi():
         # Menentukan nama pelanggan
         nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu Anonim")
         
-        # Mapping metode pembayaran (Opsional: menyesuaikan format teks)
-        metode_map = {'cash': 'TUNAI', 'qris': 'QRIS'}
-        metode_bayar = metode_map.get(order.payment_method, str(order.payment_method).upper())
+        # Ambil langsung metode dari database (CASH atau QRIS)
+        pm_raw = order.payment_method
+        metode_bayar = str(pm_raw).upper() if pm_raw else 'CASH'
 
         # TAMBAHAN: Mapping tipe pesanan agar sesuai dengan kondisi di struk HTML
         tipe_map = {'dine_in': 'dine-in', 'take_away': 'takeaway'}
@@ -657,6 +659,35 @@ def cancel_order():
         db.session.commit()
         return jsonify({"success": True, "message": f"Pesanan {order_id} berhasil dibatalkan."})
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+@kasir_bp.route('/api/pay-order', methods=['POST'])
+@login_required
+def pay_order():
+    data = request.json
+    order_number = data.get('order_number')
+    payment_method = data.get('payment_method')
+    
+    if not order_number or not payment_method:
+        return jsonify({"success": False, "message": "Data pembayaran tidak lengkap!"})
+        
+    try:
+        order = Order.query.filter_by(order_number=order_number).first()
+        if not order:
+            return jsonify({"success": False, "message": "Pesanan tidak ditemukan!"})
+            
+        if order.payment_status == 'paid':
+            return jsonify({"success": False, "message": "Pesanan ini sudah lunas sebelumnya!"})
+            
+        # Proses pelunasan dan catat metodenya
+        order.payment_status = 'paid'
+        order.payment_method = payment_method.upper() if payment_method.upper() in ['CASH', 'QRIS'] else 'CASH'
+        
+        db.session.commit()
+        return jsonify({"success": True, "message": "Pembayaran berhasil!"})
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})

@@ -293,7 +293,7 @@ document.addEventListener('alpine:init', () => {
             const baseData = this.dailyTransactions;
             const totalTrx = baseData.length;
             const totalOmzet = baseData.reduce((a, b) => a + b.total, 0);
-            const totalTunai = baseData.filter(t => t.metode === 'TUNAI').reduce((a, b) => a + b.total, 0);
+            const totalTunai = baseData.filter(t => t.metode === 'CASH').reduce((a, b) => a + b.total, 0);
             const totalQris = baseData.filter(t => t.metode === 'QRIS').reduce((a, b) => a + b.total, 0);
 
             return [
