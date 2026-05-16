@@ -2,101 +2,103 @@
 
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-gray-50 min-h-screen">
-    <div class="max-w-7xl">
-        <!-- Greeting Banner -->
+    <div class="max-w-7xl mx-auto">
         <div class="mb-12">
             <div class="overflow-hidden rounded-3xl shadow-lg">
                 <img src="{{ url_for('static', filename='images/banner.png') }}" alt="Banner" class="w-full h-auto object-cover">
             </div>
         </div>
 
-        <!-- Kategori Menu -->
         <div class="mb-16">
-            <h2 class="text-3xl font-bold text-terralogBlue mb-6">Kategori Menu</h2>
+            <h2 class="text-3xl font-bold text-terralogBlue mb-2">Kategori Menu</h2>
             <p class="text-gray-600 mb-6">Dari kopi sampai snack, semua ada</p>
             
             <div class="grid grid-cols-4 gap-6">
-                <!-- Coffee -->
-                <button class="bg-terralogBlue hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
-                    <div class="text-5xl mb-4">☕</div>
+                <a href="/customer/daftar-menu?kategori=Coffee" class="bg-terralogBlue hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105 block">
+                    <img src="{{ url_for('static', filename='images/coffee.png') }}" alt="Coffee" class="w-30 h-30 mx-auto mb-3 object-contain">
                     <h5 class="text-xl font-bold">Coffee</h5>
-                </button>
+                </a>
 
-                <!-- Non Coffee -->
-                <button class="bg-terralogOrange hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
-                    <div class="text-5xl mb-4">🥤</div>
+                <a href="/customer/daftar-menu?kategori=Non Coffee" class="bg-terralogOrange hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105 block">
+                    <img src="{{ url_for('static', filename='images/noncoffee.png') }}" alt="Coffee" class="w-30 h-30 mx-auto mb-3 object-contain">
                     <h5 class="text-xl font-bold">Non Coffee</h5>
-                </button>
+                </a>
 
-                <!-- Food -->
-                <button class="bg-yellow-400 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-gray-800 transform hover:scale-105">
-                    <div class="text-5xl mb-4">🍱</div>
+                <a href="/customer/daftar-menu?kategori=Food" class="bg-yellow-400 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105 block">
+                   <img src="{{ url_for('static', filename='images/food.png') }}" alt="Coffee" class="w-30 h-30 mx-auto mb-3 object-contain">
                     <h5 class="text-xl font-bold">Food</h5>
-                </button>
+                </a>
 
-                <!-- Snack -->
-                <button class="bg-blue-900 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105">
-                    <div class="text-5xl mb-4">🍪</div>
+                <a href="/customer/daftar-menu?kategori=Snack" class="bg-blue-900 hover:shadow-lg transition-all rounded-3xl p-8 text-center text-white transform hover:scale-105 block">
+                    <img src="{{ url_for('static', filename='images/snack.png') }}" alt="Coffee" class="w-30 h-30 mx-auto mb-3 object-contain">
                     <h5 class="text-xl font-bold">Snack</h5>
-                </button>
+                </a>
             </div>
         </div>
 
-        <!-- Best Seller -->
         <div>
-            <h2 class="text-3xl font-bold text-terralogBlue mb-6">Best Seller</h2>
+            <h2 class="text-3xl font-bold text-terralogBlue mb-2">Best Seller</h2>
             <p class="text-gray-600 mb-6">Menu andalan yang wajib kamu coba</p>
 
             <div class="grid grid-cols-4 gap-6">
-                <!-- Product 1 -->
-                <div class="bg-terralogBlue rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <div class="bg-gradient-to-br from-blue-600 to-blue-800 h-40 flex items-center justify-center">
-                        <i data-lucide="coffee" class="w-20 h-20 text-white/50"></i>
+                {% for product in best_sellers %}
+                <div onclick="window.location.href='/customer/menu/{{ product.id }}'"
+                     class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group cursor-pointer">
+                    
+                    <div class="relative h-48 overflow-hidden bg-gray-100">
+                        {% if product.image_url %}
+                            <img src="{{ product.image_url }}" 
+                                alt="{{ product.name }}" 
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        {% else %}
+                            <img src="https://via.placeholder.com/300x250/E8D5C4/8B7355?text={{ product.name }}" 
+                                alt="{{ product.name }}" 
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                        {% endif %}
+                        
+                        {% if not product.is_available %}
+                        <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                            <span class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold text-lg shadow-lg">HABIS</span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="p-6 text-white">
-                        <h5 class="text-lg font-bold mb-2">TERRALOG KOPI</h5>
-                        <p class="text-blue-100 text-sm mb-4">ICE / HOT</p>
-                        <p class="text-xs text-blue-200 leading-relaxed">Tis kesuksesan untuk rasa pala yang sempurna. dipandu artisan barista kami</p>
-                    </div>
-                </div>
 
-                <!-- Product 2 -->
-                <div class="bg-terralogOrange rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <div class="bg-gradient-to-br from-orange-500 to-orange-700 h-40 flex items-center justify-center">
-                        <i data-lucide="utensils" class="w-20 h-20 text-white/50"></i>
-                    </div>
-                    <div class="p-6 text-white">
-                        <h5 class="text-lg font-bold mb-2">AYAM GEPREK</h5>
-                        <p class="text-orange-100 text-sm mb-4">PEDAS / TIDAK PEDAS</p>
-                        <p class="text-xs text-orange-200 leading-relaxed">Ayam empuk bersaus super pedas, dilengkapi telur mata sapi</p>
-                    </div>
-                </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between bg-white">
+                        <div>
+                            <h3 class="font-bold text-gray-900 text-lg mb-1.5 line-clamp-1 group-hover:text-terralogBlue transition-colors duration-200">
+                                {{ product.name }}
+                            </h3>
+                            
+                            <div class="flex items-center gap-2 mb-4 text-xs">
+                                <div class="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md font-bold">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                    <span>{{ product.rating_avg|default(0.0) }}</span>
+                                </div>
+                                <span class="text-gray-300">|</span>
+                                <span class="text-gray-500 font-medium">
+                                    {{ product.terjual|default(0) }} Terjual
+                                </span>
+                            </div>
+                        </div>
 
-                <!-- Product 3 -->
-                <div class="bg-red-600 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <div class="bg-gradient-to-br from-red-600 to-red-800 h-40 flex items-center justify-center">
-                        <i data-lucide="bowl" class="w-20 h-20 text-white/50"></i>
-                    </div>
-                    <div class="p-6 text-white">
-                        <h5 class="text-lg font-bold mb-2">RICEBOWL BEEF TERIYAKI</h5>
-                        <p class="text-red-100 text-sm mb-4">SIGNATURE</p>
-                        <p class="text-xs text-red-200 leading-relaxed">A savory and comforting meal served on fresh rice</p>
+                        <div class="pt-2 border-t border-gray-50 flex items-center justify-between">
+                            <span class="text-xl font-bold text-terralogBlue">
+                                Rp {{ "{:,}".format(product.price).replace(',', '.') }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Product 4 -->
-                <div class="bg-blue-900 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <div class="bg-gradient-to-br from-blue-800 to-blue-950 h-40 flex items-center justify-center">
-                        <i data-lucide="coffee" class="w-20 h-20 text-white/50"></i>
-                    </div>
-                    <div class="p-6 text-white">
-                        <h5 class="text-lg font-bold mb-2">AMERICANO</h5>
-                        <p class="text-blue-100 text-sm mb-4">ICE / HOT</p>
-                        <p class="text-xs text-blue-200 leading-relaxed">A classic, single espresso shot for a smooth, balanced taste</p>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+</script>
 {% endblock %}

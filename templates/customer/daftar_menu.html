@@ -3,7 +3,7 @@
 {% block content %}
 <div class="max-w-full mx-auto">
     <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
-        activeCategory: 'semua',
+        activeCategory: new URLSearchParams(window.location.search).get('kategori') || 'semua',
         searchQuery: '',
         sortBy: 'default',
         cart: [],

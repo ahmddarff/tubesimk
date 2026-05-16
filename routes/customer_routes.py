@@ -18,8 +18,41 @@ customer_bp = Blueprint('customer', __name__)
 
 @customer_bp.route('/')
 def beranda():
-    return render_template('customer/beranda.html', segment='customer', role='customer')
+# 1. Mengambil data semua menu
+    all_menus = Menu.query.all()
+    
+    # 2. Menghitung total penjualan (qty) dan rating untuk setiap menu
+    for menu in all_menus:
+        # Hitung terjual
+        terjual = db.session.query(func.sum(OrderItem.qty))\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(OrderItem.menu_id == menu.id, Order.payment_status == 'paid')\
+            .scalar() or 0
+            
+        # Hitung rata-rata rating
+        reviews = db.session.query(Review.rating)\
+            .join(OrderItem, Review.order_item_id == OrderItem.id)\
+            .filter(OrderItem.menu_id == menu.id)\
+            .all()
+            
+        avg_rating = 0.0
+        if reviews:
+            total_rating = sum([r[0] for r in reviews])
+            avg_rating = round(total_rating / len(reviews), 1)
+            
+        # Menambahkan atribut dinamis ke objek menu
+        setattr(menu, 'terjual', int(terjual))
+        setattr(menu, 'rating_avg', avg_rating)
+        
+    # 3. Mengurutkan menu berdasarkan jumlah terjual (terbanyak ke sedikit) 
+    # dan mengambil 4 menu teratas.
+    best_sellers = sorted(all_menus, key=lambda m: m.terjual, reverse=True)[:4]
 
+    return render_template('customer/beranda.html', 
+                           best_sellers=best_sellers, 
+                           segment='customer', 
+                           role='customer')
+                           
 @customer_bp.route('/daftar-menu')
 def daftar_menu():
     categories = Category.query.all()
