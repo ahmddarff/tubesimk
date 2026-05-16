@@ -5,8 +5,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
-from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable
+from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
@@ -17,44 +18,173 @@ customer_bp = Blueprint('customer', __name__)
 
 @customer_bp.route('/')
 def beranda():
-    return render_template('customer/beranda.html', segment='customer', role='customer')
+# 1. Mengambil data semua menu
+    all_menus = Menu.query.all()
+    
+    # 2. Menghitung total penjualan (qty) dan rating untuk setiap menu
+    for menu in all_menus:
+        # Hitung terjual
+        terjual = db.session.query(func.sum(OrderItem.qty))\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(OrderItem.menu_id == menu.id, Order.payment_status == 'paid')\
+            .scalar() or 0
+            
+        # Hitung rata-rata rating
+        reviews = db.session.query(Review.rating)\
+            .join(OrderItem, Review.order_item_id == OrderItem.id)\
+            .filter(OrderItem.menu_id == menu.id)\
+            .all()
+            
+        avg_rating = 0.0
+        if reviews:
+            total_rating = sum([r[0] for r in reviews])
+            avg_rating = round(total_rating / len(reviews), 1)
+            
+        # Menambahkan atribut dinamis ke objek menu
+        setattr(menu, 'terjual', int(terjual))
+        setattr(menu, 'rating_avg', avg_rating)
+        
+    # 3. Mengurutkan menu berdasarkan jumlah terjual (terbanyak ke sedikit) 
+    # dan mengambil 4 menu teratas.
+    best_sellers = sorted(all_menus, key=lambda m: m.terjual, reverse=True)[:4]
 
+    return render_template('customer/beranda.html', 
+                           best_sellers=best_sellers, 
+                           segment='customer', 
+                           role='customer')
+                           
 @customer_bp.route('/daftar-menu')
 def daftar_menu():
-    # Mengambil semua data kategori dan menu dari basis data
     categories = Category.query.all()
     menus = Menu.query.all()
     
+    menu_data = []
+    for menu in menus:
+        # 1. Hitung total terjual dari OrderItem (hanya untuk pesanan yang sudah dibayar)
+        terjual = db.session.query(func.sum(OrderItem.qty))\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(OrderItem.menu_id == menu.id, Order.payment_status == 'paid')\
+            .scalar() or 0
+            
+        # 2. Hitung rata-rata rating dari tabel Review berdasarkan menu_id
+        reviews = db.session.query(Review.rating)\
+            .join(OrderItem, Review.order_item_id == OrderItem.id)\
+            .filter(OrderItem.menu_id == menu.id)\
+            .all()
+            
+        avg_rating = 0.0
+        if reviews:
+            total_rating = sum([r[0] for r in reviews])
+            avg_rating = round(total_rating / len(reviews), 1)
+            
+        # Sisipkan data kalkulasi ke dalam objek menu
+        setattr(menu, 'terjual', int(terjual))
+        setattr(menu, 'rating_avg', avg_rating)
+        
+        menu_data.append(menu)
+        
     return render_template('customer/daftar_menu.html', 
-                        menu=menus, 
-                        categories=categories, 
-                        segment='daftar_menu', 
-                        role='customer')
+                           categories=categories, 
+                           menu=menu_data, 
+                           segment='daftar_menu', 
+                           role='customer')
 
 @customer_bp.route('/menu/<int:menu_id>')
 def menu_detail(menu_id):
-    # Mengambil data menu dari basis data berdasarkan ID
     menu = Menu.query.get_or_404(menu_id)
+    order_items = OrderItem.query.filter_by(menu_id=menu.id).all()
+    
+    reviews = []
+    total_rating = 0
+    
+    for item in order_items:
+        if item.review:
+            nama_pelanggan = "Pelanggan Anonim"
+            nama_asli = "Pelanggan Anonim"  # Variabel baru untuk menyimpan nama asli
+            foto_pelanggan = None
+            
+            if item.order.user:
+                nama_asli = item.order.user.name
+                if current_user.is_authenticated and item.order.user.id == current_user.id:
+                    nama_pelanggan = "Anda"
+                else:
+                    nama_pelanggan = item.order.user.name
+                foto_pelanggan = item.order.user.photo
+            elif item.order.customer_name:
+                nama_asli = item.order.customer_name
+                nama_pelanggan = item.order.customer_name
+                
+            reviews.append({
+                'nama': nama_pelanggan,
+                'inisial': nama_asli[:2].upper(),  # Inisial selalu menggunakan nama asli (cth: "BU")
+                'photo': foto_pelanggan,
+                'date': item.review.created_at.strftime('%d %b %Y'),
+                'rating': item.review.rating,
+                'text': item.review.comment
+            })
+            total_rating += item.review.rating
+            
+    review_count = len(reviews)
+    avg_rating = round(total_rating / review_count, 1) if review_count > 0 else 0
     
     return render_template('customer/menu_detail.html', 
-            menu=menu, 
-            segment='daftar_menu', 
-            role='customer')
+                           menu=menu,
+                           reviews=reviews,
+                           avg_rating=avg_rating,
+                           review_count=review_count,
+                           segment='daftar_menu', 
+                           role='customer')
 
+
+@customer_bp.route('/menu/<int:menu_id>/ulasan')
+def menu_reviews(menu_id):
+    menu = Menu.query.get_or_404(menu_id)
+    order_items = OrderItem.query.filter_by(menu_id=menu.id).all()
+    
+    reviews = []
+    total_rating = 0
+    
+    for item in order_items:
+        if item.review:
+            nama_pelanggan = "Pelanggan Anonim"
+            nama_asli = "Pelanggan Anonim"  # Variabel baru untuk menyimpan nama asli
+            foto_pelanggan = None
+            
+            if item.order.user:
+                nama_asli = item.order.user.name
+                if current_user.is_authenticated and item.order.user.id == current_user.id:
+                    nama_pelanggan = "Anda"
+                else:
+                    nama_pelanggan = item.order.user.name
+                foto_pelanggan = item.order.user.photo
+            elif item.order.customer_name:
+                nama_asli = item.order.customer_name
+                nama_pelanggan = item.order.customer_name
+                
+            reviews.append({
+                'nama': nama_pelanggan,
+                'inisial': nama_asli[:2].upper(),  # Inisial selalu menggunakan nama asli (cth: "BU")
+                'photo': foto_pelanggan,
+                'date': item.review.created_at.strftime('%d %b %Y'),
+                'rating': item.review.rating,
+                'text': item.review.comment
+            })
+            total_rating += item.review.rating
+            
+    review_count = len(reviews)
+    avg_rating = round(total_rating / review_count, 1) if review_count > 0 else 0
+    
+    return render_template('customer/menu_reviews.html', 
+                           menu=menu,
+                           reviews=reviews,
+                           avg_rating=avg_rating,
+                           review_count=review_count,
+                           segment='daftar_menu', 
+                           role='customer')
 
 # =========================
 # RESERVASI
 # =========================
-
-@customer_bp.route('/menu/<int:menu_id>/ulasan')
-def menu_reviews(menu_id):
-    # Mengambil data menu dari basis data berdasarkan ID
-    menu = Menu.query.get_or_404(menu_id)
-    
-    return render_template('customer/menu_reviews.html', 
-                           menu=menu, 
-                           segment='daftar_menu', 
-                           role='customer')
 
 # Halaman List Reservasi Aktif & Riwayat
 @customer_bp.route('/buat-reservasi')
@@ -482,7 +612,7 @@ def checkout():
 
     return render_template(
         'customer/checkout.html',
-        segment='checkout',
+        segment='daftar_menu',
         role='customer',
         order=order,
         tables=tables

@@ -3,7 +3,9 @@
 {% block content %}
 <div class="max-w-full mx-auto">
     <div class="max-w-full mx-auto grid grid-cols-4 gap-8" x-data="{ 
-        activeCategory: 'semua',
+        activeCategory: new URLSearchParams(window.location.search).get('kategori') || 'semua',
+        searchQuery: '',
+        sortBy: 'default',
         cart: [],
 
         // Ambil data keranjang dari backend saat halaman dimuat
@@ -12,65 +14,65 @@
         },
 
         async loadCart() {
-                try {
-                    const response = await fetch('/customer/api/cart');
-                    const data = await response.json();
-                    this.cart = data.items || [];
-                } catch (error) {
-                    console.error('Gagal memuat keranjang:', error);
-                }
-            },
+            try {
+                const response = await fetch('/customer/api/cart');
+                const data = await response.json();
+                this.cart = data.items || [];
+            } catch (error) {
+                console.error('Gagal memuat keranjang:', error);
+            }
+        },
 
         async addToCart(productId) {
-                try {
-                    const response = await fetch('/customer/api/cart/add', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ menu_id: productId, qty: 1 })
-                    });
-                    const resData = await response.json();
-                    if (resData.success) {
-                        await this.loadCart();
-                    }
-                } catch (error) {
-                    console.error('Gagal menambahkan item:', error);
+            try {
+                const response = await fetch('/customer/api/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ menu_id: productId, qty: 1 })
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    await this.loadCart();
                 }
-            },
+            } catch (error) {
+                console.error('Gagal menambahkan item:', error);
+            }
+        },
 
         async incrementQty(productName) {
-                const item = this.cart.find(i => i.nama === productName);
-                if (!item) return;
-                try {
-                    await fetch('/customer/api/cart/update', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
-                    });
-                    await this.loadCart();
-                } catch (error) {
-                    console.error(error);
-                }
-            },
+            const item = this.cart.find(i => i.nama === productName);
+            if (!item) return;
+            try {
+                await fetch('/customer/api/cart/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
+                });
+                await this.loadCart();
+            } catch (error) {
+                console.error(error);
+            }
+        },
 
         async decrementQty(productName) {
-                const item = this.cart.find(i => i.nama === productName);
-                if (!item) return;
-                try {
-                    await fetch('/customer/api/cart/update', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
-                    });
-                    await this.loadCart();
-                } catch (error) {
-                    console.error(error);
-                }
-            },
+            const item = this.cart.find(i => i.nama === productName);
+            if (!item) return;
+            try {
+                await fetch('/customer/api/cart/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
+                });
+                await this.loadCart();
+            } catch (error) {
+                console.error(error);
+            }
+        },
         
         getItemQty(productName) {
-                const item = this.cart.find(i => i.nama === productName);
-                return item ? item.qty : 0;
-            },
+            const item = this.cart.find(i => i.nama === productName);
+            return item ? item.qty : 0;
+        },
             
         isItemAdded(productName) {
             return this.cart.some(i => i.nama === productName);
@@ -98,33 +100,50 @@
         get total() {
             return this.subtotal;
         }
-    }" x-init="init()">
+    }">
         
-        <!-- Product Grid -->
         <div class="col-span-3">
             <div class="space-y-6">
                 <div>
                     <h2 class="text-3xl font-bold text-terralogBlue mb-6">Daftar Menu</h2>                    
-                    <div class="flex gap-3 mb-8 overflow-x-auto pb-2">
-                        <button @click="activeCategory = 'semua'" 
-                                :class="activeCategory === 'semua' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                    
+                    <div class="flex gap-3 mb-4 overflow-x-auto pb-2">
+                        <button @click="activeCategory = 'semua'; sortBy = 'default'" 
+                                :class="activeCategory === 'semua' && sortBy === 'default' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
                                 class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition">
                             Semua
                         </button>
                         
+                        <button @click="activeCategory = 'semua'; sortBy = 'terlaris'" 
+                                :class="sortBy === 'terlaris' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                                class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i> Terlaris
+                        </button>
+                        
+                        <div class="w-px h-8 bg-gray-300 mx-1 my-auto"></div>
+                        
                         {% for category in categories %}
-                        <button @click="activeCategory = '{{ category.name }}'" 
-                                :class="activeCategory === '{{ category.name }}' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
+                        <button @click="activeCategory = '{{ category.name }}'; sortBy = 'default'" 
+                                :class="activeCategory === '{{ category.name }}' && sortBy === 'default' ? 'bg-terralogBlue text-white' : 'bg-white text-terralogBlue border border-terralogBlue'"
                                 class="px-6 py-2 rounded-full font-semibold whitespace-nowrap transition capitalize">
                             {{ category.name }}
                         </button>
                         {% endfor %}
                     </div>
+
+                    <div class="relative mb-8">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="w-5 h-5 text-gray-400"></i>
+                        </div>
+                        <input type="text" x-model="searchQuery" placeholder="Cari menu favorit Anda..." 
+                               class="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-terralogBlue focus:ring-1 focus:ring-terralogBlue outline-none transition shadow-sm text-sm">
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-6">
+                <div class="grid grid-cols-3 gap-6 flex-wrap">
                     {% for product in menu %}
-                    <div x-show="activeCategory === 'semua' || activeCategory === '{{ product.category.name }}'" 
+                    <div x-show="(activeCategory === 'semua' || activeCategory === '{{ product.category.name }}') && '{{ product.name }}'.toLowerCase().includes(searchQuery.toLowerCase())" 
+                        :style="sortBy === 'terlaris' ? 'order: -{{ product.terjual }}' : 'order: 0'"
                         @click="window.location.href='/customer/menu/{{ product.id }}'"
                         class="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-full flex flex-col group cursor-pointer">
                         
@@ -166,10 +185,29 @@
                             {% endif %}
                         </div>
 
-                        <div class="p-5 flex-1 flex flex-col">
-                            <h3 class="font-bold text-gray-800 text-base mb-2 line-clamp-2">{{ product.name }}</h3>
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">{{ product.description }}</p>
-                            <p class="text-2xl font-bold text-terralogBlue mb-1">Rp {{ "{:,}".format(product.price).replace(',', '.') }}</p>
+                        <div class="p-5 flex-1 flex flex-col justify-between bg-white">
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-lg mb-1.5 line-clamp-1 group-hover:text-terralogBlue transition-colors duration-200">
+                                    {{ product.name }}
+                                </h3>
+                                
+                                <div class="flex items-center gap-2 mb-4 text-xs">
+                                    <div class="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md font-bold">
+                                        <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                                        <span>{{ product.rating_avg|default(0.0) }}</span>
+                                    </div>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="text-gray-500 font-medium">
+                                        {{ product.terjual|default(0) }} Terjual
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="pt-2 border-t border-gray-50 flex items-center justify-between">
+                                <span class="text-xl font-bold text-terralogBlue">
+                                    Rp {{ "{:,}".format(product.price).replace(',', '.') }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -177,10 +215,8 @@
             </div>
         </div>
 
-        <!-- Shopping Cart Sidebar -->
         <aside class="col-span-1">
             <div class="bg-white rounded-2xl shadow-sm sticky top-24 p-6">
-                <!-- Header -->
                 <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
                     <div class="w-10 h-10 bg-terralogGold/20 rounded-lg flex items-center justify-center">
                         <i data-lucide="shopping-cart" class="w-5 h-5 text-terralogGold"></i>
@@ -188,8 +224,7 @@
                     <h2 class="text-lg font-bold text-gray-800">Keranjang Belanja</h2>
                 </div>
 
-                <!-- Cart Items -->
-                <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+                <div class="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
                     <template x-for="(item, index) in cart" :key="index">
                         <div class="flex justify-between items-start p-3 bg-gray-50 rounded-lg group hover:bg-red-50 transition">
                             <div class="flex-1">
@@ -203,7 +238,6 @@
                     </template>
                 </div>
 
-                <!-- Totals -->
                 <div class="space-y-2 border-t border-gray-200 pt-4 mb-4">
                     <div class="flex justify-between text-sm text-gray-600">
                         <span>Subtotal</span>
@@ -211,7 +245,6 @@
                     </div>
                 </div>
 
-                <!-- Checkout Button -->
                 <div>
                     <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition cursor-pointer">
                         <span x-text="cart.length + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
@@ -223,7 +256,6 @@
 </div>
 
 <script>
-    // Re-initialize icons when page loads
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
