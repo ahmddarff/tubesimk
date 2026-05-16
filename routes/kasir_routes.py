@@ -301,43 +301,41 @@ def reservasi():
 @kasir_bp.route('/riwayat-transaksi')
 @login_required
 def riwayat_transaksi():
-    # Ambil pesanan dengan status 'served' atau 'completed' (asumsi: ini adalah transaksi selesai)
-    orders_db = Order.query.filter(Order.order_status.in_(['served', 'completed'])).order_by(Order.created_at.desc()).all()
+    # PERBAIKAN: Ambil semua pesanan yang sudah lunas (paid) ATAU dibatalkan (cancelled)
+    orders_db = Order.query.filter(Order.payment_status.in_(['paid', 'cancelled'])).order_by(Order.created_at.desc()).all()
     
     data_transaksi = []
     
     for order in orders_db:
-        # Menyiapkan list item untuk transaksi ini
         items_list = []
         for item in order.items:
             items_list.append({
                 'nama': item.menu.name if item.menu else 'Item Terhapus',
                 'harga': item.price_at_order,
                 'jumlah': item.qty,
-                'subtotal': item.price_at_order * item.qty
+                'subtotal': item.price_at_order * item.qty,
+                'note': item.notes or '' # ✅ SEKARANG MENGIRIM DATA NOTES RIIL
             })
 
-        # Menentukan nama pelanggan
-        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu Anonim")
+        nama_pelanggan = order.customer_name or (order.user.name if order.user else "Tamu")
         
-        # Ambil langsung metode dari database (CASH atau QRIS)
         pm_raw = order.payment_method
-        metode_bayar = str(pm_raw).upper() if pm_raw else 'CASH'
+        metode_bayar = str(pm_raw).upper() if pm_raw else '-'
 
-        # TAMBAHAN: Mapping tipe pesanan agar sesuai dengan kondisi di struk HTML
-        tipe_map = {'dine_in': 'dine-in', 'take_away': 'takeaway'}
+        tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
 
         data_transaksi.append({
             'id': order.order_number,
             'tanggal': order.created_at.strftime('%Y-%m-%d'),
             'waktu': order.created_at.strftime('%H:%M'),
-            'kasir': 'Kasir Terralog', 
+            'kasir': current_user.name if current_user else 'Kasir Terralog', # ✅ SEKARANG DINAMIS MENGGUNAKAN NAMA USER AKTIF
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
             'total': order.total_amount,
-            # TAMBAHAN: Kirimkan data tipe dan meja ke frontend
-            'tipe': tipe_map.get(order.order_type, 'dine-in'),
+            'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
+            'status_pembayaran': order.payment_status, # ✅ DATA BARU: 'paid' atau 'cancelled'
+            'alasan_batal': order.cancellation_reason or '', # ✅ DATA BARU: Alasan pembatalan dari DB
             'items': items_list
         })
 
@@ -346,7 +344,6 @@ def riwayat_transaksi():
         transactions=data_transaksi,
         role='kasir',
     )
-
 
 # =========================
 # PENGATURAN

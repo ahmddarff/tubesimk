@@ -1,0 +1,107 @@
+<div x-show="showModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
+    
+    <div class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" x-transition>
+        
+        <div class="px-5 py-4 flex justify-between items-center bg-terralogBlue text-white border-b border-gray-100 shrink-0">
+            <h3 class="text-lg font-black tracking-tight">Detail Transaksi</h3>
+            <button @click="showModal = false" class="text-white/70 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="p-5 flex flex-col gap-3 overflow-hidden flex-1">
+            
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 shadow-sm shrink-0">
+                <div class="flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-black text-terralogBlue bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-md" x-text="selectedTrx.id"></span>
+                        <span class="text-xs font-bold text-gray-500" x-text="selectedTrx.tanggal + ' ' + (selectedTrx.waktu || '')"></span>
+                    </div>
+                    
+                    <div>
+                        <template x-if="selectedTrx.status_pembayaran === 'cancelled'">
+                            <span class="px-2 py-1 rounded text-[10px] font-black bg-red-500 text-white shadow-sm uppercase tracking-wider">DIBATALKAN</span>
+                        </template>
+                        <template x-if="selectedTrx.status_pembayaran !== 'cancelled'">
+                            <span class="px-2 py-1 rounded text-[10px] font-black text-white shadow-sm uppercase tracking-wider" 
+                                  :class="selectedTrx.metode === 'QRIS' ? 'bg-terralogBlue' : 'bg-emerald-500'"
+                                  x-text="'LUNAS - ' + selectedTrx.metode"></span>
+                        </template>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-end border-t border-gray-200 pt-3"> 
+                    <div class="flex-1 pr-2">
+                        <p class="text-gray-400 font-bold mb-0.5 text-[10px] uppercase tracking-wide">Pelanggan</p>
+                        <p class="text-gray-800 font-black text-sm truncate" x-text="selectedTrx.pelanggan"></p>
+                    </div>
+                    <div class="text-right pl-2 border-l border-gray-200">
+                        <p class="text-gray-400 font-bold mb-0.5 text-[10px] uppercase tracking-wide">Kasir Pembawa</p>
+                        <p class="text-gray-800 font-bold text-xs truncate max-w-[120px]" x-text="selectedTrx.kasir"></p>
+                    </div>
+                </div>
+            </div>
+
+            <template x-if="selectedTrx.status_pembayaran === 'cancelled'">
+                <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 shrink-0 flex items-center gap-2">
+                    <span class="font-black text-[10px] uppercase tracking-widest text-red-500 shrink-0">Alasan Batal:</span>
+                    <p class="font-bold text-xs truncate" x-text="selectedTrx.alasan_batal || 'Tidak ada alasan spesifik yang dicatat.'"></p>
+                </div>
+            </template>
+
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0">
+                <div class="overflow-y-auto custom-scrollbar flex-1">
+                    <table class="w-full text-sm">
+                        <thead class="text-gray-500 font-bold sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="px-4 py-2.5 text-left bg-gray-50 border-b border-gray-200 text-xs">Item</th>
+                                <th class="px-4 py-2.5 text-center bg-gray-50 border-b border-gray-200 text-xs">Harga</th>
+                                <th class="px-4 py-2.5 text-center bg-gray-50 border-b border-gray-200 text-xs">Jml</th>
+                                <th class="px-4 py-2.5 text-right bg-gray-50 border-b border-gray-200 text-xs">Subtotal</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody class="text-gray-800 font-bold divide-y divide-gray-100">
+                            <template x-for="item in (selectedTrx.items || [])">
+                                <tr class="hover:bg-blue-50/30 transition-colors">
+                                    <td class="px-4 py-2.5">
+                                        <p x-text="item.nama" class="leading-tight text-gray-800 text-[13px]"></p>
+                                        <template x-if="item.note">
+                                            <p class="text-[10px] text-gray-400 font-normal italic mt-0.5 leading-none" x-text="'- ' + item.note"></p>
+                                        </template>
+                                    </td>
+                                    <td class="px-4 py-2.5 text-center text-gray-600 text-xs" x-text="'Rp ' + (item.harga || 0).toLocaleString('id-ID')"></td>
+                                    <td class="px-4 py-2.5 text-center text-gray-700 text-xs" x-text="item.jumlah"></td>
+                                    <td class="px-4 py-2.5 text-right text-gray-900 text-xs" x-text="'Rp ' + (item.subtotal || 0).toLocaleString('id-ID')"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                        
+                        <tfoot class="font-black sticky bottom-0 z-20 shadow-[0_-2px_4px_rgba(0,0,0,0.03)] border-t border-gray-200">
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 text-right uppercase text-[10px] tracking-wider" :class="selectedTrx.status_pembayaran === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-terralogBlue'">Total Transaksi</td>
+                                <td class="px-4 py-3 text-right text-base" :class="selectedTrx.status_pembayaran === 'cancelled' ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-terralogBlue'" x-text="'Rp ' + (selectedTrx.total ? selectedTrx.total.toLocaleString('id-ID') : 0)"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-5 py-3 bg-gray-50 border-t border-gray-100 flex justify-end gap-2 shrink-0">
+            <button @click="showModal = false" 
+                    class="px-5 py-2 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition shadow-sm cursor-pointer">
+                Tutup
+            </button>
+            
+            <template x-if="selectedTrx.status_pembayaran !== 'cancelled'">
+                <button @click="printReceipt(selectedTrx)" 
+                        class="px-5 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md flex items-center gap-1.5 active:scale-95 cursor-pointer">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i> Cetak Struk
+                </button>
+            </template>
+        </div>
+
+    </div>
+</div>

@@ -77,9 +77,14 @@
                             <td class="px-6 py-4 text-gray-500" x-text="trx.tanggal + ' ' + trx.waktu"></td>
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="trx.pelanggan"></td>
                             <td class="px-6 py-4 text-center">
-                                <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm" 
-                                      :class="trx.metode === 'QRIS' ? 'bg-terralogBlue text-white' : 'bg-emerald-500 text-white'" 
-                                      x-text="trx.metode"></span>
+                                <template x-if="trx.status_pembayaran === 'cancelled'">
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-black bg-red-500 text-white shadow-sm uppercase tracking-wider">BATAL</span>
+                                </template>
+                                <template x-if="trx.status_pembayaran !== 'cancelled'">
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm" 
+                                          :class="trx.metode === 'QRIS' ? 'bg-terralogBlue text-white' : 'bg-emerald-500 text-white'" 
+                                          x-text="trx.metode"></span>
+                                </template>
                             </td>
                             <td class="px-6 py-4 font-bold text-gray-900" x-text="'Rp ' + trx.total.toLocaleString('id-ID')"></td>
                             <td class="px-6 py-4 text-center flex justify-center gap-2">
@@ -88,7 +93,9 @@
                                         class="p-2 text-terralogBlue bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-xl transition shadow-sm">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </button>
+                                
                                 <button @click="printReceipt(trx)" 
+                                        x-show="trx.status_pembayaran !== 'cancelled'"
                                         title="Cetak Ulang Struk"
                                         class="p-2 text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-xl transition shadow-sm">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
@@ -139,52 +146,7 @@
         </div>
     </div>
 
-    <div x-show="showModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showModal = false"></div>
-        <div class="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" x-transition>
-            <div class="px-6 py-5 flex justify-between items-center bg-terralogBlue text-white border-b border-gray-100">
-                <h3 class="text-xl font-black tracking-tight">Detail Transaksi</h3>
-                <button @click="showModal = false" class="text-white/70 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
-            </div>
-            <div class="p-6 space-y-5">
-                <div class="bg-gray-50 rounded-2xl p-5 border border-gray-100 shadow-sm">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="text-[12px] font-black text-terralogBlue bg-blue-100 border border-blue-200 px-4 py-1.5 rounded-full inline-block" x-text="selectedTrx.id"></div>
-                        <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm" 
-                              :class="selectedTrx.metode === 'QRIS' ? 'bg-terralogBlue text-white' : 'bg-emerald-500 text-white'" 
-                              x-text="'VIA ' + selectedTrx.metode"></span>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-5 text-sm font-medium"> 
-                        <div><p class="text-gray-400 font-bold mb-1">Tanggal & Waktu</p><p class="text-gray-800 font-bold" x-text="selectedTrx.tanggal + ' ' + (selectedTrx.waktu || '')"></p></div>
-                        <div><p class="text-gray-400 font-bold mb-1">Kasir</p><p class="text-gray-800 font-bold" x-text="selectedTrx.kasir"></p></div>
-                        <div class="col-span-2"><p class="text-gray-400 font-bold mb-1">Pelanggan</p><p class="text-gray-800 font-black text-lg" x-text="selectedTrx.pelanggan"></p></div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-200">
-                            <tr><th class="px-4 py-3 text-left">Item</th><th class="px-4 py-3 text-center">Harga</th><th class="px-4 py-3 text-center">Jumlah</th><th class="px-4 py-3 text-right">Subtotal</th></tr>
-                        </thead>
-                        <tbody class="text-gray-800 font-bold">
-                            <template x-for="item in (selectedTrx.items || [])">
-                                <tr class="border-b border-gray-100">
-                                    <td class="px-4 py-3" x-text="item.nama"></td>
-                                    <td class="px-4 py-3 text-center" x-text="'Rp ' + (item.harga || 0).toLocaleString('id-ID')"></td>
-                                    <td class="px-4 py-3 text-center" x-text="item.jumlah"></td>
-                                    <td class="px-4 py-3 text-right" x-text="'Rp ' + (item.subtotal || 0).toLocaleString('id-ID')"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                        <tfoot class="bg-blue-50 font-black">
-                            <tr><td colspan="3" class="px-4 py-4 text-right uppercase text-terralogBlue text-xs tracking-wider">Total Pembayaran</td><td class="px-4 py-4 text-right text-terralogBlue text-lg" x-text="'Rp ' + (selectedTrx.total ? selectedTrx.total.toLocaleString('id-ID') : 0)"></td></tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    {% include 'kasir/includes/modal_detail_transaksi.html' %}
     {% include 'kasir/includes/struk_print.html' %}
 </div>
 
@@ -288,13 +250,13 @@ document.addEventListener('alpine:init', () => {
             return Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
         },
 
-        // PERHITUNGAN STATISTIK KINI MENGGUNAKAN 'dailyTransactions'
+        // PERHITUNGAN STATISTIK SEKARANG DI-FILTER HANYA YANG SUDAH LUNAS (PAID)
         get cardStats() {
             const baseData = this.dailyTransactions;
-            const totalTrx = baseData.length;
-            const totalOmzet = baseData.reduce((a, b) => a + b.total, 0);
-            const totalTunai = baseData.filter(t => t.metode === 'CASH').reduce((a, b) => a + b.total, 0);
-            const totalQris = baseData.filter(t => t.metode === 'QRIS').reduce((a, b) => a + b.total, 0);
+            const totalTrx = baseData.filter(t => t.status_pembayaran === 'paid').length;
+            const totalOmzet = baseData.filter(t => t.status_pembayaran === 'paid').reduce((a, b) => a + b.total, 0);
+            const totalTunai = baseData.filter(t => t.status_pembayaran === 'paid' && t.metode === 'CASH').reduce((a, b) => a + b.total, 0);
+            const totalQris = baseData.filter(t => t.status_pembayaran === 'paid' && t.metode === 'QRIS').reduce((a, b) => a + b.total, 0);
 
             return [
                 { label: 'Total Transaksi', val: totalTrx, icon: 'receipt' },
