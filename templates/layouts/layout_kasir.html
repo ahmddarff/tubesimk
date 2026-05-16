@@ -117,6 +117,8 @@
 
     </div>
 
+    {% include 'includes/modal_konfirmasi.html' %}
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -126,7 +128,41 @@
             lucide.createIcons();
         });
 
-        // Fungsi Show Toast
+        // ==========================================
+        // ALPINE GLOBAL STORE UNTUK MODAL KONFIRMASI
+        // ==========================================
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('confirmModal', {
+                show: false,
+                title: 'Konfirmasi',
+                message: 'Apakah Anda yakin?',
+                confirmText: 'Ya',
+                cancelText: 'Batal',
+                type: 'danger', // Opsi: 'danger', 'primary', 'warning'
+                onConfirmCallback: null,
+
+                open(options) {
+                    this.title = options.title || 'Konfirmasi';
+                    this.message = options.message || 'Apakah Anda yakin?';
+                    this.confirmText = options.confirmText || 'Ya';
+                    this.cancelText = options.cancelText || 'Batal';
+                    this.type = options.type || 'danger';
+                    this.onConfirmCallback = options.action || null;
+                    this.show = true;
+                },
+
+                execute() {
+                    if (typeof this.onConfirmCallback === 'function') {
+                        this.onConfirmCallback();
+                    }
+                    this.show = false;
+                }
+            });
+        });
+
+        // ==========================================
+        // FUNGSI SHOW TOAST GLOBAL
+        // ==========================================
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const msg   = document.getElementById('toast-message');

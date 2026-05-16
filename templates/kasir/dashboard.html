@@ -118,7 +118,6 @@
     {% include 'kasir/includes/modal_pembayaran.html' %}
     {% include 'kasir/includes/modal_sukses.html' %}
     {% include 'kasir/includes/struk_print.html' %}
-
     <script id="edit-data" type="application/json">
         {{ edit_data | tojson | safe if edit_data else 'null' }}
     </script>
@@ -223,14 +222,22 @@ document.addEventListener('alpine:init', () => {
 
         confirmDelete() {
             if (this.selectedItems.length > 0) {
-                if (confirm(`Hapus ${this.selectedItems.length} item terpilih?`)) {
-                    this.selectedItems.sort((a, b) => b - a).forEach(idx => this.cart.splice(idx, 1));
-                    this.cancelDelete();
-                }
+                // MENGGUNAKAN GLOBAL STORE
+                Alpine.store('confirmModal').open({
+                    title: 'Hapus Item Terpilih',
+                    message: `Apakah Anda yakin ingin menghapus ${this.selectedItems.length} item dari keranjang?`,
+                    confirmText: 'Ya, Hapus',
+                    type: 'danger',
+                    action: () => {
+                        this.selectedItems.sort((a, b) => b - a).forEach(idx => this.cart.splice(idx, 1));
+                        this.cancelDelete();
+                        showToast('Item berhasil dihapus.', 'success');
+                    }
+                });
             } else { 
                 showToast('Pilih item yang ingin dihapus dulu!', 'error'); 
             }
-        }, 
+        },
 
         cancelDelete() { 
             this.isDeleteMode = false; 
@@ -247,10 +254,18 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
-                if(confirm('Yakin ingin menghapus semua item yang belum diproses dapur?')) {
-                    this.cart = lockedItems; 
-                    this.cancelDelete();
-                }
+                // MENGGUNAKAN GLOBAL STORE
+                Alpine.store('confirmModal').open({
+                    title: 'Kosongkan Keranjang',
+                    message: 'Yakin ingin menghapus semua item yang belum diproses dapur? Tindakan ini tidak dapat dibatalkan.',
+                    confirmText: 'Ya, Bersihkan',
+                    type: 'warning',
+                    action: () => {
+                        this.cart = lockedItems; 
+                        this.cancelDelete();
+                        showToast('Keranjang berhasil dibersihkan.', 'success');
+                    }
+                });
             }
         },
 
@@ -294,6 +309,7 @@ document.addEventListener('alpine:init', () => {
             }
 
             const payload = {
+                order_number: this.editingOrderNumber, // Mode Edit
                 customer_name: this.customerName,
                 table_id: this.selectedTable,
                 order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
@@ -302,7 +318,9 @@ document.addEventListener('alpine:init', () => {
                 cart: this.cart
             };
 
-            fetch('/kasir/api/submit-order', {
+            const apiEndpoint = this.editingOrderNumber ? '/kasir/api/update-order' : '/kasir/api/submit-order';
+
+            fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -313,23 +331,18 @@ document.addEventListener('alpine:init', () => {
                     this.showPayment = false;
                     this.showSuccess = true;
                 } else {
-                    showToast('Gagal simpan pesanan: ' + data.message, 'error');
+                    showToast('Gagal memproses pembayaran: ' + data.message, 'error');
                 }
             })
             .catch(err => showToast('Terjadi kesalahan koneksi ke server.', 'error'));
         },
 
         closeSuccessAndRedirect() {
-            // 1. Sembunyikan modal sukses
             this.showSuccess = false;
-            
-            // 2. Reset total state input keranjang
             this.receivedAmount = '0';
             this.cart = [];
             this.customerName = '';
             this.selectedTable = '';
-            
-            // 3. Pindahkan halaman ke Pesanan Aktif
             window.location.href = '/kasir/pesanan-aktif';
         },
 

@@ -419,7 +419,7 @@ def submit_order():
         payment_method_raw = data.get('payment_method')
         safe_payment_method = payment_method_raw.lower() if payment_method_raw else None
         
-        if safe_payment_method == 'qris':
+        if safe_payment_method in ['qris', 'cash']:
             pay_status = 'paid'
         else:
             pay_status = 'unpaid'
@@ -547,6 +547,13 @@ def update_order():
         order.customer_name = data.get('customer_name')
         order.order_type = new_order_type
         order.total_amount = data.get('total_amount', 0)
+
+        # --- TAMBAHAN FIX PEMBAYARAN MODE EDIT ---
+        payment_method_raw = data.get('payment_method')
+        if payment_method_raw: # Jika kasir menekan "Konfirmasi & Bayar", payload ini tidak akan kosong
+            safe_pm = payment_method_raw.lower()
+            order.payment_method = safe_pm
+            order.payment_status = 'paid' # Langsung set lunas!
         
         # 4. SINKRONISASI DAFTAR MENU (Hanya memproses level 'pending')
         # Tarik semua item lama berstatus pending untuk direstorasi stoknya dan dihapus dari DB

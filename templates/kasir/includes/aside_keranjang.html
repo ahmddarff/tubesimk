@@ -1,7 +1,16 @@
 <aside class="w-[340px] bg-white rounded-[2rem] shadow-md border-2 border-terralogBlue/10 p-5 flex flex-col h-full overflow-hidden z-10">
-    <h2 class="text-xl font-extrabold mb-4 text-terralogBlue tracking-tight" 
-        x-text="editingOrderNumber ? 'Edit: ' + editingOrderNumber : 'Detail Pesanan'">
-    </h2>
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-extrabold text-terralogBlue tracking-tight" 
+            x-text="editingOrderNumber ? 'Edit: ' + editingOrderNumber : 'Detail Pesanan'">
+        </h2>
+        
+        <button x-show="editingOrderNumber" 
+                @click="window.location.href='/kasir/pesanan-aktif'" 
+                class="p-1.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors shadow-sm"
+                title="Batal Edit & Kembali">
+            <i data-lucide="x" class="w-4 h-4 font-bold"></i>
+        </button>
+    </div>
     
     <div class="flex p-1.5 bg-gray-50 border border-gray-100 rounded-xl mb-4">
         <button @click="orderType = 'dine-in'" 
@@ -35,11 +44,14 @@
 
     <div class="flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0 mb-2">
         <template x-if="cart.length === 0">
-            <div class="flex flex-col items-center justify-center h-full text-center py-10">
+            <div class="flex flex-col items-center justify-center h-full text-center py-10 px-4">
                 <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-3">
                     <i data-lucide="shopping-basket" class="w-8 h-8 text-gray-300"></i>
                 </div>
-                <p class="text-sm font-bold text-gray-400">Keranjang kosong</p>
+                <p class="text-sm font-bold text-gray-400 mb-1">Keranjang kosong</p>
+                <p x-show="editingOrderNumber" class="text-[10px] text-gray-400 leading-snug">
+                    Pesanan tidak bisa disimpan jika kosong. Tambahkan menu atau tekan tombol X (silang) di atas untuk kembali.
+                </p>
             </div>
         </template>
         
