@@ -5,8 +5,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
-from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable
+from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
@@ -21,15 +22,39 @@ def beranda():
 
 @customer_bp.route('/daftar-menu')
 def daftar_menu():
-    # Mengambil semua data kategori dan menu dari basis data
     categories = Category.query.all()
     menus = Menu.query.all()
     
+    menu_data = []
+    for menu in menus:
+        # 1. Hitung total terjual dari OrderItem (hanya untuk pesanan yang sudah dibayar)
+        terjual = db.session.query(func.sum(OrderItem.qty))\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(OrderItem.menu_id == menu.id, Order.payment_status == 'paid')\
+            .scalar() or 0
+            
+        # 2. Hitung rata-rata rating dari tabel Review berdasarkan menu_id
+        reviews = db.session.query(Review.rating)\
+            .join(OrderItem, Review.order_item_id == OrderItem.id)\
+            .filter(OrderItem.menu_id == menu.id)\
+            .all()
+            
+        avg_rating = 0.0
+        if reviews:
+            total_rating = sum([r[0] for r in reviews])
+            avg_rating = round(total_rating / len(reviews), 1)
+            
+        # Sisipkan data kalkulasi ke dalam objek menu
+        setattr(menu, 'terjual', int(terjual))
+        setattr(menu, 'rating_avg', avg_rating)
+        
+        menu_data.append(menu)
+        
     return render_template('customer/daftar_menu.html', 
-                        menu=menus, 
-                        categories=categories, 
-                        segment='daftar_menu', 
-                        role='customer')
+                           categories=categories, 
+                           menu=menu_data, 
+                           segment='daftar_menu', 
+                           role='customer')
 
 @customer_bp.route('/menu/<int:menu_id>')
 def menu_detail(menu_id):
