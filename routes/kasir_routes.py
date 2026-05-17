@@ -741,10 +741,37 @@ def add_reservation():
         new_start = datetime.combine(res_date, res_time)
         new_end = new_start + timedelta(minutes=duration)
         
+        # ── BARIKADE 1: CEK APAKAH WAKTU SUDAH TERLEWAT ──
+        if new_start < datetime.now():
+            return jsonify({"success": False, "message": "Gagal! Tidak dapat membuat reservasi untuk waktu yang sudah terlewat."})
+        
+        # Tarik Pengaturan Kafe dari Database
         cafe_setting = CafeSetting.query.first()
         clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
         clearance_delta = timedelta(minutes=clearance_mins)
+        buffer_mins = cafe_setting.reservation_buffer_time if cafe_setting else 90
         
+        # ── BARIKADE 2: CEK KONDISI FISIK MEJA SAAT INI (Rolling Buffer) ──
+        if res_date == date.today():
+            now_dt = datetime.now()
+            
+            for t_id in table_ids:
+                # Ambil data meja langsung dari database
+                table_obj = db.session.get(Table, int(t_id))
+                
+                # ✅ JAUH LEBIH AMAN: Jika fisik meja terisi (is_available == False), 
+                # tidak peduli dia belum bayar atau sudah lunas tapi masih nongkrong!
+                if table_obj and not table_obj.is_available:
+                    walk_in_end = now_dt + timedelta(minutes=buffer_mins)
+                    total_wait_end = walk_in_end + clearance_delta
+                    
+                    if new_start < total_wait_end:
+                        return jsonify({
+                            "success": False, 
+                            "message": f"Meja {table_obj.table_number} saat ini secara fisik MASIH TERISI di tempat. Meja diperkirakan baru siap bersih paling cepat pukul {total_wait_end.strftime('%H:%M')} (Dihitung dari waktu sekarang)."
+                        })
+        
+        # ── BARIKADE 3: CEK BENTROK JADWAL RESERVASI LAIN ──
         existing_res = Reservation.query.filter(
             Reservation.reservation_date == res_date,
             Reservation.status.in_(['pending', 'confirmed', 'completed'])
@@ -762,6 +789,7 @@ def add_reservation():
                             "message": f"Meja {rt.table_number_snapshot} sudah dipesan oleh pelanggan lain pada pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')} (Termasuk jeda pembersihan meja {clearance_mins} menit)."
                         })
                         
+        # JIKA LOLOS SEMUA BARIKADE, SIMPAN RESERVASI
         new_res = Reservation(
             reservation_number=generate_reservation_number(),
             customer_name=data.get('nama'),
@@ -771,7 +799,6 @@ def add_reservation():
             reservation_date=res_date,
             reservation_time=res_time,
             notes=data.get('notes'),
-            # ✅ PERBAIKAN: Ambil Raw Data, default ke pending
             status=data.get('status', 'pending') 
         )
         db.session.add(new_res)
