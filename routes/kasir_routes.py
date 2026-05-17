@@ -2,9 +2,9 @@ import os
 from datetime import date
 from utils import *
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Category,Menu, Reservation, Order, OrderItem, Table, CafeSetting
+from models import Category, Menu, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -248,6 +248,11 @@ def pesanan_aktif():
 @login_required
 def reservasi():
     reservations_db = Reservation.query.all()
+    
+    # ✅ BARU: Tarik semua data meja aktif untuk pilihan valid di modal
+    all_tables = Table.query.order_by(Table.table_number.asc()).all()
+    tables_list = [{"id": t.id, "number": t.table_number, "capacity": t.capacity} for t in all_tables]
+    
     data_reservasi = []
 
     for res in reservations_db:
@@ -258,14 +263,15 @@ def reservasi():
             'cancelled': 'Dibatalkan'
         }
 
-        # Menentukan nama pelanggan
-        nama_pelanggan = res.customer_name or (res.customer.name if res.customer else "Tanpa Nama")
+        nama_pelanggan = res.customer_name or (res.user.name if res.user else "Tanpa Nama")
 
-        # Mengambil semua nomor meja dari tabel relasi
+        # Ambil daftar string nomor meja untuk tabel utama
         meja_list = [rt.table_number_snapshot for rt in res.reserved_tables]
         meja_str = ", ".join(meja_list) if meja_list else "-"
+        
+        # ✅ BARU: Ambil list ID meja asli untuk memudahkan Alpine mencentang checkbox saat edit
+        meja_ids = [rt.table_id for rt in res.reserved_tables if rt.table_id]
 
-        # Menghitung jam selesai berdasarkan durasi
         jam_mulai_str = ""
         jam_selesai_str = ""
         if res.reservation_time:
@@ -276,24 +282,27 @@ def reservasi():
                 jam_selesai_str = selesai_dt.strftime('%H:%M')
 
         data_reservasi.append({
-            'id': str(res.id).zfill(2),
+            'id': res.id,
+            'nomor_reservasi': res.reservation_number,
             'nama': nama_pelanggan,
             'tanggal': res.reservation_date.strftime('%Y-%m-%d') if res.reservation_date else '',
-            'tamu': res.guest_qty, # Menggunakan kolom baru
+            'tamu': res.guest_qty,
             'telepon': res.phone,
             'jam_mulai': jam_mulai_str,
-            'jam_selesai': jam_selesai_str, # Terhitung otomatis
+            'jam_selesai': jam_selesai_str,
             'status': status_mapping.get(res.status, 'Menunggu'),
-            'meja': meja_str # Sekarang bisa menampilkan lebih dari 1 meja (contoh: "03, 04")
+            'meja': meja_str,
+            'table_ids': meja_ids,
+            'notes': res.notes or ''
         })
 
     return render_template(
         'kasir/reservasi.html',
         segment='reservasi',
         role='kasir',
-        reservations=data_reservasi
+        reservations=data_reservasi,
+        tables=tables_list # Dikirim ke HTML
     )
-
 
 # =========================
 # RIWAYAT TRANSAKSI
@@ -700,6 +709,155 @@ def pay_order():
         db.session.commit()
         return jsonify({"success": True, "message": "Pembayaran berhasil!"})
         
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    
+# ── Reservasi APIs ─────────────────────────────────────────
+@kasir_bp.route('/api/add-reservation', methods=['POST'])
+@login_required
+def add_reservation():
+    data = request.json
+    try:
+        res_date = datetime.strptime(data.get('tanggal'), '%Y-%m-%d').date()
+        res_time = datetime.strptime(data.get('jam_mulai'), '%H:%M').time()
+        duration = int(data.get('durasi', 90))
+        table_ids = data.get('table_ids', [])
+        
+        # 1. Hitung Waktu Mulai & Selesai untuk Reservasi Baru
+        new_start = datetime.combine(res_date, res_time)
+        new_end = new_start + timedelta(minutes=duration)
+        
+        # 2. Ambil Jeda Waktu Pembersihan Meja (table_clearance_time) dari Database
+        cafe_setting = CafeSetting.query.first()
+        clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
+        clearance_delta = timedelta(minutes=clearance_mins)
+        
+        # 3. Tarik Semua Reservasi Aktif di Tanggal yang Sama (Kecuali yang Dibatalkan)
+        existing_res = Reservation.query.filter(
+            Reservation.reservation_date == res_date,
+            Reservation.status.in_(['pending', 'confirmed', 'completed'])
+        ).all()
+        
+        # 4. ALGORITMA DETEKSI BENTROK WAKTU & MEJA
+        for res in existing_res:
+            ex_start = datetime.combine(res.reservation_date, res.reservation_time)
+            ex_end = ex_start + timedelta(minutes=res.duration)
+            
+            # Cek apakah rentang waktu saling bertabrakan (Termasuk toleransi jeda kebersihan)
+            if (new_start < ex_end + clearance_delta) and (new_end > ex_start - clearance_delta):
+                
+                # Periksa apakah ada kesamaan ID meja yang dipilih
+                for rt in res.reserved_tables:
+                    if str(rt.table_id) in [str(tid) for tid in table_ids]:
+                        return jsonify({
+                            "success": False, 
+                            "message": f"Meja {rt.table_number_snapshot} sudah dipesan oleh pelanggan lain pada pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')} (Termasuk jeda pembersihan meja {clearance_mins} menit)."
+                        })
+                        
+        # 5. JIKA LOLOS VALIDASI, SIMPAN DATA RESERVASI
+        new_res = Reservation(
+            reservation_number=generate_reservation_number(),
+            customer_name=data.get('nama'),
+            phone=data.get('telepon'),
+            guest_qty=int(data.get('tamu', 1)),
+            duration=duration,
+            reservation_date=res_date,
+            reservation_time=res_time,
+            notes=data.get('notes'),
+            status='pending'
+        )
+        db.session.add(new_res)
+        db.session.flush()
+        
+        for t_id in table_ids:
+            table_db = db.session.get(Table, int(t_id))
+            if table_db:
+                res_table = ReservationTable(
+                    reservation_id=new_res.id,
+                    table_id=table_db.id,
+                    table_number_snapshot=table_db.table_number
+                )
+                db.session.add(res_table)
+                
+        db.session.commit()
+        return jsonify({"success": True, "message": "Reservasi baru berhasil disimpan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+
+# ==========================================
+# API: UPDATE/EDIT RESERVASI MULTI-MEJA
+# ==========================================
+@kasir_bp.route('/api/update-reservation', methods=['POST'])
+@login_required
+def update_reservation():
+    data = request.json
+    res_id = data.get('id')
+    try:
+        reservation = db.session.get(Reservation, int(res_id))
+        if not reservation:
+            return jsonify({"success": False, "message": "Reservasi tidak ditemukan!"})
+            
+        res_date = datetime.strptime(data.get('tanggal'), '%Y-%m-%d').date()
+        res_time = datetime.strptime(data.get('jam_mulai'), '%H:%M').time()
+        duration = int(data.get('durasi', 90))
+        table_ids = data.get('table_ids', [])
+        
+        # 1. ALGORITMA DETEKSI BENTROK (Sama seperti Add, tapi Exclude ID diri sendiri)
+        new_start = datetime.combine(res_date, res_time)
+        new_end = new_start + timedelta(minutes=duration)
+        
+        cafe_setting = CafeSetting.query.first()
+        clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
+        clearance_delta = timedelta(minutes=clearance_mins)
+        
+        existing_res = Reservation.query.filter(
+            Reservation.reservation_date == res_date,
+            Reservation.status.in_(['pending', 'confirmed', 'completed']),
+            Reservation.id != reservation.id  # ✅ EXCLUDE DIRI SENDIRI AGAR TIDAK FALSE ALARM!
+        ).all()
+        
+        for res in existing_res:
+            ex_start = datetime.combine(res.reservation_date, res.reservation_time)
+            ex_end = ex_start + timedelta(minutes=res.duration)
+            
+            if (new_start < ex_end + clearance_delta) and (new_end > ex_start - clearance_delta):
+                for rt in res.reserved_tables:
+                    if str(rt.table_id) in [str(tid) for tid in table_ids]:
+                        return jsonify({
+                            "success": False, 
+                            "message": f"Bentrok! Meja {rt.table_number_snapshot} sudah dipakai tamu lain dari pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')} (Plus {clearance_mins}m pembersihan)."
+                        })
+        
+        # 2. PROSES UPDATE DATA JIKA LOLOS
+        reservation.customer_name = data.get('nama')
+        reservation.phone = data.get('telepon')
+        reservation.guest_qty = int(data.get('tamu', 1))
+        reservation.duration = duration
+        reservation.reservation_date = res_date
+        reservation.reservation_time = res_time
+        reservation.notes = data.get('notes') # ✅ UPDATE NOTES
+        
+        status_map = {'Menunggu': 'pending', 'Dikonfirmasi': 'confirmed', 'Selesai': 'completed', 'Dibatalkan': 'cancelled'}
+        reservation.status = status_map.get(data.get('status'), 'pending')
+        
+        # 3. PERBARUI RELASI MEJA
+        for old_table in reservation.reserved_tables:
+            db.session.delete(old_table)
+            
+        for t_id in table_ids:
+            table_db = db.session.get(Table, int(t_id))
+            if table_db:
+                res_table = ReservationTable(
+                    reservation_id=reservation.id,
+                    table_id=table_db.id,
+                    table_number_snapshot=table_db.table_number
+                )
+                db.session.add(res_table)
+                
+        db.session.commit()
+        return jsonify({"success": True, "message": "Perubahan reservasi berhasil disimpan!"})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})

@@ -1,5 +1,5 @@
 from datetime import datetime
-from models import Order
+from models import Order, Reservation
 
 def generate_order_number():
     """
@@ -24,3 +24,22 @@ def generate_order_number():
         
     # Return dengan padding 3 digit (001, 002, dst)
     return f"ORD-{date_str}-{new_sequence:03d}"
+
+def generate_reservation_number():
+    """
+    Menghasilkan nomor reservasi unik dengan format: RES-YYYYMMDD-XXX
+    Reset setiap hari.
+    """
+    date_str = datetime.now().strftime('%Y%m%d')
+    search_pattern = f"RES-{date_str}-%"
+    
+    last_res = Reservation.query.filter(Reservation.reservation_number.like(search_pattern))\
+                                .order_by(Reservation.id.desc()).first()
+    
+    if last_res:
+        last_sequence = int(last_res.reservation_number.split('-')[-1])
+        new_sequence = last_sequence + 1
+    else:
+        new_sequence = 1
+        
+    return f"RES-{date_str}-{new_sequence:03d}"

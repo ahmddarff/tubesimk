@@ -1,0 +1,96 @@
+<div x-show="showEditModal" class="fixed inset-0 z-[160] flex items-center justify-center" style="display: none;" x-cloak>
+    <div x-transition:opacity class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showEditModal = false"></div>
+    <div x-transition:enter="transition ease-out duration-300 transform scale-95" 
+         class="relative bg-white w-full max-w-[550px] mx-4 rounded-3xl shadow-2xl overflow-hidden text-left">
+        
+        <div class="px-6 py-5 bg-terralogBlue flex justify-between items-center">
+            <div class="flex flex-col">
+                <h2 class="text-lg font-bold text-white tracking-tight leading-tight">Edit Detail Reservasi</h2>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="bg-white/20 text-white px-2 py-0.5 rounded text-[10px] font-black tracking-widest border border-white/10 uppercase" x-text="formRes.nomor_reservasi"></span>
+                </div>
+            </div>
+            <button @click="showEditModal = false" class="text-white/60 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-4 bg-white max-h-[75vh] overflow-y-auto custom-scrollbar">
+            
+            <div class="flex gap-4">
+                <div class="flex-[1.5]">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Nama Pelanggan</label>
+                    <input type="text" x-model="formRes.nama" placeholder="Masukkan nama..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Nomor Telepon</label>
+                    <input type="text" x-model="formRes.telepon" @input="formRes.telepon = formRes.telepon.replace(/[^0-9]/g, '');" placeholder="08..." class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <div class="flex-[1.5]">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Tanggal Kedatangan</label>
+                    <input type="date" x-model="formRes.tanggal" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all cursor-pointer">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Jumlah Tamu</label>
+                    <div class="relative">
+                        <i data-lucide="users" class="absolute left-4 top-3.5 w-4 h-4 text-gray-400"></i>
+                        <input type="number" x-model="formRes.tamu" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Jam Mulai</label>
+                    <input type="time" x-model="formRes.jamMulai" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                </div>
+                <div class="flex-1">
+                    <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Durasi (Menit)</label>
+                    <input type="number" x-model="formRes.durasi" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Catatan Khusus (Opsional)</label>
+                <textarea x-model="formRes.notes" rows="2" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all resize-none"></textarea>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3">
+                <label class="text-[10px] font-bold text-gray-400 uppercase mb-2 block tracking-wide">Pilih Ruang Meja Sesuai Kapasitas</label>
+                <div class="grid grid-cols-6 gap-2 max-h-[140px] overflow-y-auto p-2 border border-gray-100 bg-gray-50/50 rounded-xl custom-scrollbar">
+                    <template x-for="t in availableTables" :key="t.id">
+                        <label class="flex flex-col items-center justify-center border rounded-xl py-2 px-1 cursor-pointer select-none transition-all duration-200 shadow-sm min-h-[58px]"
+                               :class="formRes.table_ids.map(String).includes(String(t.id)) ? 'bg-terralogBlue text-white border-terralogBlue shadow-blue-100' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50/50'">
+                            <input type="checkbox" :value="String(t.id)" x-model="formRes.table_ids" class="hidden">
+                            <span class="text-sm font-black leading-none" x-text="t.number"></span>
+                            <div class="flex items-center gap-1 mt-1.5 transition-colors duration-200"
+                                 :class="formRes.table_ids.map(String).includes(String(t.id)) ? 'text-white/80' : 'text-gray-400'">
+                                <i class="fa-solid fa-user text-[9px]"></i>
+                                <span class="text-[11px] font-bold leading-none" x-text="t.capacity"></span>
+                            </div>
+                        </label>
+                    </template>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-100 pt-3">
+                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2 tracking-wide">Status Reservasi</label>
+                <div class="flex gap-2">
+                    <template x-for="s in ['Menunggu', 'Dikonfirmasi', 'Selesai', 'Dibatalkan']">
+                        <button @click="formRes.status = s" 
+                            :class="formRes.status === s ? 'bg-terralogBlue text-white shadow-md' : 'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100'"
+                            class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all" x-text="s"></button>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-5 border-t border-gray-50 bg-gray-50/50 flex justify-end gap-3">
+            <button @click="showEditModal = false" class="px-6 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition shadow-sm cursor-pointer">Batal</button>
+            <button @click="updateRes()" class="px-8 py-3 bg-terralogBlue text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-900 transition active:scale-95 cursor-pointer">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>
