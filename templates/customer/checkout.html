@@ -69,7 +69,7 @@
                         <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
                             <i data-lucide="shopping-cart" class="w-8 h-8 text-slate-300"></i>
                         </div>
-                        <p class="text-slate-500 font-semibold mb-4">Keranjang lu masih kosong nih.</p>
+                        <p class="text-slate-500 font-semibold mb-4">Keranjang anda masih kosong.</p>
                         <a href="/customer/daftar-menu" class="inline-block bg-terralogBlue text-white font-bold px-6 py-2 rounded-full text-sm hover:bg-blue-800 transition">Lihat Menu</a>
                     </div>
 
@@ -180,7 +180,7 @@
                     </button>
                     
                     <p x-show="!meja && items.length > 0" class="text-red-500 text-xs font-bold text-center mt-3 flex items-center justify-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Jangan lupa pilih meja dulu ya!
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Pilih meja terlebih dahulu!
                     </p>
                 </div>
             </div>
@@ -275,16 +275,14 @@
 
             async submitOrder() {
                 if(this.items.length === 0){
-                    alert('Keranjang lu masih kosong bro/sis!')
+                    alert('Keranjang anda masih kosong!')
                     return
                 }
                 if(!this.meja){
-                    alert('Pilih meja dulu dong biar pesanan bisa dianter!')
+                    alert('Pilih meja terlebih dahulu!')
                     return
                 }
                 try {
-                    // Balikin ngirim total tanpa pajak (sesuai logic backend lu awalnya), 
-                    // kalau backend lu butuh nerima total + pajak, lu harus adjust logic di app.py nya
                     const response = await fetch('/customer/submit-order', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -309,7 +307,7 @@
 
                 } catch(error){
                     console.error(error)
-                    alert('Wah, ada error koneksi nih.')
+                    alert('Ada error koneksi.')
                 }
             }
         }
