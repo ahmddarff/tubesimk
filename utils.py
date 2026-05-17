@@ -43,3 +43,30 @@ def generate_reservation_number():
         new_sequence = 1
         
     return f"RES-{date_str}-{new_sequence:03d}"
+
+def auto_sync_order_status(order):
+    """
+    Fungsi untuk menyinkronkan status Order Induk berdasarkan status anak-anaknya (OrderItems).
+    Panggil fungsi ini SETELAH melakukan perubahan pada item_status, sebelum db.session.commit().
+    """
+    if not order.items:
+        return
+        
+    # Kumpulkan semua status dari item anak
+    statuses = [item.item_status for item in order.items]
+    
+    # Aturan 1: Jika SEMUA item sudah 'served' -> Order jadi 'served'
+    if all(s == 'served' for s in statuses):
+        order.order_status = 'served'
+        
+    # Aturan 2: Jika SEMUA item sudah matang ('ready' atau 'served') -> Order jadi 'ready'
+    # Artinya tidak ada lagi yang 'pending' atau 'preparing'
+    elif not any(s in ['pending', 'preparing'] for s in statuses):
+        order.order_status = 'ready'
+        
+    # Aturan 3: Jika MINIMAL ADA 1 item yang sedang dimasak ('preparing', 'ready', atau 'served') 
+    # dan masih ada yang 'pending' -> Order jadi 'preparing'
+    elif any(s in ['preparing', 'ready', 'served'] for s in statuses):
+        # Mencegah order turun status (misal dari ready kembali ke preparing)
+        if order.order_status == 'pending':
+            order.order_status = 'preparing'

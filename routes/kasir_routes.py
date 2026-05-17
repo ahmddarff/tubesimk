@@ -292,6 +292,7 @@ def pesanan_aktif():
         items_list = []
         for item in order.items:
             items_list.append({
+                'id': item.id,  # ✅ TAMBAHKAN BARIS INI (Wajib untuk update status per item)
                 'nama': item.menu.name if item.menu else 'Item Tidak Dikenal',
                 'qty': item.qty,
                 'harga': item.price_at_order,
@@ -860,6 +861,39 @@ def complete_takeaway():
             
         db.session.commit()
         return jsonify({"success": True, "message": f"Pesanan Take Away {order_number} berhasil diselesaikan!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    
+@kasir_bp.route('/api/serve-item', methods=['POST'])
+@login_required
+def serve_item():
+    data = request.json
+    item_id = data.get('item_id')
+    
+    if not item_id:
+        return jsonify({"success": False, "message": "ID Item tidak valid!"})
+        
+    try:
+        item = db.session.get(OrderItem, int(item_id))
+        if not item:
+            return jsonify({"success": False, "message": "Item tidak ditemukan!"})
+            
+        # 1. Ubah status item spesifik ini menjadi 'served'
+        item.item_status = 'served'
+        
+        # 2. 🚀 PANGGIL FUNGSI SINKRONISASI DARI utils.py
+        auto_sync_order_status(item.order)
+        
+        db.session.commit()
+        
+        # Kembalikan status induk terbaru (kapital) agar UI langsung menyesuaikan
+        return jsonify({
+            "success": True, 
+            "message": f"{item.menu.name} berhasil diantar!",
+            "new_order_status": item.order.order_status.upper()
+        })
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})

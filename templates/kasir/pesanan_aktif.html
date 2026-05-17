@@ -349,19 +349,36 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        serveItem(item) {
-            // 1. Ubah status item di UI menjadi 'served'
-            // (Nanti kamu perlu membuat fetch() ke backend API di sini untuk update database)
-            item.status = 'served';
+        async serveItem(item) {
+            if (!item || !item.id) return;
 
-            // 2. Mengecek apakah semua item di dalam pesanan ini statusnya sudah 'served'?
-            const semuaSelesai = this.selectedOrder.items.every(i => i.status === 'served');
-
-            // 3. Jika semua item sudah diantar, otomatis ubah status pesanan utama menjadi SERVED
-            if (semuaSelesai) {
-                this.updateStatus('SERVED');
-                this.showDetail = false; 
-                showToast('Semua item telah diantar. Status menjadi SERVED!', 'success');
+            try {
+                const response = await fetch('/kasir/api/serve-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: item.id })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 1. Ubah visual item ini menjadi 'served' (Biru)
+                    item.status = 'served';
+                    
+                    // 2. Perbarui status induk (kartu pesanan) berdasarkan hasil dari Python Auto-Sync!
+                    this.updateStatus(data.new_order_status);
+                    
+                    // 3. Jika Python memutuskan seluruh orderan sudah 'SERVED', tutup modal
+                    if (data.new_order_status === 'SERVED') {
+                        this.showDetail = false;
+                        showToast('Semua pesanan telah diantar!', 'success');
+                    } else {
+                        showToast(data.message, 'success');
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('Gagal terhubung ke server.', 'error');
             }
         },
 
