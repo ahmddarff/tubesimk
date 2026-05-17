@@ -42,11 +42,11 @@
                    class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
         </div>
 
-        <div class="w-48">
-            <select x-model="filterKasir" @change="currentPage = 1" class="w-full border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
-                <option value="SEMUA">Semua Kasir</option>
-                <option :value="currentUserName">Shift Saya Saja</option>
-                <option value="Self-Service">Pesanan Mandiri (QR)</option>
+        <div class="w-52">
+            <select x-model="filterSumber" @change="currentPage = 1" class="w-full border-2 border-blue-100 rounded-xl px-4 py-2.5 text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer">
+                <option value="SEMUA">Semua Sumber Order</option>
+                <option value="KASIR">Dipesankan Kasir</option>
+                <option value="APLIKASI">Via Aplikasi / QR Meja</option>
             </select>
         </div>
 
@@ -168,8 +168,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('riwayatTransaksi', () => ({
         searchQuery: '',
         filterMethod: '',
-        filterDate: new Date().toISOString().split('T')[0], 
-        filterKasir: 'SEMUA', // Default tampilkan semua
+        filterDate: new Date().toISOString().split('T')[0],
+        filterSumber: 'SEMUA',
         currentUserName: '{{ current_user.name }}', // Jinja akan menyuntikkan nama akun yang sedang login
         
         showModal: false,
@@ -222,7 +222,7 @@ document.addEventListener('alpine:init', () => {
         resetFilters() {
             this.searchQuery = '';
             this.filterMethod = '';
-            this.filterKasir = 'SEMUA'; // Reset juga kasirnya
+            this.filterSumber = 'SEMUA'; // ✅ Reset sumber ke default
             this.currentPage = 1;
             this.refreshIcons();
         },
@@ -237,8 +237,8 @@ document.addEventListener('alpine:init', () => {
         get dailyTransactions() {
             return this.transactions.filter(t => {
                 const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
-                const matchKasir = this.filterKasir === 'SEMUA' || t.kasir === this.filterKasir;
-                return matchDate && matchKasir;
+                const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
+                return matchDate && matchSumber;
             });
         },
 
@@ -248,9 +248,8 @@ document.addEventListener('alpine:init', () => {
                 const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
                 const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
                 const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
-                const matchKasir = this.filterKasir === 'SEMUA' || t.kasir === this.filterKasir;
-                
-                return matchName && matchMethod && matchDate && matchKasir;
+                const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
+                return matchName && matchMethod && matchDate && matchSumber;
             });
         },
 

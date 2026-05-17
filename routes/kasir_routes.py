@@ -344,7 +344,8 @@ def riwayat_transaksi():
             'meja': order.table_number_snapshot or '-',
             'status_pembayaran': order.payment_status, # ✅ DATA BARU: 'paid' atau 'cancelled'
             'alasan_batal': order.cancellation_reason or '', # ✅ DATA BARU: Alasan pembatalan dari DB
-            'items': items_list
+            'items': items_list,
+            'sumber': 'APLIKASI' if order.user_id else 'KASIR'
         })
 
     return render_template('kasir/riwayat_transaksi.html', 
