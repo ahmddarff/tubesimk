@@ -15,7 +15,7 @@
             <p class="text-gray-500 font-medium text-sm">Pantau status pesanan aktif Anda</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
             
             <div class="lg:col-span-2 space-y-6">
                 <template x-if="order.payment_status === 'unpaid'">
@@ -40,43 +40,45 @@
                 </template>
 
                 <template x-if="order.payment_status === 'paid'">
-                    <div class="flex items-start justify-between relative px-2 md:px-12 mt-4 mb-4">
-                        <div class="absolute top-7 left-14 right-14 md:left-24 md:right-24 h-1 flex z-0">
-                            <div class="h-full w-1/2 transition-colors duration-500" 
-                                    :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-600' : 'bg-gray-200'"></div>
-                            <div class="h-full w-1/2 transition-colors duration-500" 
-                                    :class="order.order_status === 'served' ? 'bg-green-500' : 'bg-gray-200'"></div>
-                        </div>
-
-                        <div class="flex flex-col items-center gap-3 z-10 w-24">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
-                                    :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-600 text-white' : 
-                                        (order.order_status === 'preparing' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
-                                <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                    <div class="bg-white border border-slate-100 rounded-[24px] p-8 shadow-sm">
+                        <div class="flex items-start justify-between relative px-2 md:px-12 mt-4 mb-4">
+                            <div class="absolute top-7 left-14 right-14 md:left-24 md:right-24 h-1 flex z-0">
+                                <div class="h-full w-1/2 transition-colors duration-500" 
+                                     :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-500' : 'bg-gray-200'"></div>
+                                <div class="h-full w-1/2 transition-colors duration-500" 
+                                     :class="order.order_status === 'served' ? 'bg-green-500' : 'bg-gray-200'"></div>
                             </div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
-                                    :class="['ready', 'served'].includes(order.order_status) ? 'text-green-600' : 
-                                            (order.order_status === 'preparing' ? 'text-yellow-600' : 'text-gray-400')">Sedang Dibuat</span>
-                        </div>
 
-                        <div class="flex flex-col items-center gap-3 z-10 w-24">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
-                                    :class="order.order_status === 'served' ? 'bg-green-600 text-white' : 
-                                        (order.order_status === 'ready' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
-                                <i data-lucide="concierge-bell" class="w-6 h-6"></i>
+                            <div class="flex flex-col items-center gap-3 z-10 w-24">
+                                <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                     :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-500 text-white' : 
+                                            (order.order_status === 'preparing' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
+                                    <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                      :class="['ready', 'served'].includes(order.order_status) ? 'text-green-600' : 
+                                             (order.order_status === 'preparing' ? 'text-yellow-600' : 'text-gray-400')">Sedang Dibuat</span>
                             </div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
-                                    :class="order.order_status === 'served' ? 'text-green-600' : 
-                                            (order.order_status === 'ready' ? 'text-yellow-600' : 'text-gray-400')">Siap Diantar</span>
-                        </div>
 
-                        <div class="flex flex-col items-center gap-3 z-10 w-24">
-                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
-                                    :class="order.order_status === 'served' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'">
-                                <i data-lucide="check" class="w-6 h-6"></i>
+                            <div class="flex flex-col items-center gap-3 z-10 w-24">
+                                <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                     :class="order.order_status === 'served' ? 'bg-green-500 text-white' : 
+                                            (order.order_status === 'ready' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
+                                    <i data-lucide="concierge-bell" class="w-6 h-6"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                      :class="order.order_status === 'served' ? 'text-green-600' : 
+                                             (order.order_status === 'ready' ? 'text-yellow-600' : 'text-gray-400')">Siap Diantar</span>
                             </div>
-                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
-                                    :class="order.order_status === 'served' ? 'text-green-600' : 'text-gray-400'">Disajikan</span>
+
+                            <div class="flex flex-col items-center gap-3 z-10 w-24">
+                                <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                     :class="order.order_status === 'served' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'">
+                                    <i data-lucide="check" class="w-6 h-6"></i>
+                                </div>
+                                <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                      :class="order.order_status === 'served' ? 'text-green-600' : 'text-gray-400'">Disajikan</span>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -172,9 +174,10 @@
                     </div>
 
                     <button :disabled="order.order_status !== 'served'"
+                            @click="showReviewModal = true"
                             class="w-full py-4 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2 shadow-sm mb-3"
-                            :class="order.order_status === 'served' ? 'bg-terralogBlue hover:bg-blue-500 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
-                        <i data-lucide="star" class="w-4 h-4"></i>
+                            :class="order.order_status === 'served' ? 'bg-terralogBlue hover:bg-blue-800 text-white cursor-pointer' : 'bg-gray-400 text-white cursor-not-allowed'">
+                        <i data-lucide="star" class="w-4 h-4" :class="order.order_status !== 'served' ? 'text-white' : ''"></i>
                         Beri Ulasan
                     </button>
 
@@ -186,6 +189,89 @@
             </div>
 
         </div>
+
+        <div x-show="showReviewModal" 
+             style="display: none;" 
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4"
+             x-transition.opacity>
+            <div class="bg-white rounded-[24px] w-full max-w-lg p-8 relative shadow-2xl" @click.away="showReviewModal = false" x-transition.scale>
+                
+                <button @click="showReviewModal = false" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+
+                <div class="text-center mb-6 mt-2">
+                    <span class="text-5xl inline-block mb-3">👍</span>
+                    <h2 class="text-xl font-extrabold text-slate-800">Yuk bagikan pendapatmu tentang menu ini!</h2>
+                </div>
+
+                <template x-if="items.length > 0">
+                    <div class="relative">
+                        <div class="border border-slate-200 rounded-2xl p-4 flex items-center gap-4 bg-white relative pr-16 shadow-sm mb-4">
+                            <img :src="items[currentReviewIndex].img || '/static/images/placeholder.jpg'" class="w-20 h-20 rounded-xl object-cover bg-slate-100">
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900 text-lg" x-text="items[currentReviewIndex].nama"></h4>
+                                <p class="font-bold text-slate-500 text-sm mb-2" x-text="`Rp ${items[currentReviewIndex].harga.toLocaleString('id-ID')}`"></p>
+                                
+                                <div class="flex gap-1.5">
+                                    <template x-for="star in 5">
+                                        <svg @click="reviews[currentReviewIndex].rating = star"
+                                             xmlns="http://www.w3.org/2000/svg" 
+                                             class="w-6 h-6 cursor-pointer transition-colors duration-200" 
+                                             :class="reviews[currentReviewIndex].rating >= star ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'"
+                                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                                        </svg>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <button x-show="items.length > 1" @click="nextReviewItem()" class="absolute right-4 w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
+                        
+                        <div class="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 mb-6">
+                            <textarea x-model="reviews[currentReviewIndex].comment" 
+                                      placeholder="Berikan penilaianmu sebagai feedback kami dan bantu pengguna lain membuat pilihan yang lebih baik!" 
+                                      class="w-full bg-transparent outline-none resize-none text-sm text-slate-700 font-medium placeholder-slate-400 h-24"></textarea>
+                        </div>
+
+                        <button @click="submitReviews()" 
+                                :disabled="!isCurrentReviewValid"
+                                class="w-full py-4 rounded-[16px] font-bold text-sm transition-all flex justify-center items-center shadow-md text-white"
+                                :class="isCurrentReviewValid ? 'bg-[#001D9A] hover:bg-blue-900 active:scale-95' : 'bg-slate-300 cursor-not-allowed'">
+                            <span x-show="!isSubmitting">Kirim Ulasan</span>
+                            <span x-show="isSubmitting" class="flex items-center gap-2">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                Mengirim...
+                            </span>
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div x-show="showSuccessModal" 
+             style="display: none;" 
+             class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm px-4"
+             x-transition.opacity>
+            
+            <div class="bg-white rounded-[24px] w-full max-w-sm p-8 text-center flex flex-col items-center justify-center shadow-2xl relative" @click.away="finishReviewProcess()" x-transition.scale>
+                
+                <img src="/static/images/terra.png" alt="Berhasil" class="h-36 w-auto object-contain mb-6">
+                
+                <h2 class="font-extrabold text-[#001D9A] text-xl mb-8 leading-snug">Terima kasih! Ulasanmu sangat berarti buat kami</h2>
+                
+                <button @click="finishReviewProcess()" class="w-full py-3.5 border-2 border-[#001D9A] text-[#001D9A] hover:bg-blue-50 font-bold rounded-full mb-3 transition">
+                    Tutup
+                </button>
+                <a href="/customer/" class="block w-full py-3.5 bg-[#001D9A] hover:bg-blue-900 text-white font-bold rounded-full transition shadow-md">
+                    Kembali ke Beranda
+                </a>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -195,7 +281,6 @@
 
 <script>
     function pesananAktifApp() {
-        // PERBAIKAN: Menggunakan parsing yang aman untuk mencegah error JSON
         let serverData = null;
         try {
             const rawData = '{{ order_json|tojson if order_json else "{}"|safe }}';
@@ -206,20 +291,85 @@
         }
         
         let items = serverData.items || [];
-        // PERBAIKAN: Backend menggunakan 'cash' bukan 'tunai'
-        let paymentMethod = serverData.payment_method || 'cash';
-        let total = serverData.total_amount || 0;
+        
+        // Mempersiapkan template pengisian ulasan (Review Form) untuk setiap menu
+        let initialReviews = items.map(item => ({
+            item_id: item.id,
+            rating: 0,
+            comment: ''
+        }));
         
         return {
             items: items,
-            paymentMethod: paymentMethod,
-            total: total,
+            paymentMethod: serverData.payment_method || 'cash',
+            total: serverData.total_amount || 0,
             order: serverData,
             
+            // Variabel Status Interaktif Popup
+            showReviewModal: false,
+            showSuccessModal: false,
+            currentReviewIndex: 0,
+            reviews: initialReviews,
+            isSubmitting: false,
+            
+            // Validasi: Mengecek apakah menu yang sedang tampil di layar sudah diisi rating & komen
+            get isCurrentReviewValid() {
+                if(this.reviews.length === 0) return false;
+                let current = this.reviews[this.currentReviewIndex];
+                return current.rating > 0 && current.comment.trim() !== '';
+            },
+
             init() {
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
+            },
+            
+            // Logika untuk tombol Next (Geser Menu)
+            nextReviewItem() {
+                this.currentReviewIndex = (this.currentReviewIndex + 1) % this.items.length;
+            },
+
+            // Mengirim Data Ulasan ke Database
+            async submitReviews() {
+                // Mencegah klik ganda
+                if(!this.isCurrentReviewValid || this.isSubmitting) return;
+                
+                this.isSubmitting = true;
+                
+                try {
+                    const response = await fetch('/customer/api/submit-reviews', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            order_id: this.order.id,
+                            reviews: this.reviews 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.showReviewModal = false;
+                        this.showSuccessModal = true;
+                    } else {
+                        alert(result.message || "Gagal menyimpan ulasan.");
+                    }
+                } catch (error) {
+                    console.error("Error submitting review:", error);
+                    alert("Terjadi kesalahan pada jaringan.");
+                } finally {
+                    this.isSubmitting = false;
+                }
+            },
+            
+            // Logika setelah pengguna menekan "Tutup" pada popup sukses
+            finishReviewProcess() {
+                this.showSuccessModal = false;
+                // Memuat ulang halaman agar pesanan otomatis berpindah ke tab Riwayat (sesuai logika backend sebelumnya)
+                window.location.href = '/customer/pesanan-saya/history';            
             }
         }
     }

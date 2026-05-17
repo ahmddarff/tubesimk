@@ -789,6 +789,7 @@ def pesanan_detail(order_id):
         'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',  # Tambahkan baris ini
         'total_amount': order.total_amount,
         'items': [{
+            'id': item.id,
             'nama': item.menu.name,
             'harga': item.price_at_order,
             'qty': item.qty,
@@ -833,6 +834,46 @@ def pembayaran_nontunai(order_id):
         order_id=order_id,
         order_json=order_data
     )
+
+@customer_bp.route('/api/submit-reviews', methods=['POST'])
+@login_required
+def submit_reviews():
+    data = request.get_json()
+    order_id = data.get('order_id')
+    reviews_data = data.get('reviews', [])
+
+    # Validasi kepemilikan pesanan
+    order = Order.query.filter_by(id=order_id, user_id=current_user.id).first()
+    if not order:
+        return jsonify({"success": False, "message": "Pesanan tidak ditemukan!"}), 404
+
+    try:
+        for rev in reviews_data:
+            item_id = rev.get('item_id')
+            rating = rev.get('rating')
+            comment = rev.get('comment')
+
+            # Lewati jika rating atau komentar kosong
+            if not rating or not comment.strip():
+                continue
+
+            # Validasi bahwa item tersebut benar milik pesanan ini
+            item = OrderItem.query.filter_by(id=item_id, order_id=order.id).first()
+            if item:
+                # Cek apakah sudah pernah diulas sebelumnya
+                if not item.review:
+                    new_review = Review(
+                        order_item_id=item.id,
+                        rating=int(rating),
+                        comment=comment.strip()
+                    )
+                    db.session.add(new_review)
+        
+        db.session.commit()
+        return jsonify({"success": True, "message": "Ulasan berhasil disimpan"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": f"Terjadi kesalahan: {str(e)}"}), 500
 
 
 # =========================
