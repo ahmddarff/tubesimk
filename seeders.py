@@ -181,7 +181,10 @@ def run_seeders():
             {"nomor": "02", "kapasitas": 2, "tersedia": False},
             {"nomor": "03", "kapasitas": 4, "tersedia": True}, 
             {"nomor": "04", "kapasitas": 6, "tersedia": False},
-            {"nomor": "05", "kapasitas": 2, "tersedia": True}  
+            {"nomor": "05", "kapasitas": 2, "tersedia": True},  
+            {"nomor": "06", "kapasitas": 10, "tersedia": True},  
+            {"nomor": "07", "kapasitas": 5, "tersedia": True},
+            {"nomor": "08", "kapasitas": 3, "tersedia": True}  
         ]
         
         meja_db = {}
