@@ -71,22 +71,24 @@ def dashboard():
     menus_db = Menu.query.all()
     menu_list = []
     
+    menus_db = Menu.query.all()
+    menu_list = []
+    
     for m in menus_db:
         if m.is_available and (m.stock is None or m.stock > 0):
             status_menu = 'tersedia'
         else:
             status_menu = 'habis'
 
-        # 🔥 BARU: LOGIKA HITUNG RATING RATA-RATA SECARA DINAMIS
-        # Melompat dari Menu -> OrderItem -> Review menggunakan List Comprehension Python
+        # ── HITUNG REAL RATINGS & TOTAL ULASAN ──
         all_ratings = [oi.review.rating for oi in m.order_items if oi.review]
         
         if all_ratings:
-            # Hitung rata-rata dan bulatkan 1 angka di belakang koma (contoh: 4.8)
             avg_rating = round(sum(all_ratings) / len(all_ratings), 1)
+            total_reviews = len(all_ratings)
         else:
-            # Default bintang 5 jika belum ada review sama sekali di DB
-            avg_rating = 5.0 
+            avg_rating = 0.0
+            total_reviews = 0 # Penanda mutlak kalau belum ada ulasan
             
         menu_list.append({
             "id": m.id,
@@ -95,7 +97,8 @@ def dashboard():
             "img": m.image_url if m.image_url else "gambar.png", 
             "status": status_menu,
             "category_id": str(m.category_id),
-            "rating": avg_rating  # ✅ SUNTIKKAN NILAI RATING REAL-TIME KE FRONTEND
+            "rating": avg_rating,
+            "total_reviews": total_reviews  # ✅ SUNTIKKAN VARIABEL INI
         })
 
     # ==========================================
