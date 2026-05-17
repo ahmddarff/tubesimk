@@ -34,15 +34,16 @@
             <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
         </div>
 
-        <div class="w-40 relative">
+        <div class="w-44 relative">
             <i data-lucide="layout-dashboard" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
-            <select x-model="selectedTable" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+            <select x-model="selectedTable" @change="currentPage = 1" 
+                    class="w-full pl-9 pr-8 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
                 <option value="">Semua Meja</option>
                 <template x-for="t in availableTables" :key="t.id">
                     <option :value="t.number" x-text="'Meja ' + t.number"></option>
                 </template>
             </select>
-            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+            <i data-lucide="chevron-down" class="absolute right-3 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
         </div>
 
         <div class="w-44 relative">
@@ -96,6 +97,13 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex justify-center gap-2" x-init="setTimeout(() => lucide.createIcons(), 50)">
+                                    <button x-show="res.status === 'confirmed'" type="button" 
+                                            @click="window.location.href = '/kasir/dashboard?checkin=' + res.id"
+                                            class="p-2 text-emerald-600 bg-emerald-50 rounded-xl hover:bg-emerald-600 hover:text-white transition shadow-sm cursor-pointer"
+                                            title="Check-In & Buka Order">
+                                        <i data-lucide="rocket" class="w-4 h-4"></i>
+                                    </button>
+
                                     <button type="button" @click.prevent="openEdit(res)" 
                                             class="p-2 text-terralogBlue bg-blue-50 rounded-xl hover:bg-terralogBlue hover:text-white transition shadow-sm cursor-pointer">
                                         <i data-lucide="edit-3" class="w-4 h-4"></i>

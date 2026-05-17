@@ -90,42 +90,84 @@
                 </div>
             </div>
 
-            <div class="border-t border-gray-100 pt-3">
-                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2 tracking-wide">Status Reservasi</label>
+            <div class="border-t border-gray-100 pt-4">
+                <label class="text-[10px] font-bold text-gray-400 uppercase block mb-2 tracking-wide">Status & Aksi Reservasi</label>
                 
-                <div class="flex gap-2">
-                    <template x-for="s in ['pending', 'confirmed', 'completed', 'cancelled']">
-                        <button @click="formRes.status = s" 
-                            :disabled="!isStatusAllowed(s)"
-                            :class="{
-                                'bg-[#FF8A48] text-white shadow-md border-[#FF8A48]': formRes.status === s && s === 'pending',
-                                'bg-emerald-500 text-white shadow-md border-emerald-500': formRes.status === s && s === 'confirmed',
-                                'bg-blue-500 text-white shadow-md border-blue-500': formRes.status === s && s === 'completed',
-                                'bg-red-500 text-white shadow-md border-red-500': formRes.status === s && s === 'cancelled',
-                                'bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100 cursor-pointer': formRes.status !== s && isStatusAllowed(s),
-                                'bg-gray-50/50 text-gray-300 border border-gray-100 cursor-not-allowed opacity-60': !isStatusAllowed(s)
-                            }"
-                            class="flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all" 
-                            x-text="statusDisplay[s]"></button>
-                    </template>
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-2xl p-3 mb-3.5">
+                    <span class="text-xs font-bold text-gray-500">Status Reservasi Saat Ini:</span>
+                    <span class="px-3 py-1.5 rounded-lg text-white text-[10px] font-black uppercase tracking-wider shadow-sm"
+                          :class="{
+                              'bg-[#FF8A48]': formRes.original_status === 'pending', 
+                              'bg-emerald-500': formRes.original_status === 'confirmed', 
+                              'bg-red-500': formRes.original_status === 'cancelled', 
+                              'bg-blue-500': formRes.original_status === 'completed'
+                          }"
+                          x-text="statusDisplay[formRes.original_status] || formRes.original_status"></span>
                 </div>
 
-                <p x-show="['completed', 'cancelled'].includes(formRes.original_status)" 
-                   class="text-[10px] text-gray-400 mt-2 font-medium italic flex items-center gap-1" style="display: none;">
-                    <i data-lucide="lock" class="w-3 h-3"></i> Data reservasi ini bersifat Read-Only (sudah final) dan tidak dapat diubah.
-                </p>
+                <div x-show="formRes.original_status === 'pending'" class="space-y-2">
+                    <div class="flex gap-2.5">
+                        <button type="button" @click="formRes.status = 'confirmed'"
+                                :class="formRes.status === 'confirmed' ? 'bg-emerald-600 text-white shadow-md border-emerald-600' : 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50'"
+                                class="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i> Terima & Konfirmasi
+                        </button>
+                        
+                        <button type="button" @click="formRes.status = 'cancelled'"
+                                :class="formRes.status === 'cancelled' ? 'bg-red-600 text-white shadow-md border-red-600' : 'bg-white text-red-500 border border-red-200 hover:bg-red-50'"
+                                class="flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i> Tolak / Batalkan
+                        </button>
+                    </div>
+                    
+                    <div x-show="formRes.status === 'confirmed'" class="text-[10px] text-emerald-600 font-bold italic mt-1 text-right cursor-pointer hover:underline" @click="formRes.status = 'pending'">
+                        ✕ Batalkan pilihan konfirmasi (Kembali ke Awal)
+                    </div>
+                </div>
 
-                <div x-show="formRes.status === 'cancelled'" 
-                     x-transition:enter="transition ease-out duration-300"
+                <div x-show="formRes.original_status === 'confirmed'" class="space-y-2">
+                    <div class="flex flex-col gap-2">
+                        <button type="button" @click="window.location.href = '/kasir/dashboard?checkin=' + formRes.id"
+                                class="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:bg-emerald-700 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                            <i data-lucide="rocket" class="w-4 h-4 stroke-[3]"></i> Check-In & Buka Order POS
+                        </button>
+                        
+                        <button type="button" @click="formRes.status = (formRes.status === 'cancelled' ? 'confirmed' : 'cancelled')"
+                                :class="formRes.status === 'cancelled' ? 'bg-red-600 text-white shadow-md border-red-600' : 'bg-white text-red-500 border border-red-200 hover:bg-red-50'"
+                                class="w-full py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <span x-text="formRes.status === 'cancelled' ? 'Kembali ke Terkonfirmasi' : 'Batalkan Reservasi'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div x-show="formRes.original_status === 'completed'" class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-3 items-start">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-500 shrink-0 mt-0.5"></i>
+                    <div>
+                        <h4 class="text-xs font-bold text-blue-900">Siklus Reservasi Selesai</h4>
+                        <p class="text-[11px] text-blue-700 font-medium mt-0.5 leading-relaxed">Pelanggan ini telah sukses melakukan Check-In di meja kafe dan menyelesaikan seluruh transaksi pesanan riil melalui POS kasir.</p>
+                    </div>
+                </div>
+
+                <div x-show="formRes.original_status === 'cancelled'" class="bg-red-50 border border-red-100 rounded-2xl p-4 flex gap-3 items-start">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 shrink-0 mt-0.5"></i>
+                    <div class="w-full">
+                        <h4 class="text-xs font-bold text-red-900">Reservasi Telah Hangus / Gugur</h4>
+                        <p class="text-[10px] text-red-400 font-bold mt-2 uppercase tracking-wider">Alasan Pembatalan:</p>
+                        <p class="text-xs font-medium text-red-900 italic mt-0.5" x-text="formRes.alasan_batal || 'Tidak ada alasan spesifik yang dicatat oleh kasir.'"></p>
+                    </div>
+                </div>
+
+                <div x-show="formRes.status === 'cancelled' && formRes.original_status !== 'cancelled'" 
+                     x-transition:enter="transition ease-out duration-300 transform"
                      x-transition:enter-start="opacity-0 -translate-y-4"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="mt-3" style="display: none;">
+                     class="mt-4">
                     <label class="text-[10px] font-bold text-red-400 uppercase mb-1.5 block tracking-wide flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3 h-3"></i> Alasan Pembatalan
+                        <i data-lucide="alert-circle" class="w-3 h-3"></i> Berikan Alasan Pembatalan Wajib
                     </label>
-                    <textarea x-model="formRes.alasan_batal" rows="2" placeholder="Contoh: Pelanggan membatalkan via telepon..." 
-                              :disabled="formRes.original_status === 'cancelled'"
-                              class="w-full px-4 py-3 bg-red-50/50 border border-red-200 rounded-xl text-sm font-medium text-red-900 placeholder-red-300 outline-none focus:bg-white focus:border-red-400 transition-all resize-none disabled:opacity-70 disabled:cursor-not-allowed"></textarea>
+                    <textarea x-model="formRes.alasan_batal" rows="2" placeholder="Contoh: Pelanggan mendadak sakit / No-Show tanpa ada kabar via WA setelah 30 menit..." 
+                              class="w-full px-4 py-3 bg-red-50/50 border border-red-200 rounded-xl text-sm font-medium text-red-900 placeholder-red-300 outline-none focus:bg-white focus:border-red-400 transition-all resize-none"></textarea>
                 </div>
             </div>
         </div>

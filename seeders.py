@@ -215,13 +215,13 @@ def run_seeders():
         fallback_id = Menu.query.first().id if Menu.query.first() else 1
         now_utc = datetime.utcnow()
 
-        # Daftar Pesanan (Ditambah pesanan Ayam Geprek untuk kebutuhan Review)
         data_orders = [
             {
                 "order_number": "ORD-20260514-001",
                 "user_id": customers_db[0].id if len(customers_db) > 0 else 1,
                 "customer_name": None,
-                "table_id": meja_db.get("01"),
+                # 🔥 SENGAJA TETAP DIPASANG: Sebagai bahan test simulasi tombol "Kosongkan Meja" hari ini
+                "table_id": meja_db.get("01"), 
                 "table_number_snapshot": "01",
                 "order_type": "dine_in",
                 "order_status": "served",
@@ -284,12 +284,12 @@ def run_seeders():
                     {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 1, "price": 15000, "notes": "Tambahkan sendok", "status": "pending"}
                 ]
             },
-            # --- TIGA PESANAN TAMBAHAN UNTUK KEBUTUHAN REVIEW AYAM GEPREK ---
+            # ── PESANAN HISTORI MASA LALU (MUTLAK TABLE_ID = NONE AGAR TIDAK MENYEPAM LAYAR KASIR) ──
             {
                 "order_number": "ORD-20260513-005",
                 "user_id": customers_db[1].id if len(customers_db) > 1 else 1,
                 "customer_name": None,
-                "table_id": meja_db.get("03"),
+                "table_id": None, # ✅ SET NULL: Meja sudah dikosongkan kemarin
                 "table_number_snapshot": "03",
                 "order_type": "dine_in",
                 "order_status": "served",
@@ -305,7 +305,7 @@ def run_seeders():
                 "order_number": "ORD-20260512-006",
                 "user_id": customers_db[2].id if len(customers_db) > 2 else 1,
                 "customer_name": None,
-                "table_id": meja_db.get("05"),
+                "table_id": None, # ✅ SET NULL: Meja sudah dikosongkan 2 hari lalu
                 "table_number_snapshot": "05",
                 "order_type": "dine_in",
                 "order_status": "served",
@@ -321,7 +321,7 @@ def run_seeders():
                 "order_number": "ORD-20260511-007",
                 "user_id": customers_db[3].id if len(customers_db) > 3 else 1,
                 "customer_name": None,
-                "table_id": meja_db.get("01"),
+                "table_id": None, # ✅ SET NULL: Meja sudah dikosongkan 3 hari lalu
                 "table_number_snapshot": "01",
                 "order_type": "dine_in",
                 "order_status": "served",
@@ -378,10 +378,16 @@ def run_seeders():
         meja_db_id = {m.table_number: m.id for m in Table.query.all()}
         fallback_table = list(meja_db_id.values())[0] if meja_db_id else 1
 
+        # ✅ BARU: Kalkulasi Waktu Dinamis (Hari ini, Besok, Kemarin)
+        today_date = date.today()
+        tomorrow_date = today_date + timedelta(days=1)
+        yesterday_date = today_date - timedelta(days=1)
+
         data_reservasi = [
             {
                 "user_id": customer_id,
-                "reservation_number": "RES-20260515-001",
+                # Format nomor reservasi ikut dinamis berdasarkan tanggal
+                "reservation_number": f"RES-{today_date.strftime('%Y%m%d')}-001", 
                 "customer_name": None,
                 "phone": customer_phone,
                 "guest_qty": 2,
@@ -389,13 +395,13 @@ def run_seeders():
                 "tables": [meja_db_id.get("02", fallback_table)],
                 "notes": None,
                 "cancellation_reason": None,
-                "reservation_date": date(2026, 5, 15),
+                "reservation_date": tomorrow_date, # <-- BESOK (Pending)
                 "reservation_time": time(19, 0),
                 "status": "pending"
             },
             {
                 "user_id": customer_id,
-                "reservation_number": "RES-20260515-002",
+                "reservation_number": f"RES-{today_date.strftime('%Y%m%d')}-002",
                 "customer_name": None,
                 "phone": customer_phone,
                 "guest_qty": 4,
@@ -403,13 +409,13 @@ def run_seeders():
                 "tables": [meja_db_id.get("01", fallback_table)],
                 "notes": "Tolong siapkan kursi tinggi untuk balita.",
                 "cancellation_reason": None,
-                "reservation_date": date(2026, 5, 16),
+                "reservation_date": today_date, # <-- HARI INI (Confirmed - Siap Test Check-In!)
                 "reservation_time": time(20, 0),
                 "status": "confirmed"
             },
             {
                 "user_id": None,
-                "reservation_number": "RES-20260514-003",
+                "reservation_number": f"RES-{yesterday_date.strftime('%Y%m%d')}-001",
                 "customer_name": "Ibu Ratna",
                 "phone": "081999888777",
                 "guest_qty": 8,
@@ -417,7 +423,7 @@ def run_seeders():
                 "tables": [meja_db_id.get("03", fallback_table), meja_db_id.get("04", fallback_table)],
                 "notes": "Acara keluarga",
                 "cancellation_reason": None,
-                "reservation_date": date(2026, 5, 14),
+                "reservation_date": yesterday_date, # <-- KEMARIN (Completed)
                 "reservation_time": time(12, 30),
                 "status": "completed"
             }

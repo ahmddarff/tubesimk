@@ -25,9 +25,10 @@
     <div class="flex justify-between text-[10px] mb-1">
         <span>Tgl: <span x-text="receiptData.date"></span></span>
     </div>
-    <div class="flex justify-between text-[10px] mb-3">
-        <span>Pelanggan: <span x-text="receiptData.customer || 'Tamu'"></span></span>
-        <span x-text="(receiptData.type === 'DINE IN' || receiptData.type === 'dine-in') ? 'Meja ' + (receiptData.table || '-') : 'Take Away'"></span>
+    
+    <div class="flex justify-between items-start text-[10px] mb-3 gap-2">
+        <span class="shrink-0">Pelanggan: <span x-text="receiptData.customer || 'Tamu'"></span></span>
+        <span class="text-right font-bold" x-text="(receiptData.type === 'DINE IN' || receiptData.type === 'dine-in') ? 'Meja ' + (receiptData.table || '-') : 'Take Away'"></span>
     </div>
 
     <div class="border-b-2 border-dashed border-black mb-3"></div>
