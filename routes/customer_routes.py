@@ -577,17 +577,33 @@ def remove_cart_item(item_id):
 @customer_bp.route('/pesanan-saya')
 @login_required
 def pesanan_saya():
-    # Mengambil semua pesanan milik user yang sedang login
-    user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    # Mengambil semua pesanan milik user beserta relasi items dan review untuk mencegah N+1 query
+    user_orders = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.review)
+    ).filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
     
-    # Memisahkan pesanan Aktif dan Riwayat
-    active_orders = [
-        o for o in user_orders
-        if o.order_status in ['pending', 'preparing', 'ready']
-        and o.payment_status != 'cancelled'
-    ]
-    history_orders = [o for o in user_orders if (o.order_status == 'served' and o.payment_status == 'paid') or o.payment_status == 'cancelled']
+    active_orders = []
+    history_orders = []
     
+    for o in user_orders:
+        # Jika pesanan dibatalkan, langsung masukkan ke riwayat
+        if o.payment_status == 'cancelled':
+            history_orders.append(o)
+            continue
+            
+        # Memeriksa apakah sudah ada ulasan pada salah satu item di pesanan ini
+        has_review = any(item.review is not None for item in o.items)
+        
+        # Logika pemisahan status pesanan
+        if o.order_status in ['pending', 'preparing', 'ready']:
+            active_orders.append(o)
+        elif o.order_status == 'served':
+            if has_review:
+                history_orders.append(o)
+            else:
+                # Jika sudah disajikan tetapi belum diulas, tetap masukkan ke Pesanan Aktif
+                active_orders.append(o)
+                
     return render_template('customer/pesanan_saya.html', 
                             segment='pesanan_saya', 
                             role='customer', 
@@ -595,14 +611,21 @@ def pesanan_saya():
                             history_orders=history_orders)
 
 @customer_bp.route('/pesanan-saya/history')
+@login_required
 def pesanan_history():
-# Ambil pesanan dari database murni yang statusnya sudah disajikan (served)
-    history_orders = Order.query.options(
-        joinedload(Order.items).joinedload(OrderItem.menu)
-    ).filter(
-        Order.user_id == current_user.id,
-        Order.order_status == 'served'
-    ).order_by(Order.created_at.desc()).all()
+    # Mengambil semua pesanan beserta relasi menu dan ulasan
+    user_orders = Order.query.options(
+        joinedload(Order.items).joinedload(OrderItem.menu),
+        joinedload(Order.items).joinedload(OrderItem.review)
+    ).filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+
+    history_orders = []
+    for o in user_orders:
+        has_review = any(item.review is not None for item in o.items)
+        
+        # Riwayat hanya memuat pesanan yang dibatalkan ATAU pesanan disajikan yang TELAH diulas
+        if o.payment_status == 'cancelled' or (o.order_status == 'served' and has_review):
+            history_orders.append(o)
 
     return render_template(
         'customer/pesanan_history.html', 
