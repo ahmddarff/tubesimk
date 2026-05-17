@@ -99,6 +99,10 @@
 
         get total() {
             return this.subtotal;
+        },
+
+        get totalQty() {
+            return this.cart.reduce((sum, item) => sum + item.qty, 0);
         }
     }">
         
@@ -238,16 +242,9 @@
                     </template>
                 </div>
 
-                <div class="space-y-2 border-t border-gray-200 pt-4 mb-4">
-                    <div class="flex justify-between text-sm text-gray-600">
-                        <span>Subtotal</span>
-                        <span>Rp <span x-text="subtotal.toLocaleString('id-ID')"></span></span>
-                    </div>
-                </div>
-
                 <div>
                     <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition cursor-pointer">
-                        <span x-text="cart.length + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
+                        <span x-text="totalQty + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
                     </button>
                 </div>
             </div>

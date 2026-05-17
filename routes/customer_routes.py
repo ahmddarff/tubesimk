@@ -182,6 +182,55 @@ def menu_reviews(menu_id):
                            segment='daftar_menu', 
                            role='customer')
 
+# --- FUNGSI PEMBANTU (HELPER FUNCTIONS) ---
+def get_active_cart(user_id, load_relations=False):
+    """Mengambil keranjang/pesanan aktif milik pengguna."""
+    query = Order.query
+    if load_relations:
+        from sqlalchemy.orm import joinedload # Pastikan ini diimpor di atas jika belum
+        query = query.options(joinedload(Order.items).joinedload(OrderItem.menu))
+    
+    return query.filter_by(
+        user_id=user_id,
+        order_status='pending',
+        payment_status='unpaid'
+    ).first()
+
+def generate_order_number():
+    """Menghasilkan nomor pesanan dengan format ORD-YYYYMMDD-XXX."""
+    from datetime import datetime
+    date_str = datetime.now().strftime('%Y%m%d')
+    today_orders_count = Order.query.filter(Order.order_number.like(f"ORD-{date_str}-%")).count()
+    return f"ORD-{date_str}-{(today_orders_count + 1):03d}"
+
+def recalculate_total(order):
+    """Menghitung ulang dan memperbarui total harga keranjang."""
+    total = sum(i.qty * i.price_at_order for i in order.items)
+    order.total_amount = total
+    return total
+
+def calculate_menu_stats(menu):
+    """Menghitung total terjual dan rata-rata rating untuk sebuah menu."""
+    terjual = db.session.query(func.sum(OrderItem.qty))\
+        .join(Order, OrderItem.order_id == Order.id)\
+        .filter(OrderItem.menu_id == menu.id, Order.payment_status == 'paid')\
+        .scalar() or 0
+        
+    reviews = db.session.query(Review.rating)\
+        .join(OrderItem, Review.order_item_id == OrderItem.id)\
+        .filter(OrderItem.menu_id == menu.id)\
+        .all()
+        
+    avg_rating = 0.0
+    if reviews:
+        total_rating = sum([r[0] for r in reviews])
+        avg_rating = round(total_rating / len(reviews), 1)
+        
+    setattr(menu, 'terjual', int(terjual))
+    setattr(menu, 'rating_avg', avg_rating)
+    return menu
+# ------------------------------------------
+
 # =========================
 # RESERVASI
 # =========================
@@ -389,15 +438,9 @@ def add_to_cart():
 
     # Jika belum ada cart
     if not order:
-
-        order_number = 'ORD-' + ''.join(
-            random.choices(string.digits, k=6)
-        )
-
         order = Order(
-            order_number=order_number,
+            order_number=generate_order_number(),
             user_id=current_user.id,
-            customer_name=current_user.name,
             order_type='dine_in',
             payment_status='unpaid',
             order_status='pending',
@@ -446,14 +489,7 @@ def add_to_cart():
 @customer_bp.route('/api/cart')
 @login_required
 def get_cart():
-
-    order = Order.query.options(
-        joinedload(Order.items).joinedload(OrderItem.menu)
-    ).filter_by(
-        user_id=current_user.id,
-        order_status='pending',
-        payment_status='unpaid'
-    ).first()
+    order = get_active_cart(current_user.id, load_relations=True)
 
     if not order:
         return jsonify({
@@ -465,7 +501,6 @@ def get_cart():
     items = []
 
     for item in order.items:
-
         items.append({
             'id': item.id,
             'menu_id': item.menu_id,
@@ -486,12 +521,9 @@ def get_cart():
 @customer_bp.route('/api/cart/update', methods=['POST'])
 @login_required
 def update_cart():
-
     data = request.get_json()
-
     item_id = data.get('item_id')
     qty = int(data.get('qty'))
-
     item = OrderItem.query.get_or_404(item_id)
 
     # Pastikan item milik user
@@ -507,17 +539,7 @@ def update_cart():
         item.qty = qty
 
     db.session.flush()
-
-    order = item.order
-
-    # Recalculate total
-    total = sum(
-        i.qty * i.price_at_order
-        for i in order.items
-    )
-
-    order.total_amount = total
-
+    total = recalculate_total(order)
     db.session.commit()
 
     return jsonify({
@@ -537,9 +559,7 @@ def remove_cart_item(item_id):
         }), 403
 
     order = item.order
-
     db.session.delete(item)
-
     db.session.flush()
 
     order.total_amount = sum(
@@ -593,14 +613,7 @@ def pesanan_history():
 @customer_bp.route('/checkout')
 @login_required
 def checkout():
-
-    order = Order.query.options(
-        joinedload(Order.items).joinedload(OrderItem.menu)
-    ).filter_by(
-        user_id=current_user.id,
-        order_status='pending',
-        payment_status='unpaid'
-    ).first()
+    order = get_active_cart(current_user.id, load_relations=True)
 
     if not order:
         flash('Keranjang masih kosong', 'warning')
@@ -630,19 +643,13 @@ def pesan_lagi(order_id):
     ).first_or_404()
 
     # Cari cart aktif
-    active_order = Order.query.filter_by(
-        user_id=current_user.id,
-        order_status='pending',
-        payment_status='unpaid'
-    ).first()
+    active_order = get_active_cart(current_user.id)
 
     # Kalau belum ada cart
     if not active_order:
-
         active_order = Order(
-            order_number='ORD-' + ''.join(random.choices(string.digits, k=6)),
+            order_number=generate_order_number(),
             user_id=current_user.id,
-            customer_name=current_user.name,
             order_type='dine_in',
             payment_status='unpaid',
             order_status='pending',
@@ -654,7 +661,6 @@ def pesan_lagi(order_id):
 
     # Copy item
     for item in old_order.items:
-
         existing_item = OrderItem.query.filter_by(
             order_id=active_order.id,
             menu_id=item.menu_id
@@ -670,32 +676,20 @@ def pesan_lagi(order_id):
                 qty=item.qty,
                 price_at_order=item.price_at_order
             )
-
             db.session.add(new_item)
 
     db.session.flush()
-
-    active_order.total_amount = sum(
-        i.qty * i.price_at_order
-        for i in active_order.items
-    )
-
+    recalculate_total(active_order)
     db.session.commit()
 
     flash('Pesanan berhasil dimasukkan ke cart', 'success')
-
     return redirect(url_for('customer.checkout'))
 
 @customer_bp.route('/submit-order', methods=['POST'])
 @login_required
 def submit_order():
     data = request.get_json()
-
-    order = Order.query.filter_by(
-        user_id=current_user.id,
-        order_status='pending',
-        payment_status='unpaid'
-    ).first()
+    order = get_active_cart(current_user.id)
 
     if not order:
         return jsonify({
@@ -703,17 +697,20 @@ def submit_order():
             'message': 'Cart kosong'
         })
 
-    # Update nama pemesan terbaru dari input checkout
-    nama_pemesan = data.get('nama')
-    if nama_pemesan:
-        order.customer_name = nama_pemesan
+    # Ambil tipe pesanan dari data (default: dine_in)
+    order_type = data.get('order_type', 'dine_in')
+    order.order_type = order_type
 
-    # Ambil table jika dine in
-    table_id = data.get('table_id')
-    if table_id:
-        table = Table.query.get(table_id)
-        if table:
-            order.table_id = table.id
+    # Logika pengisian meja berdasarkan tipe pesanan
+    if order_type == 'dine_in':
+        table_id = data.get('table_id')
+        if table_id:
+            table = Table.query.get(table_id)
+            if table:
+                order.table_id = table.id
+    else:
+        # Jika take away, pastikan kolom meja dikosongkan
+        order.table_id = None
 
     order.payment_method = data.get('payment_method')
 
@@ -722,7 +719,6 @@ def submit_order():
         order.payment_status = 'paid'
 
     order.order_status = 'preparing'
-
     db.session.commit()
 
     return jsonify({
@@ -733,13 +729,9 @@ def submit_order():
 @customer_bp.route('/api/cart/note', methods=['POST'])
 @login_required
 def update_cart_note():
-
     data = request.get_json()
-
     item_id = data.get('item_id')
-
     note = data.get('note')
-
     item = OrderItem.query.get_or_404(item_id)
 
     if item.order.user_id != current_user.id:
@@ -748,7 +740,6 @@ def update_cart_note():
         }), 403
 
     item.notes = note
-
     db.session.commit()
 
     return jsonify({

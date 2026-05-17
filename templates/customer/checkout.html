@@ -28,32 +28,41 @@
                     <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                         <i data-lucide="user" class="w-5 h-5 text-terralogBlue"></i> Informasi Pemesan
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Nama Pemesan</label>
-                            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-terralogBlue transition">
-                                <input type="text" x-model="nama" :disabled="!editingName" class="w-full bg-transparent text-sm font-bold text-slate-800 focus:outline-none" :class="editingName ? 'opacity-100' : 'opacity-80'">
-                                <button @click="editingName = !editingName" class="text-slate-400 hover:text-terralogBlue transition">
-                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                </button>
+                            <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 transition">
+                                <input type="text" x-model="nama" readonly class="w-full bg-transparent text-sm font-bold text-slate-800 focus:outline-none cursor-not-allowed opacity-80">
                             </div>
                         </div>
+
                         <div>
-                            <label class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Pilih Meja</label>
-                            <div class="relative">
-                                <select x-model="meja" class="w-full appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-terralogBlue cursor-pointer transition">
-                                    <option value="" disabled selected>-- Pilih Meja Anda --</option>
-                                    {% for table in tables %}
-                                    <option value="{{ table.id }}">
-                                        Meja {{ table.table_number }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                                </div>
+                            <label class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Tipe Pesanan</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="flex items-center justify-center py-2.5 px-2 border rounded-xl cursor-pointer bg-white transition-all text-center"
+                                    :class="orderType === 'dine_in' ? 'border-terralogBlue ring-1 ring-terralogBlue bg-blue-50/50' : 'border-slate-200 hover:border-blue-200'">
+                                    <input type="radio" name="order_type" value="dine_in" x-model="orderType" class="hidden">
+                                    <span class="text-xs font-bold" :class="orderType === 'dine_in' ? 'text-terralogBlue' : 'text-slate-600'">Dine In</span>
+                                </label>
+                                
+                                <label class="flex items-center justify-center py-2.5 px-2 border rounded-xl cursor-pointer bg-white transition-all text-center"
+                                    :class="orderType === 'take_away' ? 'border-terralogBlue ring-1 ring-terralogBlue bg-blue-50/50' : 'border-slate-200 hover:border-blue-200'">
+                                    <input type="radio" name="order_type" value="take_away" x-model="orderType" class="hidden">
+                                    <span class="text-xs font-bold" :class="orderType === 'take_away' ? 'text-terralogBlue' : 'text-slate-600'">Take Away</span>
+                                </label>
                             </div>
                         </div>
+                    </div>
+
+                    <div x-show="orderType === 'dine_in'" x-transition class="mb-4">
+                        <label for="table_id" class="text-slate-500 text-xs font-bold uppercase tracking-wider block mb-2">Nomor Meja</label>
+                        <select id="table_id" name="table_id" x-model="meja" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-1 focus:ring-terralogBlue focus:border-terralogBlue bg-white text-sm font-semibold text-slate-800 outline-none transition shadow-sm">
+                            <option value="">-- Pilih Meja --</option>
+                            {% for table in tables %}
+                            <option value="{{ table.id }}">{{ table.number }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 
@@ -76,10 +85,24 @@
                     <div x-show="items.length > 0" class="space-y-4">
                         <template x-for="(item, index) in items" :key="index">
                             <div class="rounded-2xl p-5 border border-slate-100 hover:border-blue-100 transition bg-white shadow-sm">
+                                
                                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
-                                    <div class="flex-1">
-                                        <h4 class="text-base font-bold text-slate-900 mb-1" x-text="item.nama"></h4>
-                                        <p class="font-bold text-terralogBlue" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                    <div class="flex-1 flex items-center gap-4">
+                                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
+                                            <template x-if="item.img">
+                                                <img :src="item.img" :alt="item.nama" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!item.img">
+                                                <div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                                    <i data-lucide="image" class="w-6 h-6"></i>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        
+                                        <div>
+                                            <h4 class="text-base font-bold text-slate-900 mb-1 line-clamp-1" x-text="item.nama"></h4>
+                                            <p class="font-bold text-terralogBlue" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                        </div>
                                     </div>
                                     
                                     <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
@@ -97,15 +120,14 @@
                                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                                         </button>
                                     </div>
-                                </div>
-                                
-                                <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                </div> <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
                                     <div class="flex items-center gap-2 mb-1">
                                         <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <label class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Catatan (Opsional)</label>
                                     </div>
-                                    <input type="text" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none text-sm text-slate-700 focus:ring-0 p-0 placeholder-slate-400 font-medium">
+                                    <input type="text" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-transparent text-sm text-slate-700 p-0 placeholder-slate-400 font-medium">
                                 </div>
+
                             </div>
                         </template>
                     </div>
@@ -154,15 +176,17 @@
                 <div class="bg-white rounded-[24px] shadow-lg border border-slate-100 p-6 sticky top-28">
                     <h3 class="text-lg font-bold text-slate-900 mb-6">Ringkasan Pesanan</h3>
                     
-                    <div class="space-y-4 mb-6">
-                        <div class="flex justify-between text-sm font-semibold text-slate-500">
-                            <span>Subtotal</span>
-                            <span class="text-slate-800" x-text="`Rp ${subtotal.toLocaleString('id-ID')}`"></span>
-                        </div>
-                        <div class="flex justify-between text-sm font-semibold text-slate-500">
-                            <span>Pajak (PB1) <span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded ml-1">10%</span></span>
-                            <span class="text-slate-800" x-text="`Rp ${pajak.toLocaleString('id-ID')}`"></span>
-                        </div>
+                    <div class="space-y-3 mb-6 max-h-64 overflow-y-auto pr-2">
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800" x-text="item.nama"></p>
+                                    <p class="text-xs text-gray-600">
+                                        Rp <span x-text="item.harga.toLocaleString('id-ID')"></span> x <span x-text="item.qty"></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </template>
                     </div>
 
                     <div class="border-t border-dashed border-slate-200 pt-4 mb-8">
@@ -172,14 +196,14 @@
                         </div>
                     </div>
 
-                    <button @click="submitOrder()" :disabled="items.length === 0 || !meja" 
+                    <button @click="submitOrder()" :disabled="items.length === 0 || (orderType === 'dine_in' && !meja)" 
                             class="w-full py-4 rounded-xl text-white font-bold text-lg transition-all flex justify-center items-center gap-2 shadow-md hover:shadow-lg active:scale-95" 
-                            :class="items.length === 0 || !meja ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-terralogBlue hover:bg-blue-900'">
+                            :class="items.length === 0 || (orderType === 'dine_in' && !meja) ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-terralogBlue hover:bg-blue-900'">
                         <i data-lucide="check-circle" class="w-5 h-5"></i>
                         Pesan Sekarang
                     </button>
                     
-                    <p x-show="!meja && items.length > 0" class="text-red-500 text-xs font-bold text-center mt-3 flex items-center justify-center gap-1">
+                    <p x-show="orderType === 'dine_in' && !meja && items.length > 0" class="text-red-500 text-xs font-bold text-center mt-3 flex items-center justify-center gap-1">
                         <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Pilih meja terlebih dahulu!
                     </p>
                 </div>
@@ -201,6 +225,7 @@
             nama: '{{ current_user.name }}',
             editingName: false,
             paymentMethod: 'cash',
+            orderType: 'dine_in',
             
             async init() {
                 await this.loadCart()
@@ -223,14 +248,9 @@
                 return this.items.reduce((sum, item) => sum + (item.harga * item.qty), 0)
             },
 
-            // Tambahin dummy hitungan pajak biar UI-nya mirip sama desain yang bagus
-            get pajak() {
-                return this.subtotal * 0.1 
-            },
-
-            // Total sekarang = Subtotal + Pajak
+            // Total sekarang = Subtotal 
             get total() {
-                return this.subtotal + this.pajak
+                return this.subtotal
             },
 
             async incrementItem(index) {
@@ -278,7 +298,8 @@
                     alert('Keranjang anda masih kosong!')
                     return
                 }
-                if(!this.meja){
+                // 2. Sesuaikan validasi: meja hanya wajib jika Dine In
+                if(this.orderType === 'dine_in' && !this.meja){
                     alert('Pilih meja terlebih dahulu!')
                     return
                 }
@@ -290,6 +311,7 @@
                             nama: this.nama,
                             table_id: this.meja,
                             payment_method: this.paymentMethod,
+                            order_type: this.orderType, // <-- 3. Tambahkan ke payload
                             items: this.items
                         })
                     })
