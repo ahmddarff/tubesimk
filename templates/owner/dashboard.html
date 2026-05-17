@@ -75,32 +75,29 @@
 </div>
 
 <!-- Charts Row -->
-<div class="grid gap-5 mb-5" style="grid-template-columns: 1fr 280px;">
+<div class="grid gap-5 mb-5 w-full max-w-full min-w-0" style="grid-template-columns: 1fr 280px;">
 
     <!-- Line Chart -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm">
+    <div class="bg-white rounded-2xl p-5 shadow-sm min-w-0 w-full overflow-hidden">
         <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Analitik Penjualan Mingguan</h3>
-        <div class="h-52 relative">
+        <div class="relative w-full block" style="height: 200px; max-height: 200px;">
             <canvas id="salesChart"></canvas>
         </div>
     </div>
 
     <!-- Donut Chart -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm flex flex-col">
+    <div class="bg-white rounded-2xl p-5 shadow-sm flex flex-col min-w-0 w-full overflow-hidden">
         <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Kategori Terlaris</h3>
-        <div class="flex-1 h-44 relative">
+        <div class="relative w-full block mx-auto flex-shrink-0" style="height: 150px; max-height: 150px;">
             <canvas id="categoryChart"></canvas>
         </div>
-        <div class="flex justify-center gap-4 mt-3">
-            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span class="w-2 h-2 rounded-full bg-[#6C63FF] inline-block"></span> Coffee
+        <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 overflow-hidden">
+            {% set colors = ['#6C63FF', '#FF6B8A', '#4DD9C0', '#FFBE50'] %}
+            {% for cat in chart_categories %}
+            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium whitespace-nowrap">
+                <span class="w-2 h-2 rounded-full inline-block flex-shrink-0" style="background-color: {{ colors[loop.index0 % colors|length] }};"></span> {{ cat }}
             </span>
-            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span class="w-2 h-2 rounded-full bg-[#FF6B8A] inline-block"></span> Non-Coffee
-            </span>
-            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                <span class="w-2 h-2 rounded-full bg-[#4DD9C0] inline-block"></span> Food
-            </span>
+            {% endfor %}
         </div>
     </div>
 </div>
@@ -170,9 +167,9 @@
 new Chart(document.getElementById('salesChart').getContext('2d'), {
     type: 'line',
     data: {
-        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+        labels: {{ line_labels|tojson }},
         datasets: [{
-            data: [1600000, 1900000, 1700000, 800000, 1400000, 2000000, 1100000],
+            data: {{ line_values|tojson }},
             borderColor: '#F5A623',
             backgroundColor: 'rgba(245,166,35,0.08)',
             borderWidth: 2.5,
@@ -187,15 +184,15 @@ new Chart(document.getElementById('salesChart').getContext('2d'), {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            y: {
-                beginAtZero: true, max: 2400000,
-                ticks: {
-                    stepSize: 600000, color: '#9CA3AF',
-                    font: { family: 'Plus Jakarta Sans', size: 11 },
-                    callback: v => v === 0 ? '0' : (v/1000000).toFixed(1) + 'jt'
-                },
-                grid: { color: 'rgba(0,0,0,0.05)' }
+        y: {
+            beginAtZero: true,
+            ticks: {
+                color: '#9CA3AF',
+                font: { family: 'Plus Jakarta Sans', size: 11 },
+                callback: v => v === 0 ? '0' : 'Rp ' + (v/1000).toLocaleString('id-ID') + 'k'
             },
+            grid: { color: 'rgba(0,0,0,0.05)' }
+        },
             x: {
                 ticks: { color: '#9CA3AF', font: { family: 'Plus Jakarta Sans', size: 11 } },
                 grid: { display: false }
@@ -208,10 +205,10 @@ new Chart(document.getElementById('salesChart').getContext('2d'), {
 new Chart(document.getElementById('categoryChart').getContext('2d'), {
     type: 'doughnut',
     data: {
-        labels: ['Coffee', 'Non-Coffee', 'Food'],
+        labels: {{ chart_categories|tojson }},
         datasets: [{
-            data: [65, 25, 15],
-            backgroundColor: ['#6C63FF', '#FF6B8A', '#4DD9C0'],
+            data: {{ chart_category_qtys|tojson }},
+            backgroundColor: ['#6C63FF', '#FF6B8A', '#4DD9C0', '#FFBE50'],
             borderWidth: 0,
             hoverOffset: 6
         }]
@@ -221,7 +218,7 @@ new Chart(document.getElementById('categoryChart').getContext('2d'), {
         cutout: '55%',
         plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} item` } }
         }
     }
 });
