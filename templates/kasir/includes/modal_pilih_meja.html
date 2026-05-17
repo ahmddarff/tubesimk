@@ -1,0 +1,68 @@
+<div x-show="showTableModal" class="fixed inset-0 z-[150] flex items-center justify-center" style="display: none;" x-cloak>
+    <div x-transition:opacity class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showTableModal = false"></div>
+    
+    <div x-transition:enter="transition ease-out duration-300 transform scale-95 opacity-0" 
+         x-transition:enter-end="scale-100 opacity-100" 
+         class="relative bg-white w-full max-w-[500px] mx-4 rounded-3xl shadow-2xl overflow-hidden z-10 text-left">
+        
+        <div class="px-6 py-5 bg-terralogBlue flex justify-between items-center">
+            <div class="flex items-center gap-3 text-white">
+                <div class="bg-white/20 p-2 rounded-xl border border-white/10 flex items-center justify-center">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h2 class="text-lg font-bold tracking-tight leading-tight">Pilih Meja Rombongan</h2>
+                    <p class="text-[10px] text-white/70 font-medium mt-0.5">Gabungkan beberapa meja jika kapasitas kurang</p>
+                </div>
+            </div>
+            <button @click="showTableModal = false" class="text-white/60 hover:text-white transition-colors cursor-pointer">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-4 gap-2.5 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar">
+                <template x-for="t in tablesData" :key="t.id">
+                    <label class="flex flex-col items-center justify-center border-2 rounded-2xl py-3 px-2 cursor-pointer select-none transition-all duration-150 relative"
+                           :class="selectedTableIds.includes(String(t.id)) 
+                                   ? 'bg-blue-50/80 text-terralogBlue border-terralogBlue shadow-md font-black scale-[0.98]' 
+                                   : 'bg-white text-gray-700 border-gray-100 hover:bg-gray-50 hover:border-gray-300 font-bold'">
+                        
+                        <input type="checkbox" :value="String(t.id)" x-model="selectedTableIds" class="hidden">
+                        
+                        <span class="text-lg tracking-tight" x-text="t.number"></span>
+                        
+                        <span class="text-[9px] uppercase tracking-wider font-black mt-1"
+                              :class="selectedTableIds.includes(String(t.id)) ? 'text-terralogBlue/60' : 'text-gray-400'"
+                              x-text="t.capacity + ' Org'"></span>
+
+                        <div x-show="selectedTableIds.includes(String(t.id))" 
+                             class="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-terralogBlue text-white rounded-full flex items-center justify-center shadow-sm">
+                             <i class="fa-solid fa-check text-[7px]"></i>
+                        </div>
+                    </label>
+                </template>
+            </div>
+
+            <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 flex justify-between items-center text-xs">
+                <div class="space-y-0.5">
+                    <p class="text-gray-400 font-bold uppercase text-[9px] tracking-wider">Meja Terpilih</p>
+                    <p class="font-black text-terralogBlue truncate max-w-[240px]" x-text="selectedTableIds.length > 0 ? getSelectedTableNumbers() : '-'"></p>
+                </div>
+                <div class="text-right space-y-0.5">
+                    <p class="text-gray-400 font-bold uppercase text-[9px] tracking-wider">Total Kapasitas</p>
+                    <p class="font-black text-gray-800 text-sm">
+                        <span x-text="tablesData.filter(t => selectedTableIds.includes(String(t.id))).reduce((sum, t) => sum + t.capacity, 0)"></span> <span class="text-xs font-bold text-gray-400">Org</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-50 bg-gray-50/50 flex justify-end">
+            <button @click="showTableModal = false" 
+                    class="w-full sm:w-auto px-8 py-2.5 bg-terralogBlue text-white rounded-xl text-xs font-bold shadow-md hover:bg-blue-900 transition active:scale-95 cursor-pointer">
+                Simpan & Terapkan Meja
+            </button>
+        </div>
+    </div>
+</div>

@@ -78,7 +78,7 @@
 
                     <div class="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-gray-800 font-bold text-[10px] px-2 py-1 rounded-lg flex items-center gap-1 z-10 shadow-sm">
                         <i data-lucide="star" class="w-3 h-3 fill-yellow-400 text-yellow-400"></i>
-                        {{ item.rating | default('4.5') }}
+                        {{ "{:.1f}".format(item.rating) }}
                     </div>
 
                     <div class="relative h-32 overflow-hidden bg-gray-100">
@@ -116,11 +116,25 @@
     {% include 'kasir/includes/modal_pembayaran.html' %}
     {% include 'kasir/includes/modal_sukses.html' %}
     {% include 'kasir/includes/struk_print.html' %}
+    {% include 'kasir/includes/modal_pilih_meja.html' %}
     <script id="edit-data" type="application/json">
         {{ edit_data | tojson | safe if edit_data else 'null' }}
     </script>
+    <script id="checkin-data" type="application/json">
+        {{ checkin_data | tojson | safe if checkin_data else 'null' }}
+    </script>
+    <script id="checkin-error" type="application/json">
+        {{ checkin_error | tojson | safe if checkin_error else 'null' }}
+    </script>
     <script id="data-upcoming-res" type="application/json">
         {{ upcoming_reservations | tojson | safe }}
+    </script>
+    <script id="data-tables-dict" type="application/json">
+        [
+        {% for t in tables %}
+            { "id": "{{ t.id }}", "number": "{{ t.table_number }}", "capacity": {{ t.capacity }} }{% if not loop.last %},{% endif %}
+        {% endfor %}
+        ]
     </script>
 </div>
 {% endblock %}
@@ -129,9 +143,6 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('dashboardPOS', () => ({
-        // ==========================================
-        // 1. STATE & VARIABLES KERANJANG UTAMA
-        // ==========================================
         openModal: false, 
         showPayment: false, 
         showSuccess: false,
@@ -150,123 +161,156 @@ document.addEventListener('alpine:init', () => {
         paymentMethod: 'CASH', 
         receivedAmount: '0',
         customerName: '', 
-        selectedTable: '',
+        
+        // ✅ REVISI MULTI MEJA: 
+        selectedTableIds: [], // Tadinya selectedTable (String), sekarang Array
+        showTableModal: false,
+        tablesData: JSON.parse(document.getElementById('data-tables-dict').textContent || '[]'),
 
-        // ==========================================
-        // 2. VARIABEL MODE EDIT PESANAN
-        // ==========================================
         editingOrderNumber: null,
         isEditLunas: false,
         isAccountOrder: false,
-
-        // ==========================================
-        // 3. VARIABEL DATA STRUK CETAK
-        // ==========================================
         createdOrderNumber: '', 
-        receiptData: {
-            no: '', date: '', customer: '', type: '', table: '',
-            items: [], total: 0, isPaid: false, paymentMethod: '', receivedAmount: 0
-        },
+        receiptData: { no: '', date: '', customer: '', type: '', table: '', items: [], total: 0, isPaid: false, paymentMethod: '', receivedAmount: 0 },
 
-        // ==========================================
-        // 4. STATE PENGAWASAN MEJA RESERVASI (BARU)
-        // ==========================================
         bufferTime: parseInt(document.getElementById('pos-shell').dataset.buffer || 90),
         clearanceTime: parseInt(document.getElementById('pos-shell').dataset.clearance || 15),
         upcomingRes: JSON.parse(document.getElementById('data-upcoming-res').textContent || '[]'),
         ignoreWatch: false,
         now: new Date(),
+        tableWarning: '', // Jangan lupa tambahkan ini
+        checkinResId: null,
 
-        // ==========================================
-        // 5. LIFECYCLE INITIALIZATION
-        // ==========================================
         init() {
-            // Ambil data jika halaman dibuka dalam mode edit
             const rawData = document.getElementById('edit-data').textContent;
             const editData = JSON.parse(rawData);
             
             if (editData) {
                 this.editingOrderNumber = editData.order_number;
                 this.customerName = editData.customer_name || '';
-                this.selectedTable = editData.table_id ? String(editData.table_id) : ''; 
+                this.selectedTableIds = editData.table_ids ? editData.table_ids.map(String) : []; // ✅ Set nilai array saat edit
                 this.orderType = editData.order_type || 'dine-in';
                 this.cart = editData.cart || [];
                 this.isEditLunas = editData.lunas;
                 this.isAccountOrder = editData.has_account || false;
             }
 
-            // Render Ikon & Setup Interval
+            // ==========================================
+            // ✅ SINKRONISASI DATA CHECK-IN RESERVASI (DENGAN TOAST VALIDASI)
+            // ==========================================
+            const rawError = document.getElementById('checkin-error').textContent;
+            const checkinError = JSON.parse(rawError);
+
+            if (checkinError) {
+                // Tembakkan Toast Merah jika ada yang coba menembus batas!
+                setTimeout(() => { showToast(checkinError, 'error'); }, 400);
+                // Bersihkan URL agar eror tidak muncul terus-menerus saat kasir me-refresh halaman
+                window.history.replaceState(null, null, window.location.pathname);
+            } else {
+                const rawCheckin = document.getElementById('checkin-data').textContent;
+                const checkinData = JSON.parse(rawCheckin);
+                
+                if (checkinData) {
+                    this.customerName = checkinData.customer_name || '';
+                    this.selectedTableIds = checkinData.table_ids ? checkinData.table_ids.map(String) : [];
+                    this.orderType = checkinData.order_type || 'dine-in';
+                    this.checkinResId = checkinData.id; // Simpan ID reservasinya
+                    
+                    // Tembakkan Toast Hijau jika berhasil!
+                    setTimeout(() => { showToast('Tamu Reservasi Check-In! Silakan input pesanan.', 'success'); }, 400);
+                    // Bersihkan URL
+                    window.history.replaceState(null, null, window.location.pathname);
+                }
+            }
+
             setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 100);
             setInterval(() => { this.now = new Date(); }, 60000);
 
-            // CCTV Pengawas Pilihan Meja Kasir
-            this.$watch('selectedTable', (newVal, oldVal) => { 
+            // ✅ REVISI CCTV: Mengintai array
+            this.$watch('selectedTableIds', (newVal, oldVal) => { 
                 this.checkTableReservation(newVal, oldVal); 
             });
             this.$watch('orderType', () => { 
-                this.checkTableReservation(this.selectedTable, ''); 
+                this.checkTableReservation(this.selectedTableIds, []); 
             });
         },
 
-        // ==========================================
-        // 6. FUNGSI DETEKTOR BENTROK RESERVASI CERDAS
-        // ==========================================
+        // ✅ HELPER: Konversi Array ID [1, 2] menjadi Teks "01, 02"
+        getSelectedTableNumbers() {
+            return this.tablesData
+                .filter(t => this.selectedTableIds.includes(String(t.id)))
+                .map(t => t.number)
+                .join(', ');
+        },
+
+        // ✅ REVISI CCTV: Memeriksa setiap meja yang dicentang secara loop
         checkTableReservation(newVal, oldVal) {
-            if (this.ignoreWatch || !newVal || this.orderType !== 'dine-in') return;
+            if (this.ignoreWatch || !newVal || newVal.length === 0 || this.orderType !== 'dine-in') {
+                this.tableWarning = '';
+                return;
+            }
             
             const now = new Date();
             const currentTotalMins = (now.getHours() * 60) + now.getMinutes();
             
-            const resForTable = this.upcomingRes.filter(r => r.table_id === String(newVal));
-            
-            for (let r of resForTable) {
-                const [resH, resM] = r.time.split(':').map(Number);
-                const resTotalMins = (resH * 60) + resM;
-                const diffMins = resTotalMins - currentTotalMins;
+            for (let tId of newVal) {
+                const resForTable = this.upcomingRes.filter(r => r.table_id === String(tId));
+                
+                for (let r of resForTable) {
+                    const [resH, resM] = r.time.split(':').map(Number);
+                    const resTotalMins = (resH * 60) + resM;
+                    const diffMins = resTotalMins - currentTotalMins;
 
-                const batasKosongMins = resTotalMins - this.clearanceTime;
-                const batasKosongH = Math.floor(batasKosongMins / 60).toString().padStart(2, '0');
-                const batasKosongM = (batasKosongMins % 60).toString().padStart(2, '0');
-                const batasKosongStr = `${batasKosongH}:${batasKosongM}`;
-                
-                // KONDISI 1: Zona Buffer Time (Peringatan)
-                if (diffMins >= 0 && diffMins <= this.bufferTime) {
-                    this.ignoreWatch = true;
-                    this.selectedTable = oldVal || ''; // Reset pilihan
-                    setTimeout(() => this.ignoreWatch = false, 50);
+                    const batasKosongMins = resTotalMins - this.clearanceTime;
+                    const batasKosongH = Math.floor(batasKosongMins / 60).toString().padStart(2, '0');
+                    const batasKosongM = (batasKosongMins % 60).toString().padStart(2, '0');
+                    const batasKosongStr = `${batasKosongH}:${batasKosongM}`;
                     
-                    Alpine.store('confirmModal').open({
-                        title: 'Peringatan Reservasi!',
-                        message: `Meja ini telah direservasi oleh ${r.customer} pukul ${r.time}. Tamu walk-in wajib meninggalkan meja maksimal pukul ${batasKosongStr} (${this.clearanceTime} menit untuk pembersihan). Apakah tamu setuju?`,
-                        confirmText: 'Ya, Tetap Pilih',
-                        cancelText: 'Pilih Meja Lain',
-                        type: 'warning',
-                        action: () => {
-                            this.ignoreWatch = true;
-                            this.selectedTable = newVal; // Paksa pilih meja
-                            setTimeout(() => this.ignoreWatch = false, 50);
-                        }
-                    });
-                    return; 
-                }
-                
-                // KONDISI 2: Zona Aktif (Terkunci)
-                if (diffMins < 0 && Math.abs(diffMins) <= r.duration) {
-                    this.ignoreWatch = true;
-                    this.selectedTable = oldVal || ''; // Reset pilihan
-                    setTimeout(() => this.ignoreWatch = false, 50);
+                    if (diffMins >= 0 && diffMins <= this.bufferTime) {
+                        this.ignoreWatch = true;
+                        this.selectedTableIds = oldVal ? [...oldVal] : []; // Batalkan centang
+                        setTimeout(() => this.ignoreWatch = false, 50);
+                        
+                        Alpine.store('confirmModal').open({
+                            title: 'Peringatan Reservasi!',
+                            message: `Salah satu meja yang Anda centang telah direservasi oleh ${r.customer} pukul ${r.time}. Tamu walk-in wajib meninggalkannya maksimal pukul ${batasKosongStr}. Lanjutkan mencentang?`,
+                            confirmText: 'Ya, Tetap Pilih',
+                            cancelText: 'Pilih Meja Lain',
+                            type: 'warning',
+                            action: () => {
+                                this.ignoreWatch = true;
+                                this.selectedTableIds = newVal; // Kembalikan centang
+                                setTimeout(() => this.ignoreWatch = false, 50);
+                            }
+                        });
+                        return; 
+                    }
                     
-                    Alpine.store('confirmModal').open({
-                        title: 'Meja Terkunci',
-                        message: `Meja ini sedang dalam masa reservasi aktif oleh ${r.customer} (Durasi ${r.duration} menit). Silakan pilih meja yang lain.`,
-                        confirmText: 'Mengerti',
-                        cancelText: 'Tutup',
-                        type: 'danger',
-                        action: () => { /* Tidak lakukan apapun */ }
-                    });
-                    return;
+                    if (diffMins < 0 && Math.abs(diffMins) <= r.duration) {
+                        this.ignoreWatch = true;
+                        this.selectedTableIds = oldVal ? [...oldVal] : []; 
+                        setTimeout(() => this.ignoreWatch = false, 50);
+                        
+                        Alpine.store('confirmModal').open({
+                            title: 'Meja Terkunci',
+                            message: `Meja sedang dalam masa reservasi aktif oleh ${r.customer}. Silakan pilih meja yang lain.`,
+                            confirmText: 'Mengerti',
+                            cancelText: 'Tutup',
+                            type: 'danger',
+                            action: () => {}
+                        });
+                        return;
+                    }
                 }
             }
+        },
+
+        validateOrder() {
+            if (this.cart.length === 0) { showToast('Keranjang masih kosong!', 'error'); return false; }
+            if (!this.customerName || this.customerName.trim() === '') { showToast('Nama pelanggan wajib diisi!', 'error'); return false; }
+            // ✅ REVISI VALIDASI: Cek panjang array
+            if (this.orderType === 'dine-in' && this.selectedTableIds.length === 0) { showToast('Pilih minimal satu meja!', 'error'); return false; }
+            return true;
         },
 
         // ==========================================
@@ -380,8 +424,8 @@ document.addEventListener('alpine:init', () => {
                 showToast('Nama pelanggan wajib diisi!', 'error'); 
                 return false; 
             }
-            if (this.orderType === 'dine-in' && !this.selectedTable) { 
-                showToast('Pilih nomor meja terlebih dahulu!', 'error'); 
+            if (this.orderType === 'dine-in' && this.selectedTableIds.length === 0) { 
+                showToast('Pilih minimal satu meja untuk Dine In!', 'error'); 
                 return false; 
             }
             return true;
@@ -414,11 +458,12 @@ document.addEventListener('alpine:init', () => {
             const payload = {
                 order_number: this.editingOrderNumber, // Mode Edit
                 customer_name: this.customerName,
-                table_id: this.selectedTable,
+                table_ids: this.selectedTableIds,
                 order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
                 payment_method: this.paymentMethod,
                 total_amount: this.subtotal,
-                cart: this.cart
+                cart: this.cart,
+                checkin_reservation_id: this.checkinResId
             };
 
             const apiEndpoint = this.editingOrderNumber ? '/kasir/api/update-order' : '/kasir/api/submit-order';
@@ -446,7 +491,7 @@ document.addEventListener('alpine:init', () => {
             this.receivedAmount = '0';
             this.cart = [];
             this.customerName = '';
-            this.selectedTable = '';
+            this.selectedTableIds = [];
             window.location.href = '/kasir/pesanan-aktif';
         },
 
@@ -455,11 +500,12 @@ document.addEventListener('alpine:init', () => {
 
             const payload = {
                 customer_name: this.customerName,
-                table_id: this.selectedTable,
+                table_ids: this.selectedTableIds,
                 order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
                 payment_method: null, 
                 total_amount: this.subtotal,
-                cart: this.cart
+                cart: this.cart,
+                checkin_reservation_id: this.checkinResId
             };
 
             fetch('/kasir/api/submit-order', {
@@ -487,7 +533,7 @@ document.addEventListener('alpine:init', () => {
             const payload = {
                 order_number: this.editingOrderNumber,
                 customer_name: this.customerName,
-                table_id: this.selectedTable,
+                table_ids: this.selectedTableIds,
                 order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
                 total_amount: this.subtotal,
                 cart: this.cart
@@ -525,7 +571,7 @@ document.addEventListener('alpine:init', () => {
                 date: dateStr + ' ' + timeStr,
                 customer: this.customerName || 'Tamu',
                 type: this.orderType,
-                table: this.selectedTable,
+                table: this.getSelectedTableNumbers(),
                 items: this.cart, 
                 total: this.subtotal,
                 isPaid: true, 

@@ -71,8 +71,8 @@
                     :class="{
                         'border-red-400 bg-red-50': p.status === 'PENDING',
                         'border-yellow-400 bg-yellow-50': p.status === 'PREPARING',
-                        'border-blue-500 bg-blue-50': p.status === 'READY',
-                        'border-emerald-600 bg-emerald-50': p.status === 'SERVED'
+                        'border-emerald-500 bg-emerald-50': p.status === 'READY', /* 🟢 HIJAU: Urgent untuk diantar! */
+                        'border-blue-500 bg-blue-50': p.status === 'SERVED'       /* 🔵 BIRU: Sudah aman di meja */
                     }"
                 >
                     <div class="relative z-10">
@@ -82,8 +82,8 @@
                                   :class="{
                                       'text-red-500': p.status === 'PENDING',
                                       'text-yellow-600': p.status === 'PREPARING',
-                                      'text-blue-500': p.status === 'READY',
-                                      'text-emerald-600': p.status === 'SERVED'
+                                      'text-emerald-600': p.status === 'READY',  /* 🟢 */
+                                      'text-blue-500': p.status === 'SERVED'     /* 🔵 */
                                   }"
                                   :title="'Dipesan pada ' + formatWaktuLokal(p.waktu_iso)"
                                   x-text="timeAgo(p.waktu_iso)">
@@ -95,8 +95,8 @@
                                 :class="{
                                     'bg-red-500 text-white': p.status === 'PENDING',
                                     'bg-yellow-400 text-black': p.status === 'PREPARING',
-                                    'bg-blue-500 text-white': p.status === 'READY',
-                                    'bg-emerald-600 text-white': p.status === 'SERVED'
+                                    'bg-emerald-500 text-white': p.status === 'READY', /* 🟢 */
+                                    'bg-blue-500 text-white': p.status === 'SERVED'     /* 🔵 */
                                 }"
                                 x-text="p.status">
                             </span>
@@ -108,7 +108,8 @@
                             <div class="flex items-center gap-1.5 bg-white/60 px-2 py-1 rounded-md text-gray-800 font-black text-[10px] uppercase">
                                 <i x-show="p.tipe === 'DINE IN'" data-lucide="utensils" class="w-3 h-3 text-terralogBlue"></i>
                                 <i x-show="p.tipe !== 'DINE IN'" data-lucide="shopping-bag" class="w-3 h-3 text-terralogGold"></i>
-                                <span x-text="p.tipe === 'DINE IN' ? 'Meja ' + p.meja : 'Take Away'"></span>
+                                
+                                <span x-text="p.tipe === 'DINE IN' ? 'Meja ' + formatMeja(p.meja) : 'Take Away'"></span>
                             </div>
                         </div>
 
@@ -161,6 +162,20 @@ document.addEventListener('alpine:init', () => {
         showSuccess: false,
         showCancelModal: false,
         cancelReason: '',
+
+        formatMeja(mejaStr) {
+            if (!mejaStr || mejaStr === '-') return '-';
+            
+            // Pecah string "01, 02, 03" menjadi array
+            const arrayMeja = mejaStr.split(', ');
+            
+            // Jika isi meja lebih dari 2, ambil 2 saja lalu tempelkan "..."
+            if (arrayMeja.length > 2) {
+                return arrayMeja.slice(0, 2).join(', ') + '...';
+            }
+            
+            return mejaStr;
+        },
 
         // ==========================================
         // OBJEK DATA STANDAR UNTUK STRUK
@@ -386,6 +401,54 @@ document.addEventListener('alpine:init', () => {
                 }
             })
             .catch(err => showToast('Terjadi gangguan koneksi.', 'error'));
+        },
+
+        async kosongkanMeja(orderId) {
+            if (!orderId) return;
+            
+            try {
+                const response = await fetch('/kasir/api/release-table', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_number: orderId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.showDetail = false; // Tutup modal detail sidebar
+                    showToast(data.message, 'success');
+                    
+                    // Beri jeda sebentar lalu reload halaman agar kartu hilang & counter meja segar kembali
+                    setTimeout(() => { window.location.reload(); }, 800);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('Gagal terhubung ke server.', 'error');
+            }
+        },
+
+        async selesaikanTakeAway(orderId) {
+            if (!orderId) return;
+            
+            try {
+                const response = await fetch('/kasir/api/complete-takeaway', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_number: orderId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    this.showDetail = false; // Tutup sidebar modal detail
+                    showToast(data.message, 'success');
+                    
+                    // Muat ulang halaman agar kartu pesanan take away yang selesai langsung lenyap dari grid
+                    setTimeout(() => { window.location.reload(); }, 800);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('Gagal terhubung ke server.', 'error');
+            }
         },
         
         handlePhysicKey(key) {
