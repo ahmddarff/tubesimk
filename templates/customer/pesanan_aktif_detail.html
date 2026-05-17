@@ -8,9 +8,9 @@
         
         <div class="mb-8">
             <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
-                <a href="/customer/pesanan-saya" class="text-terralogBlue hover:text-blue-900 transition">Pesanan Saya</a>
+                <a href="/customer/pesanan-saya" class="text-gray-400 hover:text-terralogBlue transition">Pesanan Saya</a>
                 <span class="text-gray-400">›</span>
-                <span class="text-gray-800">Pesanan Aktif</span>
+                <span class="text-terralogBlue">Pesanan Aktif</span>
             </div>
             <p class="text-gray-500 font-medium text-sm">Pantau status pesanan aktif Anda</p>
         </div>
@@ -43,21 +43,26 @@
                     <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                         <i data-lucide="user" class="w-5 h-5 text-terralogBlue"></i> Informasi Pesanan
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
                         <div>
                             <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Nama Pemesan</label>
-                            <p class="text-slate-800 text-base font-bold" x-text="order.customer_name || 'Memuat...'"></p>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.customer_name || '{{ current_user.name }}'"></p>
                         </div>
                         <div>
                             <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">No. Pesanan</label>
                             <p class="text-slate-800 text-base font-bold" x-text="order.order_number || '-'"></p>
                         </div>
                         <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Tipe Pesanan</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.order_type === 'dine_in' ? 'Dine In' : 'Take Away'"></p>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Nomor Meja</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.no_meja || '-'"></p>
+                        </div>
+                        <div>
                             <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Metode Bayar</label>
-                            <p class="text-slate-800 text-base font-bold flex items-center gap-1">
-                                <i :data-lucide="paymentMethod === 'qris' ? 'qr-code' : 'banknote'" class="w-4 h-4 text-terralogBlue"></i>
-                                <span x-text="paymentMethod === 'qris' ? 'QRIS' : 'Tunai'"></span>
-                            </p>
+                            <p class="text-slate-800 text-base font-bold" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai')"></p>
                         </div>
                     </div>
                 </div>
@@ -73,8 +78,15 @@
                     <div class="space-y-4">
                         <template x-for="(item, index) in items" :key="index">
                             <div class="rounded-2xl p-4 border transition-all flex gap-4 items-start bg-white border-slate-100 shadow-sm">
-                                <div class="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" :class="index % 2 === 0 ? 'bg-blue-50 text-terralogBlue' : 'bg-orange-50 text-terralogOrange'">
-                                    <i :data-lucide="index % 2 === 0 ? 'coffee' : 'utensils'" class="w-8 h-8"></i>
+                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
+                                    <template x-if="item.img">
+                                        <img :src="item.img" :alt="item.nama" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!item.img">
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                            <i data-lucide="image" class="w-6 h-6"></i>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <div class="flex-1">
@@ -124,6 +136,13 @@
                             <span class="text-2xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`"></span>
                         </div>
                     </div>
+
+                    <button :disabled="order.order_status !== 'served'"
+                            class="w-full py-4 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2 shadow-sm mb-3"
+                            :class="order.order_status === 'served' ? 'bg-amber-400 hover:bg-amber-500 text-amber-900 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+                        <i data-lucide="star" class="w-4 h-4"></i>
+                        Beri Ulasan
+                    </button>
 
                     <a href="/customer/pesanan-saya" class="w-full py-4 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-bold text-sm transition-all flex justify-center items-center gap-2 shadow-sm active:scale-95">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>

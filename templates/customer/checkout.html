@@ -60,7 +60,7 @@
                         <select id="table_id" name="table_id" x-model="meja" class="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-1 focus:ring-terralogBlue focus:border-terralogBlue bg-white text-sm font-semibold text-slate-800 outline-none transition shadow-sm">
                             <option value="">-- Pilih Meja --</option>
                             {% for table in tables %}
-                            <option value="{{ table.id }}">{{ table.number }}</option>
+                            <option value="{{ table.id }}">{{ table.table_number }}</option>
                             {% endfor %}
                         </select>
                     </div>

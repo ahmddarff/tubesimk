@@ -187,13 +187,16 @@ def get_active_cart(user_id, load_relations=False):
     """Mengambil keranjang/pesanan aktif milik pengguna."""
     query = Order.query
     if load_relations:
-        from sqlalchemy.orm import joinedload # Pastikan ini diimpor di atas jika belum
+        from sqlalchemy.orm import joinedload 
         query = query.options(joinedload(Order.items).joinedload(OrderItem.menu))
     
-    return query.filter_by(
-        user_id=user_id,
-        order_status='pending',
-        payment_status='unpaid'
+    # PERBAIKAN: Keranjang belanja hanya pesanan yang payment_method-nya belum diatur.
+    # Setelah di-checkout, payment_method akan terisi (misal 'cash' atau 'qris').
+    return query.filter(
+        Order.user_id == user_id,
+        Order.order_status == 'pending',
+        Order.payment_status == 'unpaid',
+        Order.payment_method.is_(None) # Hanya ambil jika belum ada metode pembayaran
     ).first()
 
 def generate_order_number():
@@ -421,20 +424,13 @@ def reservasi_history():
 @customer_bp.route('/api/cart/add', methods=['POST'])
 @login_required
 def add_to_cart():
-
     data = request.get_json()
-
     menu_id = data.get('menu_id')
     qty = int(data.get('qty', 1))
-
     menu = Menu.query.get_or_404(menu_id)
 
     # Cari cart aktif
-    order = Order.query.filter_by(
-        user_id=current_user.id,
-        order_status='pending',
-        payment_status='unpaid'
-    ).first()
+    order = get_active_cart(current_user.id)
 
     # Jika belum ada cart
     if not order:
@@ -712,6 +708,7 @@ def submit_order():
         order.table_id = None
 
     order.payment_method = data.get('payment_method')
+    order.order_status = 'pending'
 
     db.session.commit()
 
@@ -755,14 +752,17 @@ def pesanan_detail(order_id):
     order_dict = {
         'id': order.id,
         'order_number': order.order_number,
-        'customer_name': order.customer_name,
+        'customer_name': order.customer_name or current_user.name,
         'payment_method': order.payment_method,
         'order_status': order.order_status,
+        'order_type': order.order_type,
+        'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',  # Tambahkan baris ini
         'total_amount': order.total_amount,
         'items': [{
             'nama': item.menu.name,
             'harga': item.price_at_order,
             'qty': item.qty,
+            'img': item.menu.image_url,
             'note': item.notes
         } for item in order.items]
     }
