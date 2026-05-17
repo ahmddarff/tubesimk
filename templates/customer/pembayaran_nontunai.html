@@ -5,12 +5,11 @@
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-gray-50" x-data="paymentNonTunaiApp()" x-init="initOrder()">
     <div class="max-w-6xl">
-        <div class="mb-8 flex items-center gap-2 text-gray-600">
-            <a href="/customer/daftar-menu" class="hover:text-terralogBlue font-semibold">Daftar Menu</a>
-            <span class="text-gray-400">›</span>
-            <span class="text-gray-800 font-semibold">Checkout</span>
-            <span class="text-gray-400">›</span>
-            <span class="text-gray-800 font-semibold">Pembayaran</span>
+        <div class="mb-8">
+            <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+                <span class="text-terralogBlue">Pembayaran Non Tunai</span>
+            </div>
+            <p class="text-gray-500 font-medium text-sm">Selesaikan pembayaran Anda menggunakan QRIS</p>
         </div>
 
         <div class="flex gap-8">
@@ -29,27 +28,10 @@
                 <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
                     <div class="flex items-center justify-center py-8">
                         <div class="bg-gray-100 rounded-lg p-8 flex items-center justify-center">
-                            <div class="w-56 h-56 bg-white rounded-lg flex items-center justify-center border-2 border-gray-300 shadow-md">
-                                <div class="text-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" class="opacity-80">
-                                        <rect width="200" height="200" fill="white"/>
-                                        <rect x="20" y="20" width="40" height="40" fill="black"/>
-                                        <rect x="30" y="30" width="20" height="20" fill="white"/>
-                                        <rect x="140" y="20" width="40" height="40" fill="black"/>
-                                        <rect x="150" y="30" width="20" height="20" fill="white"/>
-                                        <rect x="20" y="140" width="40" height="40" fill="black"/>
-                                        <rect x="30" y="150" width="20" height="20" fill="white"/>
-                                        <rect x="80" y="20" width="10" height="30" fill="black"/>
-                                        <rect x="100" y="40" width="20" height="10" fill="black"/>
-                                        <rect x="80" y="80" width="20" height="20" fill="black"/>
-                                        <rect x="110" y="70" width="20" height="10" fill="black"/>
-                                        <rect x="140" y="90" width="30" height="20" fill="black"/>
-                                        <rect x="80" y="120" width="10" height="40" fill="black"/>
-                                        <rect x="110" y="140" width="20" height="20" fill="black"/>
-                                        <rect x="150" y="150" width="30" height="10" fill="black"/>
-                                    </svg>
-                                    <p class="text-gray-500 text-xs font-bold mt-2 uppercase tracking-widest text-terralogBlue">Scan QRIS Resmi</p>
-                                </div>
+                            <div class="w-64 h-64 bg-white rounded-xl flex items-center justify-center shadow-md overflow-hidden p-2 border border-gray-200">
+                                <img src="https://via.placeholder.com/250x250.png?text=QR+Code+Sistem" 
+                                     alt="QRIS Terralog Cafe" 
+                                     class="w-full h-full object-contain mix-blend-multiply">
                             </div>
                         </div>
                     </div>
@@ -118,41 +100,48 @@
             total: 0,
             orderId: '{{ order_id }}',
             
-            initOrder() {
-                // Ambil data aman dari template context Flask backend
-                let serverData = {{ order_json|tojson if order_json else 'null' }};
+        initOrder() {
+                // Gunakan JSON.parse dengan pengecekan aman untuk mengambil data dari backend
+                let serverData = null;
+                try {
+                    // Gunakan tanda kutip tunggal untuk mengapit output tojson Flask
+                    const rawData = '{{ order_json|tojson if order_json else "{}"|safe }}';
+                    serverData = JSON.parse(rawData);
+                } catch (e) {
+                    console.error("Gagal parsing data pesanan:", e);
+                }
                 
-                if (serverData) {
-                    this.nama = serverData.customer_name;
-                    this.total = serverData.total_amount;
-                    this.orderId = serverData.order_id;
+                if (serverData && Object.keys(serverData).length > 0) {
+                    // Pastikan key yang diambil sesuai dengan yang dikirim di customer_routes.py
+                    this.nama = serverData.customer_name || 'Pelanggan'; 
+                    this.total = serverData.total_amount || 0;
+                    this.orderId = serverData.order_id || '{{ order_id }}';
                 } else {
                     // Fallback seandainya data server bermasalah, cek sessionStorage
                     const orderData = sessionStorage.getItem('pendingOrder');
                     if (orderData) {
                         const order = JSON.parse(orderData);
-                        this.nama = order.nama || 'Matthew Shen';
+                        this.nama = order.nama || 'Pelanggan';
                         this.total = order.total || 0;
                         this.orderId = order.order_id || '{{ order_id }}';
+                    } else {
+                        // Nilai default terakhir jika semua data gagal diambil
+                        this.nama = 'Memuat...';
                     }
                 }
             },
             
             confirmPayment(event) {
-                // Ambil element button dari argument event secara aman
                 const btn = event.currentTarget;
-                const originalText = btn.textContent;
-                btn.textContent = 'Memverifikasi Pembayaran...';
+                btn.textContent = 'Mengalihkan...';
                 btn.disabled = true;
                 
-                // Simulasi delay pengecekan mutasi/validasi status pesanan sukses
+                // Memberikan sedikit jeda sebelum dialihkan agar terasa natural
                 setTimeout(() => {
-                    // Bersihkan sisa data keranjang lama di browser jika ada
                     sessionStorage.removeItem('pendingOrder');
-                    
-                    // Alihkan langsung ke halaman detail pesanan aktif yang telah kita perbaiki
+                    // Langsung alihkan ke halaman pesanan aktif tanpa memanggil API
                     window.location.href = `/customer/pesanan/${this.orderId}`;
-                }, 1500);
+                }, 1000);
             }
         }
     }

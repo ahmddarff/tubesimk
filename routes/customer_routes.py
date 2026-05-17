@@ -478,7 +478,6 @@ def add_to_cart():
     )
 
     order.total_amount = total
-
     db.session.commit()
 
     return jsonify({
@@ -714,11 +713,6 @@ def submit_order():
 
     order.payment_method = data.get('payment_method')
 
-    # Jika QRIS → langsung paid
-    if order.payment_method == 'qris':
-        order.payment_status = 'paid'
-
-    order.order_status = 'preparing'
     db.session.commit()
 
     return jsonify({

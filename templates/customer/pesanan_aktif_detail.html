@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="pesananAktifApp()" @load="$watch('items', () => lucide.createIcons())" x-cloak>
-    <div>
+    <div class="max-w-7xl mx-auto">
         
         <div class="mb-8">
             <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
@@ -19,11 +19,31 @@
             
             <div class="lg:col-span-2 space-y-6">
                 
+                {% if order.order_status == 'pending' and order.payment_status == 'unpaid' %}
+                <div class="bg-blue-50 border border-blue-200 rounded-[24px] p-6 shadow-sm flex items-start gap-4">
+                    <div class="bg-white p-2.5 rounded-full shadow-sm shrink-0">
+                        <i data-lucide="info" class="w-6 h-6 text-terralogBlue"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-lg mb-2">Langkah Selanjutnya</h4>
+                        {% if order.payment_method == 'qris' %}
+                            <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                                Pesanan Anda telah kami terima. Silakan datang ke meja kasir dan tunjukkan bukti transfer QRIS Anda untuk <strong>mengonfirmasi pembayaran</strong> agar pesanan dapat segera disiapkan oleh koki.
+                            </p>
+                        {% else %}
+                            <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                                Pesanan Anda telah kami terima. Silakan datang ke meja kasir untuk <strong>menyelesaikan pembayaran</strong> secara tunai agar pesanan dapat segera disiapkan oleh koki.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+                
                 <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
                     <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                        <i data-lucide="info" class="w-5 h-5 text-terralogBlue"></i> Informasi Pesanan
+                        <i data-lucide="user" class="w-5 h-5 text-terralogBlue"></i> Informasi Pesanan
                     </h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
                         <div>
                             <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Nama Pemesan</label>
                             <p class="text-slate-800 text-base font-bold" x-text="order.customer_name || 'Memuat...'"></p>
@@ -34,7 +54,10 @@
                         </div>
                         <div>
                             <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Metode Bayar</label>
-                            <p class="text-slate-800 text-base font-bold" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'tunai' ? 'Tunai' : 'Non Tunai')"></p>
+                            <p class="text-slate-800 text-base font-bold flex items-center gap-1">
+                                <i :data-lucide="paymentMethod === 'qris' ? 'qr-code' : 'banknote'" class="w-4 h-4 text-terralogBlue"></i>
+                                <span x-text="paymentMethod === 'qris' ? 'QRIS' : 'Tunai'"></span>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -49,7 +72,7 @@
 
                     <div class="space-y-4">
                         <template x-for="(item, index) in items" :key="index">
-                            <div class="rounded-2xl p-4 border transition-all flex gap-4 items-start bg-white hover:border-blue-200 border-slate-100 shadow-sm">
+                            <div class="rounded-2xl p-4 border transition-all flex gap-4 items-start bg-white border-slate-100 shadow-sm">
                                 <div class="w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0" :class="index % 2 === 0 ? 'bg-blue-50 text-terralogBlue' : 'bg-orange-50 text-terralogOrange'">
                                     <i :data-lucide="index % 2 === 0 ? 'coffee' : 'utensils'" class="w-8 h-8"></i>
                                 </div>
@@ -80,21 +103,19 @@
                         <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-4 ring-4 ring-white shadow-sm">
                             <i data-lucide="clock" class="w-10 h-10 text-terralogBlue animate-pulse"></i>
                         </div>
-                        <h3 class="text-slate-900 font-bold text-lg mb-1 uppercase tracking-wide" x-text="order.order_status || 'Menunggu Konfirmasi'"></h3>
-                        <p class="text-slate-500 text-xs font-medium">Pesanan Anda sedang diproses oleh tim kami.</p>
+                        <h3 class="text-slate-900 font-bold text-lg mb-1 uppercase tracking-wide" x-text="order.order_status === 'pending' ? 'Menunggu Konfirmasi' : order.order_status"></h3>
+                        <p class="text-slate-500 text-xs font-medium">Status pesanan dapat berubah sewaktu-waktu.</p>
                     </div>
 
-                    <h3 class="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Ringkasan</h3>
+                    <h3 class="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Ringkasan Pembayaran</h3>
                     
                     <div class="space-y-4 mb-6">
-                        <div class="flex justify-between text-sm font-semibold text-slate-500">
-                            <span>Subtotal</span>
-                            <span class="text-slate-800" x-text="`Rp ${Math.round(total / 1.1).toLocaleString('id-ID')}`"></span>
-                        </div>
-                        <div class="flex justify-between text-sm font-semibold text-slate-500">
-                            <span>Pajak (PB1) <span class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded ml-1">10%</span></span>
-                            <span class="text-slate-800" x-text="`Rp ${(total - Math.round(total / 1.1)).toLocaleString('id-ID')}`"></span>
-                        </div>
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="flex justify-between text-sm text-slate-600 font-medium">
+                                <span class="line-clamp-1 pr-4" x-text="`${item.qty}x ${item.nama}`"></span>
+                                <span class="shrink-0" x-text="`Rp ${(item.qty * item.harga).toLocaleString('id-ID')}`"></span>
+                            </div>
+                        </template>
                     </div>
 
                     <div class="border-t border-slate-100 pt-4 mb-6">
@@ -106,7 +127,7 @@
 
                     <a href="/customer/pesanan-saya" class="w-full py-4 rounded-xl text-slate-700 bg-slate-100 hover:bg-slate-200 font-bold text-sm transition-all flex justify-center items-center gap-2 shadow-sm active:scale-95">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                        Kembali ke Daftar
+                        Kembali ke Daftar Pesanan
                     </a>
                 </div>
             </div>
@@ -121,23 +142,26 @@
 
 <script>
     function pesananAktifApp() {
-        let orderData = {{ order_json|tojson if order_json else 'null' }};
-        
-        let items = [];
-        let paymentMethod = 'tunai';
-        let total = 0;
-        
-        if (orderData) {
-            items = orderData.items || [];
-            paymentMethod = orderData.payment_method || 'tunai';
-            total = orderData.total_amount || 0;
+        // PERBAIKAN: Menggunakan parsing yang aman untuk mencegah error JSON
+        let serverData = null;
+        try {
+            const rawData = '{{ order_json|tojson if order_json else "{}"|safe }}';
+            serverData = JSON.parse(rawData);
+        } catch(e) {
+            console.error("Gagal memuat data:", e);
+            serverData = {};
         }
+        
+        let items = serverData.items || [];
+        // PERBAIKAN: Backend menggunakan 'cash' bukan 'tunai'
+        let paymentMethod = serverData.payment_method || 'cash';
+        let total = serverData.total_amount || 0;
         
         return {
             items: items,
             paymentMethod: paymentMethod,
             total: total,
-            order: orderData || {},
+            order: serverData,
             
             init() {
                 if (typeof lucide !== 'undefined') {
