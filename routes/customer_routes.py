@@ -100,23 +100,26 @@ def menu_detail(menu_id):
     for item in order_items:
         if item.review:
             nama_pelanggan = "Pelanggan Anonim"
-            nama_asli = "Pelanggan Anonim"  # Variabel baru untuk menyimpan nama asli
+            nama_asli = "Pelanggan Anonim"  
             foto_pelanggan = None
             
-            if item.order.user:
-                nama_asli = item.order.user.name
-                if current_user.is_authenticated and item.order.user.id == current_user.id:
+            # PERBAIKAN: Ambil data user secara eksplisit menggunakan user_id
+            pemesan = User.query.get(item.order.user_id) if item.order.user_id else None
+            
+            if pemesan:
+                nama_asli = pemesan.name
+                if current_user.is_authenticated and pemesan.id == current_user.id:
                     nama_pelanggan = "Anda"
                 else:
-                    nama_pelanggan = item.order.user.name
-                foto_pelanggan = item.order.user.photo
+                    nama_pelanggan = pemesan.name
+                foto_pelanggan = pemesan.photo
             elif item.order.customer_name:
                 nama_asli = item.order.customer_name
                 nama_pelanggan = item.order.customer_name
                 
             reviews.append({
                 'nama': nama_pelanggan,
-                'inisial': nama_asli[:2].upper(),  # Inisial selalu menggunakan nama asli (cth: "BU")
+                'inisial': nama_asli[:2].upper(),  
                 'photo': foto_pelanggan,
                 'date': item.review.created_at.strftime('%d %b %Y'),
                 'rating': item.review.rating,
@@ -147,23 +150,26 @@ def menu_reviews(menu_id):
     for item in order_items:
         if item.review:
             nama_pelanggan = "Pelanggan Anonim"
-            nama_asli = "Pelanggan Anonim"  # Variabel baru untuk menyimpan nama asli
+            nama_asli = "Pelanggan Anonim"  
             foto_pelanggan = None
             
-            if item.order.user:
-                nama_asli = item.order.user.name
-                if current_user.is_authenticated and item.order.user.id == current_user.id:
+            # PERBAIKAN: Ambil data user secara eksplisit menggunakan user_id
+            pemesan = User.query.get(item.order.user_id) if item.order.user_id else None
+            
+            if pemesan:
+                nama_asli = pemesan.name
+                if current_user.is_authenticated and pemesan.id == current_user.id:
                     nama_pelanggan = "Anda"
                 else:
-                    nama_pelanggan = item.order.user.name
-                foto_pelanggan = item.order.user.photo
+                    nama_pelanggan = pemesan.name
+                foto_pelanggan = pemesan.photo
             elif item.order.customer_name:
                 nama_asli = item.order.customer_name
                 nama_pelanggan = item.order.customer_name
                 
             reviews.append({
                 'nama': nama_pelanggan,
-                'inisial': nama_asli[:2].upper(),  # Inisial selalu menggunakan nama asli (cth: "BU")
+                'inisial': nama_asli[:2].upper(),  
                 'photo': foto_pelanggan,
                 'date': item.review.created_at.strftime('%d %b %Y'),
                 'rating': item.review.rating,
@@ -754,6 +760,7 @@ def pesanan_detail(order_id):
         'order_number': order.order_number,
         'customer_name': order.customer_name or current_user.name,
         'payment_method': order.payment_method,
+        'payment_status': order.payment_status,
         'order_status': order.order_status,
         'order_type': order.order_type,
         'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',  # Tambahkan baris ini

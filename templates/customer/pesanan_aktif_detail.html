@@ -18,26 +18,68 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             
             <div class="lg:col-span-2 space-y-6">
-                
-                {% if order.order_status == 'pending' and order.payment_status == 'unpaid' %}
-                <div class="bg-blue-50 border border-blue-200 rounded-[24px] p-6 shadow-sm flex items-start gap-4">
-                    <div class="bg-white p-2.5 rounded-full shadow-sm shrink-0">
-                        <i data-lucide="info" class="w-6 h-6 text-terralogBlue"></i>
+                <template x-if="order.payment_status === 'unpaid'">
+                    <div class="bg-blue-50 border border-blue-200 rounded-[24px] p-6 shadow-sm flex items-start gap-4">
+                        <div class="bg-white p-2.5 rounded-full shadow-sm shrink-0">
+                            <i data-lucide="info" class="w-6 h-6 text-terralogBlue"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-lg mb-2">Langkah Selanjutnya</h4>
+                            <template x-if="paymentMethod === 'qris'">
+                                <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                                    Pesanan Anda telah kami terima. Silakan datang ke meja kasir dan tunjukkan bukti transfer QRIS Anda untuk <strong>mengonfirmasi pembayaran</strong> agar pesanan dapat segera disiapkan oleh koki.
+                                </p>
+                            </template>
+                            <template x-if="paymentMethod !== 'qris'">
+                                <p class="text-sm text-slate-600 leading-relaxed font-medium">
+                                    Pesanan Anda telah kami terima. Silakan datang ke meja kasir untuk <strong>menyelesaikan pembayaran</strong> secara tunai agar pesanan dapat segera disiapkan oleh koki.
+                                </p>
+                            </template>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800 text-lg mb-2">Langkah Selanjutnya</h4>
-                        {% if order.payment_method == 'qris' %}
-                            <p class="text-sm text-slate-600 leading-relaxed font-medium">
-                                Pesanan Anda telah kami terima. Silakan datang ke meja kasir dan tunjukkan bukti transfer QRIS Anda untuk <strong>mengonfirmasi pembayaran</strong> agar pesanan dapat segera disiapkan oleh koki.
-                            </p>
-                        {% else %}
-                            <p class="text-sm text-slate-600 leading-relaxed font-medium">
-                                Pesanan Anda telah kami terima. Silakan datang ke meja kasir untuk <strong>menyelesaikan pembayaran</strong> secara tunai agar pesanan dapat segera disiapkan oleh koki.
-                            </p>
-                        {% endif %}
+                </template>
+
+                <template x-if="order.payment_status === 'paid'">
+                    <div class="flex items-start justify-between relative px-2 md:px-12 mt-4 mb-4">
+                        <div class="absolute top-7 left-14 right-14 md:left-24 md:right-24 h-1 flex z-0">
+                            <div class="h-full w-1/2 transition-colors duration-500" 
+                                    :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-600' : 'bg-gray-200'"></div>
+                            <div class="h-full w-1/2 transition-colors duration-500" 
+                                    :class="order.order_status === 'served' ? 'bg-green-500' : 'bg-gray-200'"></div>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-3 z-10 w-24">
+                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                    :class="['ready', 'served'].includes(order.order_status) ? 'bg-green-600 text-white' : 
+                                        (order.order_status === 'preparing' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
+                                <i data-lucide="chef-hat" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                    :class="['ready', 'served'].includes(order.order_status) ? 'text-green-600' : 
+                                            (order.order_status === 'preparing' ? 'text-yellow-600' : 'text-gray-400')">Sedang Dibuat</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-3 z-10 w-24">
+                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                    :class="order.order_status === 'served' ? 'bg-green-600 text-white' : 
+                                        (order.order_status === 'ready' ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-500')">
+                                <i data-lucide="concierge-bell" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                    :class="order.order_status === 'served' ? 'text-green-600' : 
+                                            (order.order_status === 'ready' ? 'text-yellow-600' : 'text-gray-400')">Siap Diantar</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-3 z-10 w-24">
+                            <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-md transition-colors duration-500"
+                                    :class="order.order_status === 'served' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'">
+                                <i data-lucide="check" class="w-6 h-6"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-wider text-center" 
+                                    :class="order.order_status === 'served' ? 'text-green-600' : 'text-gray-400'">Disajikan</span>
+                        </div>
                     </div>
-                </div>
-                {% endif %}
+                </template>
                 
                 <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
                     <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
@@ -111,14 +153,6 @@
             <div class="lg:col-span-1">
                 <div class="bg-white rounded-[24px] shadow-lg border border-slate-100 p-6 sticky top-28">
                     
-                    <div class="text-center pb-6 border-b border-dashed border-slate-200 mb-6">
-                        <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-4 ring-4 ring-white shadow-sm">
-                            <i data-lucide="clock" class="w-10 h-10 text-terralogBlue animate-pulse"></i>
-                        </div>
-                        <h3 class="text-slate-900 font-bold text-lg mb-1 uppercase tracking-wide" x-text="order.order_status === 'pending' ? 'Menunggu Konfirmasi' : order.order_status"></h3>
-                        <p class="text-slate-500 text-xs font-medium">Status pesanan dapat berubah sewaktu-waktu.</p>
-                    </div>
-
                     <h3 class="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Ringkasan Pembayaran</h3>
                     
                     <div class="space-y-4 mb-6">
@@ -139,7 +173,7 @@
 
                     <button :disabled="order.order_status !== 'served'"
                             class="w-full py-4 rounded-xl font-bold text-sm transition-all flex justify-center items-center gap-2 shadow-sm mb-3"
-                            :class="order.order_status === 'served' ? 'bg-amber-400 hover:bg-amber-500 text-amber-900 cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
+                            :class="order.order_status === 'served' ? 'bg-terralogBlue hover:bg-blue-500 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 cursor-not-allowed'">
                         <i data-lucide="star" class="w-4 h-4"></i>
                         Beri Ulasan
                     </button>
