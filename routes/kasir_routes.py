@@ -126,6 +126,25 @@ def dashboard():
             }
 
     # ==========================================
+    # 4. DATA RESERVASI HARI INI (Untuk Warning Buffer di Keranjang)
+    # ==========================================
+    upcoming_res_db = Reservation.query.filter(
+        Reservation.reservation_date == today,
+        Reservation.status.in_(['pending', 'confirmed'])
+    ).all()
+    
+    upcoming_reservations = []
+    for r in upcoming_res_db:
+        if r.reservation_time:
+            for rt in r.reserved_tables:
+                upcoming_reservations.append({
+                    "table_id": str(rt.table_id), # Jadikan string agar mudah dicocokkan di JS
+                    "time": r.reservation_time.strftime('%H:%M'),
+                    "customer": r.customer_name or (r.user.name if r.user else "Tamu"),
+                    "duration": r.duration
+                })
+
+    # ==========================================
     # 4. RENDER TEMPLATE
     # ==========================================
     return render_template(
@@ -136,7 +155,8 @@ def dashboard():
         tables=tables_db,
         categories=categories_db,
         menu=menu_list,
-        edit_data=edit_data
+        edit_data=edit_data,
+        upcoming_reservations=upcoming_reservations
     )
 
 # =========================
@@ -247,29 +267,21 @@ def pesanan_aktif():
 @kasir_bp.route('/reservasi')
 @login_required
 def reservasi():
-    reservations_db = Reservation.query.all()
+    reservations_db = Reservation.query.order_by(
+        Reservation.reservation_date.desc(),
+        Reservation.reservation_time.asc()
+    ).all()
     
-    # ✅ BARU: Tarik semua data meja aktif untuk pilihan valid di modal
     all_tables = Table.query.order_by(Table.table_number.asc()).all()
     tables_list = [{"id": t.id, "number": t.table_number, "capacity": t.capacity} for t in all_tables]
     
     data_reservasi = []
 
     for res in reservations_db:
-        status_mapping = {
-            'pending': 'Menunggu',
-            'confirmed': 'Dikonfirmasi',
-            'completed': 'Selesai',
-            'cancelled': 'Dibatalkan'
-        }
-
         nama_pelanggan = res.customer_name or (res.user.name if res.user else "Tanpa Nama")
 
-        # Ambil daftar string nomor meja untuk tabel utama
         meja_list = [rt.table_number_snapshot for rt in res.reserved_tables]
         meja_str = ", ".join(meja_list) if meja_list else "-"
-        
-        # ✅ BARU: Ambil list ID meja asli untuk memudahkan Alpine mencentang checkbox saat edit
         meja_ids = [rt.table_id for rt in res.reserved_tables if rt.table_id]
 
         jam_mulai_str = ""
@@ -290,10 +302,12 @@ def reservasi():
             'telepon': res.phone,
             'jam_mulai': jam_mulai_str,
             'jam_selesai': jam_selesai_str,
-            'status': status_mapping.get(res.status, 'Menunggu'),
+            # ✅ PERBAIKAN: Kirim Raw Data (pending/confirmed) langsung ke frontend, HAPUS status_mapping!
+            'status': res.status, 
             'meja': meja_str,
             'table_ids': meja_ids,
-            'notes': res.notes or ''
+            'notes': res.notes or '',
+            'alasan_batal': res.cancellation_reason or ''
         })
 
     return render_template(
@@ -301,7 +315,7 @@ def reservasi():
         segment='reservasi',
         role='kasir',
         reservations=data_reservasi,
-        tables=tables_list # Dikirim ke HTML
+        tables=tables_list
     )
 
 # =========================
@@ -724,30 +738,23 @@ def add_reservation():
         duration = int(data.get('durasi', 90))
         table_ids = data.get('table_ids', [])
         
-        # 1. Hitung Waktu Mulai & Selesai untuk Reservasi Baru
         new_start = datetime.combine(res_date, res_time)
         new_end = new_start + timedelta(minutes=duration)
         
-        # 2. Ambil Jeda Waktu Pembersihan Meja (table_clearance_time) dari Database
         cafe_setting = CafeSetting.query.first()
         clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
         clearance_delta = timedelta(minutes=clearance_mins)
         
-        # 3. Tarik Semua Reservasi Aktif di Tanggal yang Sama (Kecuali yang Dibatalkan)
         existing_res = Reservation.query.filter(
             Reservation.reservation_date == res_date,
             Reservation.status.in_(['pending', 'confirmed', 'completed'])
         ).all()
         
-        # 4. ALGORITMA DETEKSI BENTROK WAKTU & MEJA
         for res in existing_res:
             ex_start = datetime.combine(res.reservation_date, res.reservation_time)
             ex_end = ex_start + timedelta(minutes=res.duration)
             
-            # Cek apakah rentang waktu saling bertabrakan (Termasuk toleransi jeda kebersihan)
             if (new_start < ex_end + clearance_delta) and (new_end > ex_start - clearance_delta):
-                
-                # Periksa apakah ada kesamaan ID meja yang dipilih
                 for rt in res.reserved_tables:
                     if str(rt.table_id) in [str(tid) for tid in table_ids]:
                         return jsonify({
@@ -755,7 +762,6 @@ def add_reservation():
                             "message": f"Meja {rt.table_number_snapshot} sudah dipesan oleh pelanggan lain pada pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')} (Termasuk jeda pembersihan meja {clearance_mins} menit)."
                         })
                         
-        # 5. JIKA LOLOS VALIDASI, SIMPAN DATA RESERVASI
         new_res = Reservation(
             reservation_number=generate_reservation_number(),
             customer_name=data.get('nama'),
@@ -765,7 +771,8 @@ def add_reservation():
             reservation_date=res_date,
             reservation_time=res_time,
             notes=data.get('notes'),
-            status='pending'
+            # ✅ PERBAIKAN: Ambil Raw Data, default ke pending
+            status=data.get('status', 'pending') 
         )
         db.session.add(new_res)
         db.session.flush()
@@ -798,51 +805,58 @@ def update_reservation():
         reservation = db.session.get(Reservation, int(res_id))
         if not reservation:
             return jsonify({"success": False, "message": "Reservasi tidak ditemukan!"})
+
+        if reservation.status in ['completed', 'cancelled']:
+            return jsonify({"success": False, "message": "Reservasi yang sudah final/batal tidak dapat diubah lagi!"})
             
         res_date = datetime.strptime(data.get('tanggal'), '%Y-%m-%d').date()
         res_time = datetime.strptime(data.get('jam_mulai'), '%H:%M').time()
         duration = int(data.get('durasi', 90))
         table_ids = data.get('table_ids', [])
         
-        # 1. ALGORITMA DETEKSI BENTROK (Sama seperti Add, tapi Exclude ID diri sendiri)
-        new_start = datetime.combine(res_date, res_time)
-        new_end = new_start + timedelta(minutes=duration)
+        # ✅ PERBAIKAN: Pastikan variabelnya bernama new_status
+        new_status = data.get('status', 'pending')
         
-        cafe_setting = CafeSetting.query.first()
-        clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
-        clearance_delta = timedelta(minutes=clearance_mins)
-        
-        existing_res = Reservation.query.filter(
-            Reservation.reservation_date == res_date,
-            Reservation.status.in_(['pending', 'confirmed', 'completed']),
-            Reservation.id != reservation.id  # ✅ EXCLUDE DIRI SENDIRI AGAR TIDAK FALSE ALARM!
-        ).all()
-        
-        for res in existing_res:
-            ex_start = datetime.combine(res.reservation_date, res.reservation_time)
-            ex_end = ex_start + timedelta(minutes=res.duration)
+        if new_status != 'cancelled':
+            new_start = datetime.combine(res_date, res_time)
+            new_end = new_start + timedelta(minutes=duration)
             
-            if (new_start < ex_end + clearance_delta) and (new_end > ex_start - clearance_delta):
-                for rt in res.reserved_tables:
-                    if str(rt.table_id) in [str(tid) for tid in table_ids]:
-                        return jsonify({
-                            "success": False, 
-                            "message": f"Bentrok! Meja {rt.table_number_snapshot} sudah dipakai tamu lain dari pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')} (Plus {clearance_mins}m pembersihan)."
-                        })
+            cafe_setting = CafeSetting.query.first()
+            clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
+            clearance_delta = timedelta(minutes=clearance_mins)
+            
+            existing_res = Reservation.query.filter(
+                Reservation.reservation_date == res_date,
+                Reservation.status.in_(['pending', 'confirmed', 'completed']),
+                Reservation.id != reservation.id
+            ).all()
+            
+            for res in existing_res:
+                ex_start = datetime.combine(res.reservation_date, res.reservation_time)
+                ex_end = ex_start + timedelta(minutes=res.duration)
+                
+                if (new_start < ex_end + clearance_delta) and (new_end > ex_start - clearance_delta):
+                    for rt in res.reserved_tables:
+                        if str(rt.table_id) in [str(tid) for tid in table_ids]:
+                            return jsonify({
+                                "success": False, 
+                                "message": f"Bentrok! Meja {rt.table_number_snapshot} sudah dipakai tamu lain dari pukul {ex_start.strftime('%H:%M')} - {ex_end.strftime('%H:%M')}."
+                            })
         
-        # 2. PROSES UPDATE DATA JIKA LOLOS
         reservation.customer_name = data.get('nama')
         reservation.phone = data.get('telepon')
         reservation.guest_qty = int(data.get('tamu', 1))
         reservation.duration = duration
         reservation.reservation_date = res_date
         reservation.reservation_time = res_time
-        reservation.notes = data.get('notes') # ✅ UPDATE NOTES
+        reservation.notes = data.get('notes')
+        reservation.status = new_status # ✅ Simpan ke DB
         
-        status_map = {'Menunggu': 'pending', 'Dikonfirmasi': 'confirmed', 'Selesai': 'completed', 'Dibatalkan': 'cancelled'}
-        reservation.status = status_map.get(data.get('status'), 'pending')
+        if new_status == 'cancelled':
+            reservation.cancellation_reason = data.get('alasan_batal')
+        else:
+            reservation.cancellation_reason = None
         
-        # 3. PERBARUI RELASI MEJA
         for old_table in reservation.reserved_tables:
             db.session.delete(old_table)
             

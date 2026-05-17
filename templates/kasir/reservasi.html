@@ -14,90 +14,135 @@
         </button>
     </div>
 
-    <div class="flex gap-4 mb-6 items-end">
-        <div class="flex-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Tanggal</label>
-            <div class="relative">
-                <i data-lucide="calendar" class="absolute left-4 top-3 w-4 h-4 text-terralogBlue"></i>
-                <input type="date" class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium focus:border-terralogBlue outline-none shadow-sm transition-all cursor-pointer">
-            </div>
+    <div class="flex flex-wrap gap-3 mb-6">
+        
+        <div class="relative flex-grow min-w-[200px]">
+            <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="text" x-model="searchQuery" @input="currentPage = 1" placeholder="Cari nama pelanggan atau nomor..." 
+                   class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
         </div>
 
-        <div class="flex-1">
-            <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Cari Nomor Meja</label>
-            <div class="relative">
-                <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-terralogBlue"></i>
-                <input type="text" x-model="selectedTable" placeholder="Contoh: 01" class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium focus:border-terralogBlue outline-none shadow-sm transition-all">
-            </div>
+        <div class="w-44 relative">
+            <i data-lucide="filter" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterStatus" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Status</option>
+                <option value="pending">Menunggu</option>
+                <option value="confirmed">Dikonfirmasi</option>
+                <option value="completed">Selesai</option>
+                <option value="cancelled">Dibatalkan</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
         </div>
 
-        <div class="flex-[1.5]">
-            <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Cari Nama</label>
-            <div class="relative">
-                <i data-lucide="search" class="absolute left-4 top-3 w-4 h-4 text-gray-400"></i>
-                <input type="text" x-model="searchQuery" placeholder="Cari pelanggan..." class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium focus:border-terralogBlue outline-none shadow-sm transition-all">
-            </div>
+        <div class="w-40 relative">
+            <i data-lucide="layout-dashboard" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="selectedTable" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="">Semua Meja</option>
+                <template x-for="t in availableTables" :key="t.id">
+                    <option :value="t.number" x-text="'Meja ' + t.number"></option>
+                </template>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
         </div>
 
-        <button @click="searchQuery = ''; selectedTable = ''" class="px-8 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition shadow-sm h-[42px] border border-gray-200 cursor-pointer">
-            Reset
-        </button>
+        <div class="w-44 relative">
+            <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="date" x-model="filterDate" @change="currentPage = 1" class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:border-terralogBlue shadow-sm outline-none transition cursor-pointer">
+        </div>
+
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="w-full text-left border-collapse">
-            <thead class="bg-gray-50/50 border-b border-gray-100 text-sm font-bold text-gray-800">
-                <tr>
-                    <th class="px-6 py-4 w-[10%]">ID</th>
-                    <th class="px-6 py-4 w-[20%]">Pelanggan</th>
-                    <th class="px-6 py-4 w-[15%]">Tanggal</th>
-                    <th class="px-6 py-4 text-center w-[10%]">Tamu</th>
-                    <th class="px-6 py-4 w-[20%]">Durasi Waktu</th>
-                    <th class="px-6 py-4 text-center w-[15%]">Status</th>
-                    <th class="px-6 py-4 text-center w-[10%]">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="text-sm font-medium text-gray-700">
-                <template x-for="res in reservations" :key="res.id">
-                    <tr x-show="res.nama.toLowerCase().includes(searchQuery.toLowerCase()) && (selectedTable === '' || res.meja.includes(selectedTable))" class="border-b border-gray-50 last:border-0 hover:bg-blue-50/30 transition">
-                        <td class="px-6 py-4 text-gray-400 font-bold text-xs" x-text="res.nomor_reservasi"></td>
-                        <td class="px-6 py-4 font-bold text-gray-800">
-                            <span x-text="res.nama"></span>
-                            <div class="text-[10px] text-gray-400 mt-0.5 font-normal">Meja: <span x-text="res.meja" class="font-bold text-terralogBlue"></span></div>
-                        </td>
-                        <td class="px-6 py-4" x-text="res.tanggal"></td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center gap-2 bg-blue-50/50 py-1.5 rounded-lg border border-blue-100 w-20 mx-auto">
-                                <i data-lucide="users" class="w-3.5 h-3.5 text-terralogBlue"></i>
-                                <span class="text-terralogBlue font-black text-xs" x-text="res.tamu"></span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <span class="text-terralogBlue font-bold" x-text="res.jam_mulai"></span> — <span class="text-gray-400" x-text="res.jam_selesai"></span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase inline-block w-28 text-center shadow-sm"
-                                :class="{'bg-[#FF8A48]': res.status === 'Menunggu', 'bg-emerald-500': res.status === 'Dikonfirmasi', 'bg-red-500': res.status === 'Dibatalkan', 'bg-blue-500': res.status === 'Selesai'}"
-                                x-text="res.status"></span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex justify-center gap-2" x-init="lucide.createIcons()">
-                                <button type="button" @click.prevent="openEdit(res)" 
-                                        class="p-2 text-terralogBlue bg-blue-50 rounded-xl hover:bg-terralogBlue hover:text-white transition shadow-sm cursor-pointer">
-                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
-                                </button>
-                            </div>
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50/50 border-b border-gray-100 text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    <tr>
+                        <th class="px-6 py-4 w-[15%]">No. Reservasi</th>
+                        <th class="px-6 py-4 w-[20%]">Pelanggan</th>
+                        <th class="px-6 py-4 w-[15%]">Tanggal</th>
+                        <th class="px-6 py-4 text-center w-[10%]">Tamu</th>
+                        <th class="px-6 py-4 w-[15%]">Durasi Waktu</th>
+                        <th class="px-6 py-4 text-center w-[15%]">Status</th>
+                        <th class="px-6 py-4 text-center w-[10%]">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm font-medium text-gray-700">
+                    <template x-for="res in pagedReservations" :key="res.id">
+                        <tr class="border-b border-gray-50 last:border-0 hover:bg-blue-50/30 transition">
+                            <td class="px-6 py-4 text-gray-400 font-bold text-xs" x-text="res.nomor_reservasi"></td>
+                            <td class="px-6 py-4 font-bold text-gray-800">
+                                <span x-text="res.nama"></span>
+                                <div class="text-[10px] text-gray-400 mt-0.5 font-normal">Meja: <span x-text="res.meja" class="font-bold text-terralogBlue"></span></div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-500" x-text="res.tanggal"></td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2 bg-blue-50/50 py-1.5 rounded-lg border border-blue-100 w-20 mx-auto">
+                                    <i data-lucide="users" class="w-3.5 h-3.5 text-terralogBlue"></i>
+                                    <span class="text-terralogBlue font-black text-xs" x-text="res.tamu"></span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-terralogBlue font-bold" x-text="res.jam_mulai"></span> — <span class="text-gray-400" x-text="res.jam_selesai"></span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase inline-block w-28 text-center shadow-sm"
+                                    :class="{
+                                        'bg-[#FF8A48]': res.status === 'pending', 
+                                        'bg-emerald-500': res.status === 'confirmed', 
+                                        'bg-red-500': res.status === 'cancelled', 
+                                        'bg-blue-500': res.status === 'completed'
+                                    }"
+                                    x-text="statusDisplay[res.status] || res.status"></span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex justify-center gap-2" x-init="setTimeout(() => lucide.createIcons(), 50)">
+                                    <button type="button" @click.prevent="openEdit(res)" 
+                                            class="p-2 text-terralogBlue bg-blue-50 rounded-xl hover:bg-terralogBlue hover:text-white transition shadow-sm cursor-pointer">
+                                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                    
+                    <tr x-show="filteredReservations.length === 0" style="display: none;">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-bold">
+                            <i data-lucide="calendar-x" class="w-10 h-10 mx-auto mb-3 opacity-50"></i>
+                            Reservasi tidak ditemukan berdasarkan filter saat ini.
                         </td>
                     </tr>
-                </template>
-            </tbody>
-        </table>
-        
-        <div x-show="reservations.filter(r => r.nama.toLowerCase().includes(searchQuery.toLowerCase())).length === 0" 
-             class="px-6 py-12 text-center" style="display: none;">
-            <div class="flex flex-col items-center gap-2">
-                <i data-lucide="calendar-x" class="w-12 h-12 text-gray-200"></i>
-                <p class="text-gray-400 font-medium">Reservasi tidak ditemukan.</p>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-6 py-4 bg-white flex justify-end items-center gap-2 border-t border-gray-100 flex-none">
+            <div class="flex items-center gap-1 mr-4">
+                <span class="text-xs text-gray-500">Total</span>
+                <div class="bg-gray-100 px-3 py-1 rounded-lg border border-gray-200 text-xs font-bold mx-1" x-text="filteredReservations.length"></div>
+                <span class="text-xs text-gray-500">reservasi</span>
+            </div>
+
+            <button @click="currentPage > 1 && currentPage--" :class="currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-terralogBlue hover:text-terralogBlue'" class="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md transition-colors cursor-pointer">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <template x-for="p in totalPages" :key="p">
+                <button @click="currentPage = p" 
+                        class="w-7 h-7 flex items-center justify-center border rounded-md text-xs transition-all cursor-pointer"
+                        :class="currentPage === p ? 'border-terralogBlue bg-terralogBlue text-white font-bold' : 'border-gray-200 text-gray-500 hover:border-terralogBlue hover:text-terralogBlue'"
+                        x-text="p"></button>
+            </template>
+            
+            <button @click="currentPage < totalPages && currentPage++" :class="currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:border-terralogBlue hover:text-terralogBlue'" class="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md transition-colors cursor-pointer">
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <div class="ml-4 flex items-center">
+                <select x-model="itemsPerPage" @change="currentPage = 1" class="border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:border-terralogBlue text-gray-600 font-medium cursor-pointer">
+                    <option value="25">25 / halaman</option>
+                    <option value="50">50 / halaman</option>
+                    <option value="100">100 / halaman</option>
+                </select>
             </div>
         </div>
     </div>
@@ -141,15 +186,28 @@
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('reservasiData', () => ({
+        statusDisplay: {
+            'pending': 'Menunggu',
+            'confirmed': 'Dikonfirmasi',
+            'completed': 'Selesai',
+            'cancelled': 'Dibatalkan'
+        },
+
         searchQuery: '',
         selectedTable: '',
+        filterDate: new Date().toISOString().split('T')[0],
+        filterStatus: 'SEMUA',
         showAddModal: false, 
         showEditModal: false,
         showSaveSuccess: false,
         toastTime: '',
 
-        // Data State Form (Tanpa variabel delete)
-        formRes: { id: '', nomor_reservasi: '', nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', status: '', notes: '' },
+        // State Konten Manajemen Paging Virtualisasi
+        currentPage: 1,
+        itemsPerPage: 25,
+
+        // Data State Form Objek Bersih Kebal Tipe Data
+        formRes: { id: '', nomor_reservasi: '', nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', status: '', original_status: '', notes: '', alasan_batal: '' },
         newRes: { nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', notes: '' },
 
         get today() {
@@ -159,7 +217,32 @@ document.addEventListener('alpine:init', () => {
         reservations: JSON.parse(document.getElementById('data-reservasi').textContent),
         availableTables: JSON.parse(document.getElementById('data-meja').textContent),
 
-        // Menghitung jam selesai berdasarkan durasi menit secara realtime di frontend
+        // Perhitungan Komposit Saringan Filter Pencarian Dinamis
+        get filteredReservations() {
+            let result = this.reservations.filter(r => {
+                const matchName = r.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || 
+                                  r.nomor_reservasi.toLowerCase().includes(this.searchQuery.toLowerCase());
+                const matchTable = this.selectedTable === '' || r.meja.includes(this.selectedTable);
+                const matchDate = this.filterDate === '' || r.tanggal === this.filterDate;
+                const matchStatus = this.filterStatus === 'SEMUA' || r.status === this.filterStatus;
+                
+                return matchName && matchTable && matchDate && matchStatus;
+            });
+
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+            return result;
+        },
+
+        // Pemotong Array untuk Menentukan Tampilan Baris Sesuai Halaman Aktif
+        get pagedReservations() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            return this.filteredReservations.slice(start, start + parseInt(this.itemsPerPage));
+        },
+
+        get totalPages() {
+            return Math.ceil(this.filteredReservations.length / this.itemsPerPage);
+        },
+
         hitungJamSelesai(jamMulai, durasiMenit) {
             if (!jamMulai || !durasiMenit) return '';
             let [h, m] = jamMulai.split(':');
@@ -197,15 +280,14 @@ document.addEventListener('alpine:init', () => {
                         jam_mulai: this.newRes.jamMulai,
                         durasi: this.newRes.durasi,
                         tamu: this.newRes.tamu,
-                        notes: this.newRes.notes // ✅ BARU: Kirim teks catatan ke Flask
+                        notes: this.newRes.notes,
+                        status: 'confirmed'
                     })
                 });
                 const result = await response.json();
                 if (result.success) {
                     this.showAddModal = false;
                     showToast(result.message, "success");
-                    
-                    // Reset state (termasuk notes kosong kembali)
                     this.newRes = { nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', notes: '' };
                     setTimeout(() => { window.location.reload(); }, 800);
                 } else { showToast(result.message, "error"); }
@@ -224,9 +306,21 @@ document.addEventListener('alpine:init', () => {
                 durasi: res.durasi || 90, 
                 tamu: res.tamu, 
                 status: res.status,
-                notes: res.notes || ''
+                original_status: res.status,
+                notes: res.notes || '',
+                alasan_batal: res.alasan_batal || ''
             };
             this.showEditModal = true;
+        },
+
+        // Logika Pengendalian Aliran One-Way State Transition Machine
+        isStatusAllowed(targetStatus) {
+            const orig = this.formRes.original_status;
+            if (orig === 'completed') return targetStatus === 'completed';
+            if (orig === 'cancelled') return targetStatus === 'cancelled';
+            if (orig === 'pending') return ['pending', 'confirmed', 'cancelled'].includes(targetStatus);
+            if (orig === 'confirmed') return ['confirmed', 'completed', 'cancelled'].includes(targetStatus);
+            return false;
         },
 
         async updateRes() {
@@ -235,7 +329,6 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            // ✅ PERBAIKAN BUG DI MODE EDIT JUGA
             let totalKapasitasTerpilih = this.formRes.table_ids.reduce((sum, idMeja) => {
                 let dataMejaDb = this.availableTables.find(t => String(t.id) === String(idMeja));
                 return sum + (dataMejaDb ? parseInt(dataMejaDb.capacity) : 0);
@@ -243,6 +336,11 @@ document.addEventListener('alpine:init', () => {
 
             if (parseInt(this.formRes.tamu) > totalKapasitasTerpilih) {
                 showToast(`Kapasitas kurang! Meja terpilih hanya muat maksimal ${totalKapasitasTerpilih} orang.`, "error");
+                return;
+            }
+
+            if (this.formRes.status === 'Dibatalkan' && (!this.formRes.alasan_batal || this.formRes.alasan_batal.trim() === '')) {
+                showToast("Mohon isi alasan pembatalan!", "error");
                 return;
             }
 
@@ -260,7 +358,8 @@ document.addEventListener('alpine:init', () => {
                         durasi: this.formRes.durasi,
                         tamu: this.formRes.tamu,
                         status: this.formRes.status,
-                        notes: this.formRes.notes // ✅ Kirim teks edit
+                        notes: this.formRes.notes,
+                        alasan_batal: this.formRes.alasan_batal
                     })
                 });
                 const result = await response.json();
