@@ -1,0 +1,93 @@
+<div x-show="showModalEdit" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display: none;">
+    <div x-transition.opacity class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showModalEdit = false"></div>
+    <div x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" 
+         class="w-full max-w-lg bg-white rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+        
+        <div class="px-6 py-5 bg-terralogBlue flex justify-between items-center shrink-0">
+            <h2 class="text-xl font-bold text-white tracking-tight">Edit Menu</h2>
+            <button @click="showModalEdit = false" class="text-white/60 hover:text-white transition-colors cursor-pointer">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4 overflow-y-auto custom-scrollbar bg-white">
+            
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Foto Produk</label>
+                <div class="relative w-full p-6 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 hover:border-terralogBlue transition-colors group"
+                     @dragover.prevent="$el.classList.add('border-terralogBlue', 'bg-blue-50')"
+                     @dragleave.prevent="$el.classList.remove('border-terralogBlue', 'bg-blue-50')"
+                     @drop.prevent="$el.classList.remove('border-terralogBlue', 'bg-blue-50'); handleDrop($event, 'edit')"
+                     @click="$refs.fotoEdit.click()">
+                    
+                    <input type="file" x-ref="fotoEdit" accept="image/*" class="hidden" @change="previewImage($event, 'edit')">
+                    
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden shadow-sm mb-3 border-2 border-white relative group-hover:scale-105 transition-transform">
+                        <img :src="editMenuForm.imgPreview || (editMenuForm.originalImg ? (editMenuForm.originalImg.startsWith('http') ? editMenuForm.originalImg : '/static/' + editMenuForm.originalImg) : '/static/uploads/menu/default.png')" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="camera" class="w-7 h-7 text-white"></i>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm font-bold text-gray-700">Klik atau Drag & Drop untuk ganti</p>
+                    <p class="text-[10px] font-medium text-gray-400 mt-1 uppercase tracking-widest">Maksimal 2MB (JPG, PNG)</p>
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nama Menu</label>
+                <input type="text" x-model="editMenuForm.nama" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kategori</label>
+                    <select x-model="editMenuForm.kategori" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm font-bold appearance-none cursor-pointer">
+                        <template x-for="kat in categories" :key="kat.id">
+                            <option :value="kat.name" x-text="kat.name"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Harga Jual (Rp)</label>
+                    <input type="number" x-model="editMenuForm.harga" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                    <label class="flex items-center gap-2 cursor-pointer w-fit" :class="editMenuForm.hasStock ? 'mb-3' : ''">
+                        <input type="checkbox" x-model="editMenuForm.hasStock" class="w-4 h-4 rounded border-gray-300 text-terralogBlue">
+                        <span class="text-xs font-bold text-gray-600 uppercase">Kelola Stok</span>
+                    </label>
+                    <div x-show="editMenuForm.hasStock" x-transition>
+                        <input type="number" x-model="editMenuForm.stok" placeholder="Stok..." class="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white focus:border-terralogBlue outline-none text-sm font-bold">
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl border border-blue-100 bg-blue-50/50 flex flex-col justify-center">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-xs font-bold text-gray-800 uppercase mb-0.5">Status Menu</p>
+                            <p class="text-[9px] text-gray-500 font-medium">Matikan jika habis</p>
+                        </div>
+                        <label class="toggle-switch relative inline-block w-[38px] h-5 cursor-pointer">
+                            <input type="checkbox" x-model="editMenuForm.status">
+                            <span class="toggle-slider !w-[38px] !h-5 before:!w-3.5 before:!h-3.5 before:!top-[3px] before:!left-[3px] peer-checked:before:!translate-x-[18px]"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Deskripsi</label>
+                <textarea x-model="editMenuForm.deskripsi" rows="2" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold resize-none"></textarea>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 shrink-0">
+            <button @click="showModalEdit = false" class="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition shadow-sm cursor-pointer">Batal</button>
+            <button @click="updateMenu()" class="px-8 py-2.5 bg-terralogBlue text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-900 transition active:scale-95 cursor-pointer">Simpan Perubahan</button>
+        </div>
+    </div>
+</div>

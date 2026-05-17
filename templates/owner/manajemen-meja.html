@@ -2,205 +2,198 @@
 {% block title %}Manajemen Meja{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Manajemen Meja</h1>
-        <p class="text-gray-500 mt-1 text-sm">Atur daftar meja fisik dan kapasitas daya tampung kafe Anda</p>
-    </div>
-    <button onclick="openModal('modalTambahMeja')"
-            class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95">
-        <i data-lucide="plus-circle" class="w-5 h-5"></i>
-        Tambah Meja
-    </button>
-</div>
+<div x-data="manajemenMeja()" class="relative" x-cloak>
 
-<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <table class="w-full text-sm border-collapse">
-        <thead>
-            <tr class="border-b-2 border-gray-100 bg-gray-50/50">
-                <th class="px-6 py-4 text-left font-bold text-gray-800 w-[40%]">Nomor / ID Meja</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[30%]">Kapasitas</th>
-                <th class="px-6 py-4 text-center font-bold text-gray-800 w-[30%]">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for table in tables %}
-            <tr class="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-terralogBlue font-black border border-blue-100">
-                            {{ table.table_number }}
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-center text-sm font-bold text-gray-700">
-                    <i data-lucide="users" class="w-4 h-4 inline-block mr-1 text-gray-400"></i> {{ table.capacity }} Orang
-                </td>
-                <td class="px-6 py-4 text-center">
-                    <button type="button" 
-                            class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            data-id="{{ table.id }}"
-                            data-nomor="{{ table.table_number }}"
-                            data-kapasitas="{{ table.capacity }}"
-                            onclick="handleEditClick(this)">
-                        <i data-lucide="edit-3" class="w-5 h-5"></i>
-                    </button>
-                    <button type="button" 
-                            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
-                            onclick="hapusMeja('{{ table.id }}', '{{ table.table_number }}')">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="3" class="px-6 py-8 text-center text-gray-400 font-medium">Belum ada data meja.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div id="modalTambahMeja" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
-    <div class="modal-box w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-black text-gray-800">Tambah Meja</h3>
-            <button onclick="closeModal('modalTambahMeja')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition hover:bg-red-50 hover:text-red-500">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Manajemen Meja</h1>
+            <p class="text-gray-500 mt-1 text-sm">Atur daftar meja fisik dan pantau status ketersediaannya secara real-time</p>
         </div>
-
-        <div class="space-y-4">
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nomor Meja</label>
-                <input type="text" id="tambahNomor" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold uppercase" placeholder="Contoh: A1, B2, 01">
-            </div>
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kapasitas (Orang)</label>
-                <input type="number" id="tambahKapasitas" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Contoh: 4">
-            </div>
-        </div>
-
-        <button onclick="simpanMeja()" class="w-full mt-8 py-3.5 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm hover:bg-blue-900 transition">
-            Simpan Meja Baru
+        <button @click="openModalTambah()"
+                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:shadow-lg transition-all active:scale-95">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            Tambah Meja
         </button>
     </div>
-</div>
 
-<div id="modalEditMeja" class="modal-overlay hidden fixed inset-0 z-[100] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
-    <div class="modal-box w-full max-w-sm bg-white rounded-[2.5rem] p-8 shadow-2xl relative" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-black text-gray-800">Edit Meja</h3>
-            <button onclick="closeModal('modalEditMeja')" class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center transition hover:bg-red-50 hover:text-red-500">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
+    <div class="flex flex-wrap gap-3 mb-6">
+        <div class="relative flex-1 min-w-[250px] max-w-sm">
+            <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="text" x-model="searchQuery" placeholder="Cari nomor meja..." 
+                   class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
         </div>
-
-        <input type="hidden" id="editMejaId">
-        <div class="space-y-4">
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nomor Meja</label>
-                <input type="text" id="editNomor" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold uppercase">
-            </div>
-            <div>
-                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kapasitas (Orang)</label>
-                <input type="number" id="editKapasitas" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold">
-            </div>
-        </div>
-
-        <button onclick="updateMeja()" class="w-full mt-8 py-3.5 bg-terralogBlue text-white rounded-xl font-bold shadow-md text-sm hover:bg-blue-900 transition">
-            Simpan Perubahan
-        </button>
-    </div>
-</div>
-
-<div id="modalConfirm" class="modal-overlay hidden fixed inset-0 z-[200] bg-black/50 items-center justify-center p-4 backdrop-blur-sm">
-    <div class="modal-box w-full max-w-sm bg-white rounded-[2rem] p-6 text-center shadow-2xl relative" onclick="event.stopPropagation()">
-        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 border-4 border-white shadow-sm">
-            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
-        </div>
-        <h3 class="text-2xl font-black text-gray-800 mb-2">Hapus Meja</h3>
-        <p id="confirmMessage" class="text-sm font-medium text-gray-500 mb-8 px-4">Apakah Anda yakin?</p>
-        
-        <div class="flex gap-3">
-            <button onclick="closeModal('modalConfirm')" class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition text-sm">
-                Batal
-            </button>
-            <button id="confirmActionBtn" class="flex-1 py-3.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition shadow-md text-sm">
-                Ya, Hapus
-            </button>
+        <div class="w-48 relative">
+            <i data-lucide="filter" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterStatus" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Status</option>
+                <option value="Tersedia">Tersedia (Kosong)</option>
+                <option value="Terisi">Sedang Terisi</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
         </div>
     </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="border-b-2 border-gray-100 bg-gray-50/50">
+                    <th class="px-6 py-4 text-left font-bold text-gray-800 w-[25%]">Nomor Meja</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-800 w-[25%]">Kapasitas</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-800 w-[25%]">Status Saat Ini</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-800 w-[25%]">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="table in filteredTables" :key="table.id">
+                    <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-terralogBlue font-black border border-blue-100" x-text="table.nomor"></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center text-sm font-bold text-gray-700">
+                            <i data-lucide="users" class="w-4 h-4 inline-block mr-1 text-gray-400"></i> <span x-text="table.kapasitas + ' Orang'"></span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border"
+                                 :class="table.is_available ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-500 border-red-100'">
+                                <div class="w-1.5 h-1.5 rounded-full" :class="table.is_available ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'"></div>
+                                <span x-text="table.is_available ? 'Tersedia' : 'Terisi'"></span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button @click="openModalEdit(table)" 
+                                    :disabled="!table.is_available"
+                                    class="p-2 rounded-lg transition-colors cursor-pointer"
+                                    :class="table.is_available ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-300 cursor-not-allowed'" 
+                                    :title="table.is_available ? 'Edit Meja' : 'Meja sedang dipakai'">
+                                <i data-lucide="edit-3" class="w-5 h-5"></i>
+                            </button>
+                            
+                            <button @click="hapusMeja(table.id, table.nomor)" 
+                                    :disabled="!table.is_available"
+                                    class="p-2 rounded-lg transition-colors ml-1 cursor-pointer"
+                                    :class="table.is_available ? 'text-red-500 hover:bg-red-50' : 'text-gray-300 cursor-not-allowed'" 
+                                    :title="table.is_available ? 'Hapus Meja' : 'Meja sedang dipakai'">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </template>
+                <tr x-show="filteredTables.length === 0">
+                    <td colspan="4" class="px-6 py-12 text-center text-gray-400 font-bold">
+                        <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 opacity-50"></i>
+                        Tidak ada data meja.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% include 'owner/includes/modal_tambah_meja.html' %}
+    {% include 'owner/includes/modal_edit_meja.html' %}
 </div>
+
+<script id="data-tables" type="application/json">
+    [{% for t in tables %}{ "id": {{ t.id }}, "nomor": "{{ t.table_number }}", "kapasitas": {{ t.capacity }}, "is_available": {{ 'true' if t.is_available else 'false' }} }{% if not loop.last %},{% endif %}{% endfor %}]
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    function simpanMeja() {
-        const nomor = document.getElementById('tambahNomor').value.trim();
-        const kapasitas = document.getElementById('tambahKapasitas').value;
+document.addEventListener('alpine:init', () => {
+    Alpine.data('manajemenMeja', () => ({
+        tables: JSON.parse(document.getElementById('data-tables').textContent),
+        searchQuery: '',
+        filterStatus: 'SEMUA', // ✅ State Filter Baru
 
-        if (!nomor || !kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+        showModalTambah: false,
+        showModalEdit: false,
 
-        const formData = new FormData();
-        formData.append('nomor', nomor.toUpperCase());
-        formData.append('kapasitas', kapasitas);
+        formTambah: { nomor: '', kapasitas: '' },
+        formEdit: { id: null, nomor: '', kapasitas: '' },
 
-        fetch('/owner/api/tambah-meja', { method: 'POST', body: formData })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else { showToast(data.message, 'error'); }
-        }).catch(() => showToast('Gagal menghubungi server', 'error'));
-    }
+        get filteredTables() {
+            let result = this.tables.filter(t => {
+                const matchSearch = this.searchQuery === '' || t.nomor.toLowerCase().includes(this.searchQuery.toLowerCase());
+                
+                let matchStatus = true;
+                if (this.filterStatus === 'Tersedia') matchStatus = t.is_available === true;
+                if (this.filterStatus === 'Terisi') matchStatus = t.is_available === false;
 
-    function handleEditClick(btn) {
-        document.getElementById('editMejaId').value = btn.getAttribute('data-id');
-        document.getElementById('editNomor').value = btn.getAttribute('data-nomor');
-        document.getElementById('editKapasitas').value = btn.getAttribute('data-kapasitas');
-        openModal('modalEditMeja');
-    }
-
-    function updateMeja() {
-        const id = document.getElementById('editMejaId').value;
-        const nomor = document.getElementById('editNomor').value.trim();
-        const kapasitas = document.getElementById('editKapasitas').value;
-
-        if (!nomor || !kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
-
-        const formData = new FormData();
-        formData.append('nomor', nomor.toUpperCase());
-        formData.append('kapasitas', kapasitas);
-
-        fetch(`/owner/api/edit-meja/${id}`, { method: 'POST', body: formData })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else { showToast(data.message, 'error'); }
-        }).catch(() => showToast('Gagal menghubungi server', 'error'));
-    }
-
-    function hapusMeja(id, nomor) {
-        document.getElementById('confirmMessage').innerText = `Yakin ingin menghapus meja ${nomor}? Aksi ini tidak dapat dibatalkan.`;
-        const btn = document.getElementById('confirmActionBtn');
-        
-        btn.onclick = function() {
-            closeModal('modalConfirm');
+                return matchSearch && matchStatus;
+            });
             
-            fetch(`/owner/api/hapus-meja/${id}`, { method: 'POST' })
-            .then(r => r.json())
-            .then(data => {
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+            return result;
+        },
+
+        openModalTambah() {
+            this.formTambah = { nomor: '', kapasitas: '' };
+            this.showModalTambah = true;
+        },
+
+        openModalEdit(table) {
+            this.formEdit = { id: table.id, nomor: table.nomor, kapasitas: table.kapasitas };
+            this.showModalEdit = true;
+        },
+
+        async simpanMeja() {
+            if (!this.formTambah.nomor || !this.formTambah.kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+
+            const fd = new FormData();
+            fd.append('nomor', this.formTambah.nomor.trim().toUpperCase());
+            fd.append('kapasitas', this.formTambah.kapasitas);
+
+            try {
+                const res = await fetch('/owner/api/tambah-meja', { method: 'POST', body: fd });
+                const data = await res.json();
                 if (data.success) {
+                    this.showModalTambah = false;
                     showToast(data.message, 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else { showToast(data.message, 'error'); }
-            }).catch(() => showToast('Gagal menghubungi server', 'error'));
-        };
-        openModal('modalConfirm');
-    }
+                    setTimeout(() => location.reload(), 800);
+                } else showToast(data.message, 'error');
+            } catch(e) { showToast('Gagal menghubungi server', 'error'); }
+        },
+
+        async updateMeja() {
+            if (!this.formEdit.nomor || !this.formEdit.kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+
+            const fd = new FormData();
+            fd.append('nomor', this.formEdit.nomor.trim().toUpperCase());
+            fd.append('kapasitas', this.formEdit.kapasitas);
+
+            try {
+                const res = await fetch(`/owner/api/edit-meja/${this.formEdit.id}`, { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    this.showModalEdit = false;
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else showToast(data.message, 'error');
+            } catch(e) { showToast('Gagal menghubungi server', 'error'); }
+        },
+
+        hapusMeja(id, nomor) {
+            Alpine.store('confirmModal').open({
+                title: 'Hapus Meja',
+                message: `Yakin ingin menghapus meja ${nomor}? Aksi ini tidak dapat dibatalkan.`,
+                confirmText: 'Ya, Hapus',
+                cancelText: 'Batal',
+                type: 'danger',
+                action: async () => {
+                    try {
+                        const res = await fetch(`/owner/api/hapus-meja/${id}`, { method: 'POST' });
+                        const data = await res.json();
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            setTimeout(() => location.reload(), 800);
+                        } else showToast(data.message, 'error');
+                    } catch(e) { showToast('Gagal menghubungi server', 'error'); }
+                }
+            });
+        }
+    }));
+});
 </script>
 {% endblock %}

@@ -54,9 +54,20 @@ def manajemen_menu():
     # Ambil semua data menu dan kategori dari database
     menus = Menu.query.all()
     categories = Category.query.all()
+    
+    # 🔥 BARU: Hitung rating riil untuk masing-masing menu di sisi Owner
+    for m in menus:
+        all_ratings = [oi.review.rating for oi in m.order_items if oi.review]
+        if all_ratings:
+            m.avg_rating = round(sum(all_ratings) / len(all_ratings), 1)
+            m.total_reviews = len(all_ratings)
+        else:
+            m.avg_rating = 0.0
+            m.total_reviews = 0
+
     return render_template('owner/manajemen-menu.html',
-                           menu_list=menus, 
-                           categories=categories)
+                        menu_list=menus, 
+                        categories=categories)
 
 @owner_bp.route('/manajemen-meja')
 @login_required
@@ -285,6 +296,54 @@ def edit_menu(menu_id):
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})
 
+@owner_bp.route('/api/update-stok/<int:menu_id>', methods=['POST'])
+@login_required
+def update_stok_cepat(menu_id):
+    data = request.json
+    stok_baru = data.get('stok')
+    
+    try:
+        menu = db.session.get(Menu, menu_id)
+        if not menu:
+            return jsonify({"success": False, "message": "Menu tidak ditemukan."})
+            
+        # Update langsung stoknya
+        menu.stock = int(stok_baru)
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Stok diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal update stok."})
+
+@owner_bp.route('/api/menu-reviews/<int:menu_id>', methods=['GET'])
+@login_required
+def get_menu_reviews(menu_id):
+    menu = db.session.get(Menu, menu_id)
+    if not menu:
+        return jsonify({"success": False, "message": "Menu tidak ditemukan"})
+
+    reviews_data = []
+    for oi in menu.order_items:
+        if oi.review:
+            # Cari nama pelanggan (Walk-in atau punya akun)
+            customer_name = oi.order.customer_name or (oi.order.customer.name if oi.order.customer else "Tamu Anonim")
+            
+            reviews_data.append({
+                "rating": oi.review.rating,
+                "comment": oi.review.comment or "Tidak ada komentar tulisan.",
+                "date": oi.review.created_at.strftime("%d %b %Y"),
+                "customer": customer_name
+            })
+
+    # Urutkan ulasan dari yang paling baru (terkini)
+    reviews_data.sort(key=lambda x: datetime.strptime(x['date'], "%d %b %Y"), reverse=True)
+
+    return jsonify({
+        "success": True,
+        "reviews": reviews_data
+    })
+
 # ── Meja APIS ─────────────────────────────────────────
 @owner_bp.route('/api/tambah-meja', methods=['POST'])
 @login_required
@@ -315,10 +374,13 @@ def edit_meja(id):
     if not table:
         return jsonify({"success": False, "message": "Meja tidak ditemukan."})
 
+    # ✅ BARIKADE BARU: Cegah edit jika meja sedang dipakai tamu
+    if not table.is_available:
+        return jsonify({"success": False, "message": f"Gagal! Meja {table.table_number} sedang terisi/digunakan."})
+
     nomor_baru = request.form.get('nomor')
     kapasitas_baru = request.form.get('kapasitas')
     
-    # Cek duplikat jika nomor meja diganti
     if nomor_baru != table.table_number:
         if Table.query.filter_by(table_number=nomor_baru).first():
             return jsonify({"success": False, "message": "Nomor meja tersebut sudah digunakan."})
@@ -336,6 +398,10 @@ def edit_meja(id):
 @login_required
 def hapus_meja(id):
     table = Table.query.get_or_404(id)
+    
+    # ✅ BARIKADE BARU: Cegah hapus jika meja sedang dipakai tamu
+    if not table.is_available:
+        return jsonify({"success": False, "message": f"Gagal! Meja {table.table_number} sedang terisi oleh tamu. Selesaikan pesanan di kasir terlebih dahulu."})
     
     try:
         db.session.delete(table)
