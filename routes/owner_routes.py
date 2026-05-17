@@ -1,18 +1,20 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user 
-from models import User, CafeSetting, OperationalHour, Menu, Category, Table
+from models import User, CafeSetting, OperationalHour, Menu, Category, Table, Order, OrderItem
+from sqlalchemy import func
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 owner_bp = Blueprint('owner', __name__)
 
-@owner_bp.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('owner/dashboard.html')
+menu_data = [
+    {"id": 1, "nama": "Espresso", "kategori": "Coffee", "harga": 20000},
+    {"id": 2, "nama": "Matcha Latte", "kategori": "Non-Coffee", "harga": 25000},
+    {"id": 3, "nama": "Croissant", "kategori": "Food", "harga": 18000}
+]
 
 staff_data = [
     {"id": 1, "nama": "Andi Pratama", "shift": "Pagi",  "status": "online",  "total_transaksi": 42},
@@ -22,31 +24,89 @@ staff_data = [
 kasir_data = [
     {"id": 1, "nama": "Dimas",   "total_transaksi": 7,  "total_penjualan": 350000, "status": "online"},
     {"id": 2, "nama": "Bg Ari",  "total_transaksi": 3,  "total_penjualan": 100000, "status": "offline"},
-    {"id": 3, "nama": "Kak Aca", "total_transaksi": 15, "total_penjualan": 750000, "status": "online"},
+    {"id": 3, "nama": "Kak Aca", "total_transaksi": 15, "total_penjualan": 600000, "status": "online"}
 ]
 
-menu_data = [
-    {"id": 1,  "nama": "Ayam Geprek",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 13},
-    {"id": 2,  "nama": "Indomie Kuah",   "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
-    {"id": 3,  "nama": "Indomie Goreng", "kategori": "Food",       "harga": 12000, "status": True,  "stok": 30},
-    {"id": 4,  "nama": "Kentang Goreng", "kategori": "Snack",      "harga": 15000, "status": True,  "stok": 8},
-    {"id": 5,  "nama": "Nasi Goreng",    "kategori": "Food",       "harga": 20000, "status": True,  "stok": 12},
-    {"id": 6,  "nama": "Matcha",         "kategori": "Non Coffee", "harga": 17000, "status": True,  "stok": 18},
-    {"id": 7,  "nama": "Americano",      "kategori": "Coffee",     "harga": 15000, "status": True,  "stok": 25},
-    {"id": 8,  "nama": "Dimsum",         "kategori": "Snack",      "harga": 15000, "status": False, "stok": 0},
-    {"id": 9,  "nama": "Vanilla Latte",  "kategori": "Non Coffee", "harga": 18000, "status": True,  "stok": 17},
-    {"id": 10, "nama": "Beef Teriyaki",  "kategori": "Food",       "harga": 30000, "status": True,  "stok": 7},
-]
+@owner_bp.route('/dashboard')
+@login_required
+def dashboard():
+    # 1. Hitung Stat Utama dari Database (Menggunakan total_amount sesuai models.py)
+    total_penjualan_val = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid').scalar() or 0
+    total_order_val = Order.query.filter(Order.payment_status == 'paid').count()
+    
+    total_penjualan_formatted = f"Rp {total_penjualan_val:,}".replace(",", ".")
 
-transaksi_data = [
-    {"id_transaksi": "#TRX001", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
-    {"id_transaksi": "#TRX002", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
-    {"id_transaksi": "#TRX003", "tanggal": "06 Apr, 14:00:21", "metode": "QRIS",  "total": "Rp45.000"},
-    {"id_transaksi": "#TRX004", "tanggal": "06 Apr, 13:45:10", "metode": "Cash",  "total": "Rp32.000"},
-    {"id_transaksi": "#TRX005", "tanggal": "06 Apr, 13:20:05", "metode": "QRIS",  "total": "Rp58.000"},
-    {"id_transaksi": "#TRX006", "tanggal": "06 Apr, 12:55:33", "metode": "Cash",  "total": "Rp27.000"},
-    {"id_transaksi": "#TRX007", "tanggal": "06 Apr, 12:10:47", "metode": "Debit", "total": "Rp75.000"},
-]
+    # 2. Ambil Menu Terlaris dinamis dari OrderItem (Join Menu dan Order)
+    menu_terlaris_query = db.session.query(Menu.name, func.sum(OrderItem.qty).label('total_qty'))\
+        .join(OrderItem, OrderItem.menu_id == Menu.id)\
+        .join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid')\
+        .group_by(Menu.name)\
+        .order_by(func.sum(OrderItem.qty).desc()).first()
+        
+    menu_terlaris_name = menu_terlaris_query[0] if menu_terlaris_query else "-"
+    menu_terlaris_qty = menu_terlaris_query[1] if menu_terlaris_query else 0
+
+    # 3. Data untuk Donut Chart (Kategori Terlaris - Join ke Category)
+    category_data = db.session.query(Category.name, func.sum(OrderItem.qty))\
+        .join(Menu, Menu.category_id == Category.id)\
+        .join(OrderItem, OrderItem.menu_id == Menu.id)\
+        .join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid')\
+        .group_by(Category.name).all()
+    
+    chart_categories = [item[0] for item in category_data]
+    chart_category_qtys = [int(item[1]) for item in category_data]
+
+    # 4. Data untuk Line Chart (Pendapatan 7 Hari Terakhir)
+    hari_ini = datetime.utcnow().date()
+    tujuh_hari_lalu = hari_ini - timedelta(days=6)
+    
+    pendapatan_harian = db.session.query(
+        func.date(Order.created_at).label('tanggal'),
+        func.sum(Order.total_amount).label('total')
+    ).filter(Order.payment_status == 'paid', Order.created_at >= tujuh_hari_lalu)\
+     .group_by(func.date(Order.created_at))\
+     .order_by(func.date(Order.created_at)).all()
+     
+    line_labels = [p.tanggal.strftime('%a') for p in pendapatan_harian] 
+    line_values = [int(p.total) for p in pendapatan_harian]
+
+    if not line_labels:
+        line_labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+        line_values = [0, 0, 0, 0, 0, 0, 0]
+
+    # 5. Data Staff Overview (Dinamis dari tabel User dan Order)
+    # Melakukan outerjoin untuk menghitung berapa order yang ditangani setiap kasir/koki
+    staff_query = db.session.query(
+        User,
+        func.count(Order.id).label('total_transaksi')
+    ).outerjoin(Order, Order.cashier_id == User.id)\
+     .filter(User.role.in_(['kasir', 'koki']))\
+     .group_by(User.id).all()
+
+    dinamis_staff_data = []
+    for user, total_transaksi in staff_query:
+        dinamis_staff_data.append({
+            "nama": user.name,
+            # Karena di database belum ada kolom 'shift', kita buat logika dummy sementara (Ganjil=Pagi, Genap=Sore)
+            "shift": "Pagi" if user.id % 2 != 0 else "Sore",
+            "status": "online" if user.is_active else "offline",
+            "total_transaksi": total_transaksi
+        })
+
+    return render_template(
+        'owner/dashboard.html',
+        total_penjualan=total_penjualan_formatted,
+        total_order=total_order_val,
+        menu_terlaris=menu_terlaris_name,
+        menu_terlaris_qty=menu_terlaris_qty,
+        staff=dinamis_staff_data, 
+        line_labels=line_labels,
+        line_values=line_values,
+        chart_categories=chart_categories,
+        chart_category_qtys=chart_category_qtys
+    )
 
 @owner_bp.route('/manajemen-menu')
 @login_required
