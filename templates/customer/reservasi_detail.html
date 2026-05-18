@@ -9,11 +9,22 @@
             <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
                 <a href="/customer/buat-reservasi" class="text-gray-400 hover:text-terralogBlue transition">Reservasi Saya</a>
                 <span class="text-gray-400">›</span>
-                <a href="/customer/reservasi/history" class="text-gray-400 hover:text-terralogBlue transition">Riwayat</a>
+                
+                {% if reservation.status in ['pending', 'confirmed'] %}
+                    <a href="/customer/buat-reservasi" class="text-gray-400 hover:text-terralogBlue transition">Aktif</a>
+                {% else %}
+                    <a href="/customer/reservasi/history" class="text-gray-400 hover:text-terralogBlue transition">Riwayat</a>
+                {% endif %}
+                
                 <span class="text-gray-400">›</span>
                 <span class="text-terralogBlue">{{ reservation.reservation_number }}</span>
             </div>
-            <p class="text-gray-500 font-medium text-sm">Detail riwayat reservasi Anda</p>
+            
+            {% if reservation.status in ['pending', 'confirmed'] %}
+                <p class="text-gray-500 font-medium text-sm">Detail reservasi aktif Anda</p>
+            {% else %}
+                <p class="text-gray-500 font-medium text-sm">Detail riwayat reservasi Anda</p>
+            {% endif %}
         </div>
 
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
