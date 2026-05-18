@@ -118,10 +118,9 @@ def manajemen_meja():
 @owner_bp.route('/manajemen-kasir')
 @login_required
 def manajemen_kasir():
-    # ✅ SEKARANG DINAMIS: Mengambil data kasir dari tabel users
+    # 1. Ambil Data Kasir
     kasir_users = User.query.filter_by(role='kasir').all()
     kasir_list = []
-    
     for k in kasir_users:
         total_tx = Order.query.filter_by(cashier_id=k.id, payment_status='paid').count()
         total_sales = db.session.query(func.sum(Order.total_amount)).filter_by(cashier_id=k.id, payment_status='paid').scalar() or 0
@@ -135,11 +134,31 @@ def manajemen_kasir():
             "total_penjualan": total_sales
         })
         
+    # 2. Ambil Data Koki
+    koki_users = User.query.filter_by(role='koki').all()
+    koki_list = []
+    for c in koki_users:
+        # Placeholder metrik Koki (karena koki_id belum berelasi langsung dengan OrderItem di model saat ini)
+        koki_list.append({
+            "id": c.id,
+            "nama": c.name,
+            "username": c.username,
+            "total_pesanan": 0,  
+            "avg_speed": "-",    
+            "status": "online" if c.is_active else "offline"
+        })
+
+    # 3. Hitung Statistik Ringkasan
     kasir_online = sum(1 for k in kasir_list if k['status'] == 'online')
+    koki_online = sum(1 for c in koki_list if c['status'] == 'online')
+    total_staff = len(kasir_list) + len(koki_list)
+
     return render_template('owner/manajemen-kasir.html',
         kasir_list=kasir_list,
-        kasir_online=kasir_online, 
-        total_kasir=len(kasir_list)
+        koki_list=koki_list,
+        kasir_online=kasir_online,
+        koki_online=koki_online,
+        total_staff=total_staff
     )
 
 @owner_bp.route('/laporan-penjualan')
