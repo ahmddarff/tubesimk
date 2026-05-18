@@ -168,7 +168,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('riwayatTransaksi', () => ({
         searchQuery: '',
         filterMethod: '',
-        filterDate: new Date().toISOString().split('T')[0],
+        filterDate: '',
         filterSumber: 'SEMUA',
         currentUserName: '{{ current_user.name }}', // Jinja akan menyuntikkan nama akun yang sedang login
         

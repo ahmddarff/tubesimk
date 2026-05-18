@@ -144,9 +144,46 @@ def manajemen_kasir():
 @owner_bp.route('/laporan-penjualan')
 @login_required
 def laporan_penjualan():
-    # ✅ SEKARANG DINAMIS: Mengambil riwayat transaksi langsung dari database order
-    orders = Order.query.order_by(Order.created_at.desc()).all()
-    return render_template('owner/laporan-penjualan.html', transaksi_list=orders)
+    # 1. Hitung Statistik Utama (Hanya pesanan LUNAS)
+    paid_orders = Order.query.filter_by(payment_status='paid').all()
+    
+    total_penjualan = sum(o.total_amount for o in paid_orders)
+    total_order = len(paid_orders)
+    rata_rata = total_penjualan / total_order if total_order > 0 else 0
+
+    # 2. Data Grafik Penjualan (7 Hari Terakhir)
+    hari_ini = datetime.utcnow().date()
+    tujuh_hari_lalu = hari_ini - timedelta(days=6)
+    
+    pendapatan_harian = db.session.query(
+        func.date(Order.created_at).label('tanggal'),
+        func.sum(Order.total_amount).label('total')
+    ).filter(Order.payment_status == 'paid', Order.created_at >= tujuh_hari_lalu)\
+        .group_by(func.date(Order.created_at))\
+        .order_by(func.date(Order.created_at)).all()
+    
+    chart_labels = [p.tanggal.strftime('%d %b') for p in pendapatan_harian]
+    chart_data = [int(p.total) for p in pendapatan_harian]
+
+    if not chart_labels:
+        chart_labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+        chart_data = [0, 0, 0, 0, 0, 0, 0]
+
+    # 3. Hanya ambil order lunas (paid & served) ATAU yang dibatalkan (cancelled)
+    orders = Order.query.filter(
+        db.or_(
+            db.and_(Order.payment_status == 'paid', Order.order_status == 'served'),
+            Order.payment_status == 'cancelled'
+        )
+    ).order_by(Order.created_at.desc()).all()
+    
+    return render_template('owner/laporan-penjualan.html', 
+                            transaksi_list=orders,
+                            total_penjualan=total_penjualan,
+                            total_order=total_order,
+                            rata_rata=rata_rata,
+                            chart_labels=chart_labels,
+                            chart_data=chart_data)
 
 @owner_bp.route('/pengaturan')
 @login_required

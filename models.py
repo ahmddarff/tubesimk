@@ -135,7 +135,7 @@ class Order(db.Model):
     user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cashier_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name   = db.Column(db.String(100), nullable=True)
-    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) # Nullable untuk Take Away
+    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) # Nullable untuk Take Away atau pesanan selesai untuk Dine In
     table_number_snapshot = db.Column(db.String(20), nullable=True) # Snapshot nomor meja saat order dibuat (untuk histori)
     order_type      = db.Column(db.Enum('dine_in', 'take_away', name='order_type'), nullable=False)
     order_status    = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='order_status'), default='pending')

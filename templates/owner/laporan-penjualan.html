@@ -3,220 +3,314 @@
 {% block breadcrumb %}Laporan Penjualan{% endblock %}
 
 {% block content %}
+<div x-data="laporanPenjualan()" x-cloak>
 
-<!-- Filter Row -->
-<div class="flex items-center gap-3 mb-6">
-    <!-- Periode -->
-    <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-gray-500">Periode</label>
-        <div class="relative">
-            <select id="filterPeriode"
-                    class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-9 text-sm font-medium text-gray-700 outline-none focus:border-[#1B2FAA] cursor-pointer transition-colors">
-                <option>April 2026</option>
-                <option>Maret 2026</option>
-                <option>Februari 2026</option>
-                <option>Januari 2026</option>
-            </select>
-            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Laporan Penjualan</h1>
+            <p class="text-gray-500 mt-1 text-sm">Pantau statistik pendapatan, tren transaksi, dan riwayat pesanan kafe Anda</p>
         </div>
-    </div>
-
-    <!-- Kategori -->
-    <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-gray-500">Kategori</label>
-        <div class="relative">
-            <select id="filterKategori"
-                    class="appearance-none bg-white border border-gray-200 rounded-xl px-4 py-2.5 pr-9 text-sm font-medium text-gray-700 outline-none focus:border-[#1B2FAA] cursor-pointer transition-colors">
-                <option>Semua</option>
-                <option>Coffee</option>
-                <option>Non Coffee</option>
-                <option>Food</option>
-                <option>Snack</option>
-            </select>
-            <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
-        </div>
-    </div>
-
-    <!-- Unduh Laporan -->
-    <div class="flex flex-col gap-1">
-        <label class="text-xs font-semibold text-transparent select-none">‎</label>
-        <button onclick="unduhLaporan()"
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
-            <i class="fa-solid fa-download"></i>
+        <button @click="unduhLaporan()"
+                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:shadow-lg transition-all active:scale-95">
+            <i data-lucide="download" class="w-5 h-5"></i>
             Unduh Laporan
         </button>
     </div>
-</div>
 
-<!-- Stat Cards -->
-<div class="grid grid-cols-3 gap-5 mb-5">
-
-    <!-- Total Penjualan -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="mb-3">
-            <span class="text-sm font-semibold text-gray-500">Total Penjualan</span>
-        </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-500 text-lg flex-shrink-0">
-                <i class="fa-solid fa-chart-line"></i>
+    <div class="grid grid-cols-3 gap-4 mb-6">
+        
+        <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
+            <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
+            
+            <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
+                <i data-lucide="banknote" class="w-5 h-5"></i>
             </div>
-            <span class="text-2xl font-extrabold text-gray-900">Rp2.500.000,00</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
-            </span>
-            <span class="text-xs text-gray-400">vs bulan lalu</span>
-        </div>
-    </div>
 
-    <!-- Total Order -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="mb-3">
-            <span class="text-sm font-semibold text-gray-500">Total Order</span>
-        </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 text-lg flex-shrink-0">
-                <i class="fa-solid fa-receipt"></i>
+            <div class="relative z-10">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Pendapatan Bersih</p>
+                <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">Rp {{ "{:,.0f}".format(total_penjualan).replace(',', '.') }}</h3>
             </div>
-            <span class="text-2xl font-extrabold text-gray-900">124</span>
         </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
-            </span>
-            <span class="text-xs text-gray-400">vs bulan lalu</span>
-        </div>
-    </div>
 
-    <!-- Rata-rata Penjualan -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="mb-3">
-            <span class="text-sm font-semibold text-gray-500">Rata-rata Penjualan</span>
-        </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-500 text-lg flex-shrink-0">
-                <i class="fa-solid fa-chart-bar"></i>
+        <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
+            <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
+            
+            <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
             </div>
-            <span class="text-2xl font-extrabold text-gray-900">Rp36.500</span>
+
+            <div class="relative z-10">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Transaksi Sukses</p>
+                <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">{{ total_order }}</h3>
+            </div>
         </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i> Rp2.000
-            </span>
-            <span class="text-xs text-gray-400">vs bulan lalu</span>
+
+        <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
+            <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
+            
+            <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
+                <i data-lucide="calculator" class="w-5 h-5"></i>
+            </div>
+
+            <div class="relative z-10">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Rata-rata Nilai Transaksi</p>
+                <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">Rp {{ "{:,.0f}".format(rata_rata).replace(',', '.') }}</h3>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
+        <h3 class="text-sm font-bold text-terralogBlue mb-4">Grafik Pendapatan (7 Hari Terakhir)</h3>
+        <div class="h-64 relative">
+            <canvas id="laporanSalesChart"></canvas>
         </div>
     </div>
-</div>
 
-<!-- Weekly Sales Chart -->
-<div class="bg-white rounded-2xl p-6 shadow-sm mb-5">
-    <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Analitik Penjualan Mingguan</h3>
-    <div class="h-56 relative">
-        <canvas id="laporanSalesChart"></canvas>
-    </div>
-</div>
+    <div class="flex flex-wrap gap-3 mb-4 items-center">
+        
+        <div class="relative flex-1 min-w-[250px]">
+            <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="text" x-model="searchQuery" @input="currentPage = 1" placeholder="Cari Order ID..." 
+                   class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
+        </div>
 
-<!-- Riwayat Transaksi -->
-<div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <h3 class="text-sm font-bold text-[#1B2FAA]">Riwayat Transaksi Terakhir</h3>
-        <div class="relative">
-            <select id="filterRiwayat"
-                    class="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 pr-8 text-xs font-medium text-gray-600 outline-none focus:border-[#1B2FAA] cursor-pointer transition-colors">
-                <option>Hari ini</option>
-                <option>Minggu ini</option>
-                <option>Bulan ini</option>
+        <div class="w-48 relative">
+            <i data-lucide="monitor-smartphone" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterSumber" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Sumber</option>
+                <option value="App Mandiri">App Mandiri</option>
+                <option value="Kasir">Kasir</option>
             </select>
-            <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none"></i>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+        </div>
+
+        <div class="w-48 relative">
+            <i data-lucide="credit-card" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterMetode" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Metode</option>
+                <option value="CASH">CASH</option>
+                <option value="QRIS">QRIS</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+        </div>
+
+        <div class="w-48 relative">
+            <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="date" x-model="filterTanggal" @change="currentPage = 1" 
+                   class="w-full pl-10 pr-4 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition cursor-pointer">
+        </div>
+        
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <h3 class="text-sm font-bold text-terralogBlue">Riwayat Transaksi</h3>
+        </div>
+
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-sm border-collapse text-left">
+                <thead>
+                    <tr class="border-b border-gray-100 bg-white">
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Order ID</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Sumber</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Metode</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Total (Rp)</th>
+                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="t in pagedTransaksi" :key="t.order_number">
+                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
+                            <td class="px-6 py-4 font-bold text-gray-800" x-text="t.order_number"></td>
+                            <td class="px-6 py-4 text-gray-600 font-medium" x-text="t.tanggal"></td>
+                            
+                            <td class="px-6 py-4 text-center">
+                                <template x-if="t.sumber === 'App Mandiri'">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-purple-50 text-purple-600 border border-purple-200 text-[10px] font-black uppercase tracking-widest"><i data-lucide="smartphone" class="w-3 h-3"></i> App Mandiri</span>
+                                </template>
+                                <template x-if="t.sumber === 'Kasir'">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-terralogBlue border border-blue-200 text-[10px] font-black uppercase tracking-widest"><i data-lucide="monitor" class="w-3 h-3"></i> Kasir</span>
+                                </template>
+                            </td>
+
+                            <td class="px-6 py-4 text-center">
+                                <template x-if="t.metode === 'QRIS'">
+                                    <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">QRIS</span>
+                                </template>
+                                <template x-if="t.metode === 'CASH'">
+                                    <span class="text-xs font-black text-amber-600 bg-amber-50 px-2 py-1 rounded">CASH</span>
+                                </template>
+                                <template x-if="t.metode === '-'">
+                                    <span class="text-xs font-bold text-gray-400">-</span>
+                                </template>
+                            </td>
+                            
+                            <td class="px-6 py-4 font-black text-terralogBlue text-right" x-text="Number(t.total).toLocaleString('id-ID')"></td>
+
+                            <td class="px-6 py-4 text-center">
+                                <template x-if="t.status === 'paid'">
+                                    <span class="text-[10px] font-bold text-white bg-emerald-500 px-2.5 py-1 rounded-lg shadow-sm">LUNAS</span>
+                                </template>
+                                <template x-if="t.status === 'cancelled'">
+                                    <span class="text-[10px] font-bold text-white bg-red-500 px-2.5 py-1 rounded-lg shadow-sm">BATAL</span>
+                                </template>
+                                <template x-if="t.status === 'unpaid'">
+                                    <span class="text-[10px] font-bold text-white bg-orange-500 px-2.5 py-1 rounded-lg shadow-sm">BELUM BAYAR</span>
+                                </template>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="filteredTransaksi.length === 0">
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-bold">Data tidak ditemukan.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-6 py-4 bg-white flex justify-end items-center gap-2 border-t border-gray-100 flex-none">
+            <div class="flex items-center gap-1 mr-4">
+                <span class="text-xs text-gray-500">Total</span>
+                <div class="bg-gray-100 px-3 py-1 rounded-lg border border-gray-200 text-xs font-bold mx-1" x-text="filteredTransaksi.length"></div>
+                <span class="text-xs text-gray-500">data</span>
+            </div>
+
+            <button @click="currentPage > 1 && currentPage--" :class="currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-terralogBlue hover:text-terralogBlue'" class="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md transition-colors cursor-pointer outline-none">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <template x-for="p in totalPages" :key="p">
+                <button @click="currentPage = p" 
+                        class="w-7 h-7 flex items-center justify-center border rounded-md text-xs transition-all cursor-pointer outline-none"
+                        :class="currentPage === p ? 'border-terralogBlue bg-terralogBlue text-white font-bold' : 'border-gray-200 text-gray-500 hover:border-terralogBlue hover:text-terralogBlue'"
+                        x-text="p"></button>
+            </template>
+            
+            <button @click="currentPage < totalPages && currentPage++" :class="currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:border-terralogBlue hover:text-terralogBlue'" class="w-7 h-7 flex items-center justify-center border border-gray-200 rounded-md transition-colors cursor-pointer outline-none">
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+            </button>
+
+            <div class="ml-4 flex items-center">
+                <select x-model="itemsPerPage" @change="currentPage = 1" class="border border-gray-200 rounded-md px-2 py-1 text-xs outline-none focus:border-terralogBlue text-gray-600 font-medium cursor-pointer">
+                    <option value="25">25 / halaman</option>
+                    <option value="50">50 / halaman</option>
+                    <option value="100">100 / halaman</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <table class="w-full text-sm border-collapse">
-        <thead>
-            <tr class="border-b border-gray-100 bg-gray-50/50">
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500">ID Transaksi</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500">Tanggal & Waktu</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500">Metode Bayar</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500">Total Bayar</th>
-            </tr>
-        </thead>
-        <tbody id="transaksiTableBody">
-            {% for t in transaksi_list %}
-            <tr class="border-b border-gray-100 hover:bg-blue-50/30 transition-colors">
-                <td class="px-6 py-3.5 text-sm text-gray-700 font-medium">{{ t.id_transaksi }}</td>
-                <td class="px-6 py-3.5 text-sm text-gray-600">{{ t.tanggal }}</td>
-                <td class="px-6 py-3.5">
-                    {% if t.metode == 'QRIS' %}
-                        <span class="text-sm font-bold text-purple-600">QRIS</span>
-                    {% elif t.metode == 'Cash' %}
-                        <span class="text-sm font-bold text-green-600">Cash</span>
-                    {% else %}
-                        <span class="text-sm font-bold text-blue-600">{{ t.metode }}</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-3.5 text-sm font-semibold text-gray-800">{{ t.total }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 
+<script id="chart-labels" type="application/json">{{ chart_labels | tojson | safe }}</script>
+<script id="chart-data" type="application/json">{{ chart_data | tojson | safe }}</script>
+<script id="transaksi-data" type="application/json">
+[
+    {% for t in transaksi_list %}
+    {
+        "order_number": "{{ t.order_number }}",
+        "tanggal": "{{ t.created_at.strftime('%d %b %Y, %H:%M') }}",
+        "tanggal_mentah": "{{ t.created_at.strftime('%Y-%m-%d') }}",
+        "sumber": "{{ 'App Mandiri' if t.user_id else 'Kasir' }}",
+        "metode": "{{ t.payment_method | upper if t.payment_method else '-' }}",
+        "total": {{ t.total_amount }},
+        "status": "{{ t.payment_status }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Weekly Sales Chart
-new Chart(document.getElementById('laporanSalesChart').getContext('2d'), {
-    type: 'line',
-    data: {
-        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
-        datasets: [{
-            data: [1600000, 1900000, 1700000, 800000, 1400000, 2000000, 1100000],
-            borderColor: '#F5A623',
-            backgroundColor: 'rgba(245,166,35,0.08)',
-            borderWidth: 2.5,
-            pointBackgroundColor: '#F5A623',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.3,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: {
-                beginAtZero: true,
-                max: 2400000,
-                ticks: {
-                    stepSize: 600000,
-                    color: '#9CA3AF',
-                    font: { family: 'Plus Jakarta Sans', size: 11 },
-                    callback: v => v === 0 ? '0' : (v / 1000000).toFixed(1) + 'jt'
+document.addEventListener('alpine:init', () => {
+    Alpine.data('laporanPenjualan', () => ({
+        searchQuery: '',
+        filterTanggal: '',
+        filterSumber: 'SEMUA',
+        filterMetode: 'SEMUA',
+        
+        currentPage: 1,
+        itemsPerPage: 25,
+        
+        transaksi: JSON.parse(document.getElementById('transaksi-data').textContent || '[]'),
+        
+        get filteredTransaksi() {
+            let res = this.transaksi.filter(t => {
+                const matchSearch = t.order_number.toLowerCase().includes(this.searchQuery.toLowerCase());
+                const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
+                const matchMetode = this.filterMetode === 'SEMUA' || t.metode === this.filterMetode;
+                const matchTanggal = this.filterTanggal === '' || t.tanggal_mentah === this.filterTanggal;
+                return matchSearch && matchSumber && matchMetode && matchTanggal;
+            });
+            return res;
+        },
+
+        get pagedTransaksi() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const res = this.filteredTransaksi.slice(start, start + parseInt(this.itemsPerPage));
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+            return res;
+        },
+
+        get totalPages() {
+            return Math.ceil(this.filteredTransaksi.length / this.itemsPerPage);
+        },
+
+        init() {
+            this.initChart();
+        },
+
+        initChart() {
+            const chartLabels = JSON.parse(document.getElementById('chart-labels').textContent || '[]');
+            const chartData = JSON.parse(document.getElementById('chart-data').textContent || '[]');
+
+            new Chart(document.getElementById('laporanSalesChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Pendapatan (Rp)',
+                        data: chartData,
+                        borderColor: '#0022AA',
+                        backgroundColor: 'rgba(0, 34, 170, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#0022AA',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.4, 
+                        fill: true
+                    }]
                 },
-                grid: { color: 'rgba(0,0,0,0.05)' }
-            },
-            x: {
-                ticks: { color: '#9CA3AF', font: { family: 'Plus Jakarta Sans', size: 11 } },
-                grid: { display: false }
-            }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#9CA3AF',
+                                font: { family: 'Inter', size: 11, weight: 'bold' },
+                                callback: v => v === 0 ? '0' : 'Rp ' + (v / 1000).toLocaleString('id-ID') + 'k'
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] }
+                        },
+                        x: {
+                            ticks: { color: '#9CA3AF', font: { family: 'Inter', size: 11, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        },
+
+        unduhLaporan() {
+            showToast('Menyiapkan data laporan...', 'success');
         }
-    }
-});
-
-// Unduh Laporan
-function unduhLaporan() {
-    const periode  = document.getElementById('filterPeriode').value;
-    const kategori = document.getElementById('filterKategori').value;
-    showToast(`Laporan ${periode} - ${kategori} sedang diunduh...`);
-}
-
-// Filter Riwayat
-document.getElementById('filterRiwayat').addEventListener('change', function() {
-    showToast(`Menampilkan transaksi: ${this.value}`);
+    }));
 });
 </script>
 {% endblock %}
