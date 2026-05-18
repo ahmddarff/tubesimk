@@ -15,26 +15,30 @@ koki_bp = Blueprint('koki', __name__)
 @koki_bp.route('/antrean-order')
 @login_required
 def antrian():
-    # Ambil order yang statusnya pending, preparing, atau ready (belum served/selesai)
-    orders_db = Order.query.filter(Order.order_status.in_(['pending', 'preparing', 'ready']))\
-                           .order_by(Order.created_at.asc()).all()
+    # ✅ PROTEKSI ANTI-FIKTIF: Kasir boleh unpaid, Pesanan Mandiri aplikasi wajib PAID!
+    orders_db = Order.query.filter(
+        Order.order_status.in_(['pending', 'preparing', 'ready']),
+        Order.payment_status != 'cancelled',
+        db.or_(
+            Order.user_id.is_(None), 
+            db.and_(Order.user_id.isnot(None), Order.payment_status == 'paid')
+        )
+    ).order_by(Order.created_at.asc()).all()
     
-    # Hitung jumlah antrean baru (pending) untuk indikator badge navbar koki
-    pending_count = Order.query.filter_by(order_status='pending').count()
+    pending_count = sum(1 for o in orders_db if o.order_status == 'pending')
     
     formatted_orders = []
     for o in orders_db:
         items_list = []
         for item in o.items:
-            # ✅ Proteksi Null-Safe: Jaga-jaga jika ada menu yang dihapus owner dari DB
-            nama_menu = item.menu.name if item.menu else "Menu Terhapus"
             items_list.append({
-                "nama": nama_menu,
+                "id": item.id,
+                "nama": item.menu.name if item.menu else "Menu Terhapus",
                 "qty": item.qty,
-                "catatan": item.notes or ""
+                "catatan": item.notes or "",
+                "status": item.item_status # 'pending', 'preparing', 'ready', atau 'served'
             })
             
-        # ✅ Gunakan snapshot nomor meja agar lebih konsisten dan aman dari crash relasi
         info_meja = o.table_number_snapshot if o.table_number_snapshot else "Take Away"
         if o.order_type == 'dine_in' and o.table_number_snapshot:
             info_meja = f"Meja {o.table_number_snapshot}"
@@ -44,6 +48,7 @@ def antrian():
             "id_display": o.order_number,
             "waktu": o.created_at.strftime("%H:%M"),
             "meja": info_meja,
+            "sumber": "Aplikasi" if o.user_id else "Kasir",
             "status": o.order_status,
             "items": items_list
         })
@@ -144,6 +149,65 @@ def update_password():
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
+    
+# ── ANTREAN ORDER APIS ──────────────────────────────────────────────
+@koki_bp.route('/api/koki/update-kitchen-status', methods=['POST'])
+@login_required
+def update_kitchen_status():
+    data = request.json
+    order_id = data.get('order_id')
+    item_id = data.get('item_id')
+    new_status = data.get('status') # 'preparing' atau 'ready'
+    
+    # Ambil fungsi otomasi status bawaan sistem Terralog
+    from utils import auto_sync_order_status
+    
+    try:
+        if item_id:
+            # A. PROSES PER ITEM (Koki klik tombol aksi granular per masakan)
+            item = db.session.get(OrderItem, int(item_id))
+            if not item:
+                return jsonify({"success": False, "message": "Item menu tidak ditemukan."}), 404
+            
+            item.item_status = new_status
+            
+            # 🔥 SINKRONISASI OTOMATIS: Panggil fungsi sakti dari utils.py
+            auto_sync_order_status(item.order)
+            db.session.commit()
+            
+            return jsonify({
+                "success": True,
+                "message": f"Status {item.menu.name if item.menu else 'item'} berhasil diperbarui!",
+                "new_order_status": item.order.order_status
+            })
+            
+        elif order_id:
+            # B. PROSES BULK SEMUA ITEM (Koki klik tombol Proses/Selesaikan Semua)
+            order = db.session.get(Order, int(order_id))
+            if not order:
+                return jsonify({"success": False, "message": "Pesanan tidak ditemukan."}), 404
+            
+            for item in order.items:
+                if new_status == 'preparing' and item.item_status == 'pending':
+                    item.item_status = 'preparing'
+                elif new_status == 'ready' and item.item_status in ['pending', 'preparing']:
+                    item.item_status = 'ready'
+            
+            # 🔥 SINKRONISASI OTOMATIS: Berlaku juga untuk perubahan borongan
+            auto_sync_order_status(order)
+            db.session.commit()
+            
+            return jsonify({
+                "success": True,
+                "message": f"Seluruh item pada {order.order_number} berhasil diperbarui!",
+                "new_order_status": order.order_status
+            })
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+        
+    return jsonify({"success": False, "message": "Request tidak valid."}), 400
 
 # ── STOCK MENU APIS ──────────────────────────────────────────────
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
