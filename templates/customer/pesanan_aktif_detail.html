@@ -368,8 +368,7 @@
             // Logika setelah pengguna menekan "Tutup" pada popup sukses
             finishReviewProcess() {
                 this.showSuccessModal = false;
-                // Memuat ulang halaman agar pesanan otomatis berpindah ke tab Riwayat (sesuai logika backend sebelumnya)
-                window.location.href = '/customer/pesanan-saya/history';            
+                window.location.href = '/customer/pesanan/' + this.order.id;
             }
         }
     }

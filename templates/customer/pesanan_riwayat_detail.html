@@ -1,0 +1,170 @@
+{% extends 'layout.html' %}
+
+{% block title %}Detail Riwayat Pesanan - Terralog{% endblock %}
+
+{% block content %}
+<div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="pesananRiwayatApp()" @load="$watch('items', () => lucide.createIcons())" x-cloak>
+    <div class="max-w-7xl mx-auto">
+        
+        <div class="mb-8">
+            <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+                <a href="/customer/pesanan-saya" class="text-gray-400 hover:text-terralogBlue transition">Pesanan Saya</a>
+                <span class="text-gray-400">›</span>
+                <a href="/customer/pesanan-saya/history" class="text-gray-400 hover:text-terralogBlue transition">Riwayat</a>
+                <span class="text-gray-400">›</span>
+                <span class="text-terralogBlue" x-text="order.order_number || '-'"></span>
+            </div>
+            <p class="text-gray-500 font-medium text-sm">Detail riwayat pesanan Anda</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
+            
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
+                    <h2 class="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-terralogBlue"></i> Informasi Pesanan
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Nama Pemesan</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.customer_name || '{{ current_user.name }}'"></p>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">No. Pesanan</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.order_number || '-'"></p>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Tipe Pesanan</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.order_type === 'dine_in' ? 'Dine In' : 'Take Away'"></p>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Nomor Meja</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="order.no_meja || '-'"></p>
+                        </div>
+                        <div>
+                            <label class="text-slate-500 text-[10px] font-bold uppercase tracking-wider block mb-1">Metode Bayar</label>
+                            <p class="text-slate-800 text-base font-bold" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai')"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">
+                    <div class="flex justify-between items-end mb-5">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="shopping-bag" class="w-5 h-5 text-terralogBlue"></i> Pesanan Anda
+                        </h2>
+                        <span class="text-sm font-bold text-terralogBlue bg-blue-50 px-3 py-1 rounded-full" x-text="`${items.length} Item`"></span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="rounded-2xl p-4 border transition-all flex gap-4 items-start bg-white border-slate-100 shadow-sm">
+                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200">
+                                    <template x-if="item.img">
+                                        <img :src="item.img" :alt="item.nama" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!item.img">
+                                        <div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                            <i data-lucide="image" class="w-6 h-6"></i>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="flex-1">
+                                    <div class="flex items-start justify-between mb-1">
+                                        <div>
+                                            <h4 class="font-bold text-slate-900 text-base" x-text="item.nama"></h4>
+                                            <p class="font-bold text-terralogBlue text-sm" x-text="`Rp ${item.harga.toLocaleString('id-ID')}`"></p>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-3">
+                                            <template x-if="item.rating">
+                                                <div class="flex items-center gap-0.5 bg-white border border-slate-100 px-2 py-1 rounded-lg shadow-sm">
+                                                    <template x-for="i in 5">
+                                                        <span class="text-base leading-none" 
+                                                              :class="i <= item.rating ? 'text-amber-400' : 'text-slate-200'">
+                                                            ★
+                                                        </span>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <span class="bg-slate-100 text-slate-700 font-bold px-3 py-1 rounded-lg text-sm" x-text="`${item.qty}x`"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div x-show="item.note" class="mt-2 bg-slate-50 rounded-lg p-2.5 border border-slate-100 flex items-start gap-2">
+                                        <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0"></i>
+                                        <p class="text-slate-600 text-xs font-medium" x-text="item.note"></p>
+                                    </div>
+
+                                    <div x-show="item.comment" class="mt-2 bg-blue-50/50 rounded-lg p-3 border border-blue-100 flex items-start gap-2">
+                                        <i data-lucide="thumbs-up" class="w-4 h-4 text-terralogBlue mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <span class="text-[10px] font-bold text-terralogBlue uppercase tracking-wider block mb-0.5">Ulasan Anda</span>
+                                            <p class="text-slate-700 text-xs italic font-medium leading-relaxed" x-text="`&quot;${item.comment}&quot;`"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-[24px] shadow-lg border border-slate-100 p-6 sticky top-28">
+                    <h3 class="text-sm font-bold text-slate-900 mb-4 uppercase tracking-wider">Ringkasan Pembayaran</h3>
+                    
+                    <div class="space-y-4 mb-6">
+                        <template x-for="(item, index) in items" :key="index">
+                            <div class="flex justify-between text-sm text-slate-600 font-medium">
+                                <span class="line-clamp-1 pr-4" x-text="`${item.qty}x ${item.nama}`"></span>
+                                <span class="shrink-0" x-text="`Rp ${(item.qty * item.harga).toLocaleString('id-ID')}`"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-4">
+                        <div class="flex justify-between items-end">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Akhir</span>
+                            <span class="text-2xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+
+<script>
+    function pesananRiwayatApp() {
+        let serverData = null;
+        try {
+            // Parsing aman untuk mencegah blank page
+            const rawData = '{{ order_json|tojson if order_json else "{}"|safe }}';
+            serverData = JSON.parse(rawData);
+        } catch(e) {
+            console.error("Gagal memuat data:", e);
+            serverData = {};
+        }
+        
+        return {
+            items: serverData.items || [],
+            paymentMethod: serverData.payment_method || '-',
+            total: serverData.total_amount || 0,
+            order: serverData,
+
+            init() {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}
