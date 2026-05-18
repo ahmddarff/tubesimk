@@ -22,6 +22,10 @@ def handle_db_error(e):
     </div>
     """, 503
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', is_404=True), 404
+
 # ==========================================
 # KONFIGURASI DATABASE
 # ==========================================

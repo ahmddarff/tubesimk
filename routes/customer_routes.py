@@ -2,7 +2,7 @@ import os, random, string
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash, current_app, abort
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
@@ -680,13 +680,13 @@ def checkout():
 @customer_bp.route('/pesan-lagi/<int:order_id>')
 @login_required
 def pesan_lagi(order_id):
-
     old_order = Order.query.options(
         joinedload(Order.items)
-    ).filter_by(
-        id=order_id,
-        user_id=current_user.id
-    ).first_or_404()
+    ).filter_by(id=order_id).first_or_404()
+
+    # Perlindungan IDOR
+    if old_order.user_id != current_user.id:
+        abort(404)
 
     # Cari cart aktif
     active_order = get_active_cart(current_user.id)
@@ -794,14 +794,15 @@ def update_cart_note():
 @customer_bp.route('/pesanan/<int:order_id>')
 @login_required
 def pesanan_detail(order_id):
-    # Mengambil data order beserta relasi items, menu, dan review secara eksplisit
+# Mengambil data order beserta relasi items, menu, dan review secara eksplisit
     order = Order.query.options(
         joinedload(Order.items).joinedload(OrderItem.menu),
         joinedload(Order.items).joinedload(OrderItem.review)
-    ).filter_by(
-        id=order_id,
-        user_id=current_user.id
-    ).first_or_404()
+    ).filter_by(id=order_id).first_or_404()
+
+    # Perlindungan IDOR
+    if order.user_id != current_user.id:
+        abort(404)
 
     # PERBAIKAN LOGIKA: Cek apakah pesanan sudah memiliki ulasan pada item-itemnya
     has_review = any(item.review is not None for item in order.items)
@@ -853,8 +854,12 @@ def pesanan_detail(order_id):
 @customer_bp.route('/pembayaran-nontunai/<int:order_id>')
 @login_required
 def pembayaran_nontunai(order_id):
-    # Ambil data order milik user yang sedang login
-    order = Order.query.filter_by(id=order_id, user_id=current_user.id).first_or_404()
+    # Ambil data order
+    order = Order.query.filter_by(id=order_id).first_or_404()
+    
+    # Perlindungan IDOR
+    if order.user_id != current_user.id:
+        abort(404)
     
     # Ambil data penting untuk dikirim ke Alpine.js secara aman
     order_data = {
