@@ -150,9 +150,14 @@
                         <p class="text-lg font-bold text-gray-800 mb-3">Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
                     </div>
 
-                    <a href="/customer/pesan-lagi/{{ order.id }}" class="w-full py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition inline-block text-center">
-                        Pesan Lagi
-                    </a>
+                    <div class="flex gap-3 mt-4">
+                        <a href="/customer/pesanan/{{ order.id }}" class="flex-1 py-2 border-2 border-terralogBlue text-terralogBlue rounded-lg font-bold text-sm hover:bg-blue-50 transition text-center">
+                            Lihat Detail
+                        </a>
+                        <a href="/customer/pesan-lagi/{{ order.id }}" class="flex-1 py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition text-center">
+                            Pesan Lagi
+                        </a>
+                    </div>
                 </div>
                 {% endfor %}
             </div>

@@ -770,15 +770,18 @@ def update_cart_note():
 @customer_bp.route('/pesanan/<int:order_id>')
 @login_required
 def pesanan_detail(order_id):
-
+    # Mengambil data order beserta relasi items, menu, dan review secara eksplisit
     order = Order.query.options(
-        joinedload(Order.items).joinedload(OrderItem.menu)
+        joinedload(Order.items).joinedload(OrderItem.menu),
+        joinedload(Order.items).joinedload(OrderItem.review)
     ).filter_by(
         id=order_id,
         user_id=current_user.id
     ).first_or_404()
 
-    # Konversi objek SQLAlchemy menjadi dictionary murni agar aman di-serialize ke JSON
+    # Menentukan apakah pesanan termasuk dalam kategori riwayat/selesai
+    is_history = order.payment_status == 'cancelled' or order.order_status == 'served'
+
     order_dict = {
         'id': order.id,
         'order_number': order.order_number,
@@ -787,7 +790,7 @@ def pesanan_detail(order_id):
         'payment_status': order.payment_status,
         'order_status': order.order_status,
         'order_type': order.order_type,
-        'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',  # Tambahkan baris ini
+        'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',
         'total_amount': order.total_amount,
         'items': [{
             'id': item.id,
@@ -795,9 +798,21 @@ def pesanan_detail(order_id):
             'harga': item.price_at_order,
             'qty': item.qty,
             'img': item.menu.image_url,
-            'note': item.notes
+            'note': item.notes,
+            'rating': item.review.rating if item.review else None, # Menambahkan data rating
+            'comment': item.review.comment if item.review else None # Menambahkan data komentar ulasan
         } for item in order.items]
     }
+
+    # Jika pesanan sudah selesai/batal, arahkan ke halaman baru
+    if is_history:
+        return render_template(
+            'customer/pesanan_riwayat_detail.html',
+            segment='pesanan_saya',
+            role='customer',
+            order=order,
+            order_json=order_dict
+        )
 
     return render_template(
         'customer/pesanan_aktif_detail.html',
@@ -806,15 +821,6 @@ def pesanan_detail(order_id):
         order=order,
         order_json=order_dict
     )
-
-@customer_bp.route('/pesanan/<order_id>/selesai')
-def pesanan_selesai(order_id):
-    if 'orders' in session and order_id in session['orders']:
-        session['orders'][order_id]['status'] = 'Selesai'
-        session.modified = True
-    
-    order = session.get('orders', {}).get(order_id)
-    return render_template('customer/pesanan_selesai.html', segment='pesanan_saya', role='customer', order=order, order_id=order_id)
 
 @customer_bp.route('/pembayaran-nontunai/<int:order_id>')
 @login_required
