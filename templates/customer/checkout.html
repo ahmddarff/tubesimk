@@ -125,7 +125,7 @@
                                         <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <label class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Catatan (Opsional)</label>
                                     </div>
-                                    <input type="text" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-transparent text-sm text-slate-700 p-0 placeholder-slate-400 font-medium">
+                                    <input type="text" maxlength="255" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-transparent text-sm text-slate-700 p-0 placeholder-slate-400 font-medium">
                                 </div>
 
                             </div>

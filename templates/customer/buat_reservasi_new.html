@@ -23,8 +23,10 @@
                 
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-semibold text-slate-600">No Handphone <span class="text-red-500">*</span></p>
-                    <input type="text" x-model="telepon" placeholder="Contoh: 0812..." 
-                           class="border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white text-right w-1/2 md:w-1/3 font-bold" required>
+                    <input type="tel" x-model="telepon" placeholder="Contoh: 0812..." 
+                        @input="telepon = telepon.replace(/[^0-9]/g, '').slice(0, 13)"
+                        pattern="[0-9]{10,13}"
+                        class="border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white text-right w-1/2 md:w-1/3 font-bold" required>
                 </div>
                 
                 <div>
@@ -111,7 +113,7 @@
 
                 <div class="rounded-[24px] border border-[#D6E4FF] bg-[#F5F8FF] p-6 mt-6 text-left">
                     <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Catatan (Opsional)</p>
-                    <textarea x-model="notes" rows="3" placeholder="Contoh: Tolong sediakan kursi tinggi untuk anak-anak..." 
+                    <textarea x-model="notes" maxlength="255" rows="3" placeholder="Contoh: Tolong sediakan kursi tinggi untuk anak-anak..." 
                               class="w-full border border-slate-200 rounded-2xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-medium bg-white"></textarea>
                 </div>
 
@@ -221,9 +223,6 @@
                 let totalMinMulai = h1 * 60 + m1;
                 let totalMinSelesai = h2 * 60 + m2;
                 
-                if (totalMinSelesai <= totalMinMulai) {
-                    totalMinSelesai += 24 * 60;
-                }
                 return totalMinSelesai - totalMinMulai;
             },
 
@@ -240,19 +239,31 @@
 
             submitReservasi() {
                 if (!this.telepon.trim()) {
-                    alert('Nomor telepon wajib diisi!');
+                    showToast('Nomor telepon wajib diisi!', 'error');
                     return;
                 }
 
                 const selectedTables = this.mejas.filter(m => m.id !== '');
                 if (selectedTables.length === 0) {
-                    alert('Mohon pilih setidaknya satu meja!');
+                    showToast('Mohon pilih setidaknya satu meja!', 'error');
+                    return;
+                }
+
+                // VALIDASI BARU: Jam tidak boleh sama
+                if (this.jamMulai === this.jamSelesai) {
+                    showToast('Jam mulai dan jam selesai tidak boleh sama!', 'error');
+                    return;
+                }
+
+                // VALIDASI BARU: Jam selesai tidak boleh mundur (lebih awal dari jam mulai)
+                if (this.jamSelesai < this.jamMulai) {
+                    showToast('Jam selesai tidak boleh lebih awal dari jam mulai!', 'error');
                     return;
                 }
 
                 const durasi = this.calculateDuration();
                 if (durasi <= 0) {
-                    alert('Jam selesai harus diatur dengan benar!');
+                    showToast('Jam selesai harus diatur dengan benar!', 'error');
                     return;
                 }
 
@@ -288,12 +299,12 @@
                     if (result.success) {
                         window.location.href = '/customer/buat-reservasi'; 
                     } else {
-                        alert(result.message || 'Terjadi kesalahan saat membuat reservasi.');
+                        showToast(result.message || 'Terjadi kesalahan saat membuat reservasi.');
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    alert('Terjadi kesalahan koneksi ke server.');
+                    showToast('Terjadi kesalahan koneksi ke server.');
                 });
             }
         }
