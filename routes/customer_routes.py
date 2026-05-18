@@ -532,10 +532,11 @@ def update_cart():
         return jsonify({
             'success': False
         }), 403
+    
+    order = item.order
 
     if qty <= 0:
         db.session.delete(item)
-
     else:
         item.qty = qty
 
