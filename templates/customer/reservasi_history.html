@@ -57,7 +57,10 @@
                     <p class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1">Meja</p>
                     <p class="text-base font-bold text-gray-800">
                         {% if reservation.reserved_tables %}
-                            Meja {{ reservation.reserved_tables[0].table_number_snapshot }}
+                            Meja 
+                            {% for table in reservation.reserved_tables %}
+                                {{ table.table_number_snapshot }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
                         {% else %}
                             -
                         {% endif %}
