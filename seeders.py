@@ -99,8 +99,30 @@ def run_seeders():
         else:
             print("ℹ️ Lewati: Akun Kasir sudah ada.")
 
+            # ==========================================
+        # 5. ✅ BARU: SEEDER AKUN KOKI / CHIEF 1
         # ==========================================
-        # 5. SEEDER AKUN CUSTOMER (TOTAL 5 CUSTOMER)
+        koki_exist = User.query.filter_by(role='koki').first()
+        
+        if not koki_exist:
+            hashed_password = generate_password_hash('koki123')
+            new_koki = User(
+                name='Sung Hanbin',
+                username='koki',
+                email='hanbin.koki@gmail.com',
+                password=hashed_password,
+                phone='0814-xxxx-xxxx',
+                role='koki',
+                is_active=True
+            )
+            db.session.add(new_koki)
+            db.session.commit()
+            print("✅ Berhasil: Akun Koki Utama ditambahkan!")
+        else:
+            print("ℹ️ Lewati: Akun Koki Utama sudah ada.")
+
+        # ==========================================
+        # 6. SEEDER AKUN CUSTOMER (TOTAL 5 CUSTOMER)
         # ==========================================
         data_customers = [
             {'name': 'Budi Pelanggan', 'username': 'customer', 'email': 'budi@gmail.com', 'phone': '0812-9999-8888', 'photo': None},
@@ -130,7 +152,7 @@ def run_seeders():
         print(f"✅ Berhasil: Data Akun Customer dipastikan tersedia!")
             
         # ==========================================
-        # 6. SEEDER KATEGORI MENU
+        # 7. SEEDER KATEGORI MENU
         # ==========================================
         daftar_kategori = ['Food', 'Snack', 'Coffee', 'Non Coffee']
         
@@ -143,7 +165,7 @@ def run_seeders():
         db.session.commit()
 
         # ==========================================
-        # 7. SEEDER MENU
+        # 8. SEEDER MENU
         # ==========================================
         kategori_db = {k.name: k.id for k in Category.query.all()}
 
@@ -174,7 +196,7 @@ def run_seeders():
         print("✅ Berhasil: Data Menu ditambahkan!")
 
         # ==========================================
-        # 8. SEEDER MEJA (TABLE) 
+        # 9. SEEDER MEJA (TABLE) 
         # ==========================================
         data_meja = [
             {"nomor": "01", "kapasitas": 4, "tersedia": False},
@@ -201,7 +223,7 @@ def run_seeders():
             meja_db[meja["nomor"]] = m.id
 
         # ==========================================
-        # 9. SEEDER ORDER & ORDER ITEMS 
+        # 10. SEEDER ORDER & ORDER ITEMS 
         # ==========================================
         customers_db = User.query.filter_by(role='customer').all()
         
@@ -369,7 +391,7 @@ def run_seeders():
         print("✅ Berhasil: Data Order & Detail Item ditambahkan!")
 
         # ==========================================
-        # 10. SEEDER RESERVASI
+        # 11. SEEDER RESERVASI
         # ==========================================
         customer = customers_db[0] if customers_db else None
         customer_id = customer.id if customer else 1
@@ -465,7 +487,7 @@ def run_seeders():
         print("✅ Berhasil: Data Reservasi & Relasi Meja ditambahkan!")
 
         # ==========================================
-        # 11. SEEDER REVIEW (AYAM GEPREK)
+        # 12. SEEDER REVIEW (AYAM GEPREK)
         # ==========================================
         if menu_ayam:
             # Mengambil 4 OrderItem untuk menu Ayam Geprek yang sudah selesai (served)

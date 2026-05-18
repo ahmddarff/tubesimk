@@ -1,4 +1,4 @@
-{% extends "layouts/layout-koki.html" %}
+{% extends "layout.html" %}
 {% block title %}Antrean Order{% endblock %}
 {% block page_title %}Antrean Order{% endblock %}
 
@@ -63,9 +63,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Inject data dari Flask ke JS -->
 <script>
-    const ordersData = {{ orders | tojson }};
+    const ordersData = {{ orders | tojson | safe }};
 </script>
-<script src="{{ url_for('static', filename='static/koki/js/antrian.js') }}"></script>
+<script src="{{ url_for('static', filename='koki/js/antrian.js') }}"></script>
 {% endblock %}

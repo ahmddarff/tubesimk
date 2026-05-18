@@ -1,4 +1,4 @@
-{% extends "layouts/layout-koki.html" %}
+{% extends "layout.html" %}
 {% block title %}Stok Menu{% endblock %}
 {% block page_title %}Stok Menu{% endblock %}
 
@@ -46,9 +46,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Inject data dari Flask ke JS -->
 <script>
-    const menuData = {{ menu_list | tojson }};
+    const menuData = {{ menu_list | tojson | safe }};
 </script>
-<script src="{{ url_for('static', filename='static/koki/js/stok.js') }}"></script>
+<script src="{{ url_for('static', filename='koki/js/stok.js') }}"></script>
 {% endblock %}

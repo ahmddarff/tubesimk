@@ -14,7 +14,7 @@ def redirect_based_on_role(role):
     elif role == 'kasir':
         return redirect(url_for('kasir.dashboard')) # Sesuaikan dengan nama fungsi di kasir_routes
     elif role == 'koki':
-        return redirect(url_for('koki.dashboard'))  # Sesuaikan dengan nama fungsi di koki_routes
+        return redirect(url_for('koki.antrian'))  # Sesuaikan dengan nama fungsi di koki_routes
     else:
         return redirect(url_for('customer.beranda')) # Sesuaikan dengan nama fungsi di customer_routes
 
