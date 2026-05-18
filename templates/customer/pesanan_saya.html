@@ -6,7 +6,7 @@
 <div class="customer-page-shell w-full">
     <div class="flex justify-between items-center mb-8">
         <div>
-            <h1 class="text-3xl font-bold text-terralogBlue mb-1">Pesanan Saya</h1>
+            <h1 class="text-3xl font-bold text-terralogBlue mb-2">Pesanan Saya</h1>
             <p class="text-gray-500 text-sm">Kelola dan pantau pesanan Anda</p>
         </div>
         <a href="/customer/daftar-menu" class="px-6 py-3 bg-terralogOrange text-white rounded-full font-bold flex items-center gap-2 hover:bg-orange-500 transition shadow-lg">
@@ -19,13 +19,13 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-4">Pesanan Aktif</h2>
         
         {% if active_orders %}
-            <div class="space-y-4">
-                {% for order in active_orders %}
-                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition">
+            <div class="grid grid-cols-2 gap-6">    
+            {% for order in active_orders %}
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition flex flex-col h-full">
                     
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
+                    <div class="flex-1">
+                        <div class="mb-4">
+                            <div class="flex items-center gap-3 mb-2 flex-wrap">
                                 <h3 class="text-lg font-bold text-gray-800">{{ order.order_number }}</h3>
                                 
                                 {% if order.order_status == 'pending' %}
@@ -35,54 +35,52 @@
                                 {% elif order.order_status == 'ready' %}
                                     <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Siap Dihidangkan</span>
                                 {% elif order.order_status == 'served' %}
-                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Belum Diulas</span>
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">Menunggu Ulasan</span>
                                 {% endif %}
                             </div>
-                            <p class="text-sm text-gray-500">{{ order.created_at.strftime('%d %B %Y') }}</p>
-                        </div>
-                        <p class="text-sm text-gray-500 text-right">{{ order.created_at.strftime('%H:%M') }} WIB</p>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                        {% for item in order.items %}
-                        <div class="flex items-center gap-4 mb-3 pb-3 {% if not loop.last %}border-b border-gray-200{% endif %}">
-                            
-                            {% if item.menu.image_url and item.menu.image_url.startswith('http') %}
-                                <img src="{{ item.menu.image_url }}" class="w-12 h-12 rounded-lg object-cover">
-                            {% elif item.menu.image_url %}
-                                <img src="{{ url_for('static', filename='images/' + item.menu.image_url) }}" class="w-12 h-12 rounded-lg object-cover">
-                            {% else %}
-                                <img src="https://via.placeholder.com/150x150/E8D5C4/8B7355?text={{ item.menu.name }}" class="w-12 h-12 rounded-lg object-cover">
-                            {% endif %}
-                            
-                            <div class="flex-1">
-                                <p class="font-semibold text-gray-800 text-sm">{{ item.menu.name }}</p>
-                                <p class="text-xs text-gray-500">Qty: {{ item.qty }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-gray-800">Rp {{ "{:,.0f}".format(item.price_at_order).replace(',', '.') }}</p>
-                                <span class="inline-block px-2 py-1 bg-terralogOrange text-white text-xs font-bold rounded mt-1">{{ item.qty }}</span>
+                            <div class="flex justify-between items-center text-sm text-gray-500">
+                                <p>{{ order.created_at.strftime('%d %B %Y') }}</p>
+                                <p>{{ order.created_at.strftime('%H:%M') }} WIB</p>
                             </div>
                         </div>
-                        {% endfor %}
-                    </div>
 
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-gray-500 mb-1">Total Harga</p>
-                            <p class="text-xl font-bold text-gray-800">Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
-                        </div>
-                        <div class="flex gap-3">
-                            <a href="/customer/pesanan/{{ order.id }}" class="px-6 py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition inline-block">
-                                Lihat Detail
-                            </a>
-                            {% if order.order_status == 'pending' %}
-                            <button onclick="if(confirm('Batalkan pesanan {{ order.order_number }}?')) { window.location.href='/customer/pesanan/{{ order.id }}/cancel'; }" class="px-6 py-2 border-2 border-red-500 text-red-500 rounded-lg font-bold text-sm hover:bg-red-50 transition">
-                                Batalkan
-                            </button>
+                        <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                            {% for item in order.items[:2] %}
+                            <div class="flex items-center gap-3 mb-2 pb-2 {% if not loop.last %}border-b border-gray-200{% endif %}">
+                                
+                                {% if item.menu.image_url and item.menu.image_url.startswith('http') %}
+                                    <img src="{{ item.menu.image_url }}" class="w-10 h-10 rounded-lg object-cover">
+                                {% elif item.menu.image_url %}
+                                    <img src="{{ url_for('static', filename='images/' + item.menu.image_url) }}" class="w-10 h-10 rounded-lg object-cover">
+                                {% else %}
+                                    <img src="https://via.placeholder.com/150x150/E8D5C4/8B7355?text={{ item.menu.name }}" class="w-10 h-10 rounded-lg object-cover">
+                                {% endif %}
+                                
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-gray-800 text-sm truncate">{{ item.menu.name }}</p>
+                                    <p class="text-xs text-gray-500">Rp {{ "{:,.0f}".format(item.price_at_order).replace(',', '.') }}</p>
+                                </div>
+                                <span class="inline-block px-2 py-1 bg-terralogOrange text-white text-xs font-bold rounded flex-shrink-0">{{ item.qty }}</span>
+                            </div>
+                            {% endfor %}
+
+                            {% if order.items|length > 2 %}
+                            <div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200 font-medium italic pl-1">
+                                dan {{ order.items|length - 2 }} item lainnya
+                            </div>
                             {% endif %}
                         </div>
+                    </div> <div class="border-t border-gray-200 pt-3 mb-4 mt-auto">
+                        <p class="text-xs text-gray-500 mb-1">Total Harga</p>
+                        <p class="text-lg font-bold text-gray-800 mb-3">Rp {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }}</p>
                     </div>
+
+                    <div class="w-full">
+                        <a href="/customer/pesanan/{{ order.id }}" class="block w-full py-2 bg-terralogBlue text-white rounded-lg font-bold text-sm hover:bg-blue-900 transition text-center border-2 border-terralogBlue">
+                            Lihat Detail
+                        </a>
+                    </div>
+
                 </div>
                 {% endfor %}
             </div>

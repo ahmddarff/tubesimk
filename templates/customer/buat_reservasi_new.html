@@ -11,8 +11,11 @@
             <span class="text-terralogBlue">Buat Reservasi</span>
         </div>
 
-        <div class="bg-white rounded-[28px] border-2 border-[#D6E4FF] shadow-sm p-8 mb-10">
-            <div class="space-y-6">
+        <div class="bg-white rounded-[28px]  shadow-sm p-8 mb-6">
+            <div class="mb-8">
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Informasi Pemesan</h3>
+            </div>
+            <div class="space-y-4">
                 <div class="flex justify-between items-center pb-6 border-b border-gray-100">
                     <p class="text-sm font-semibold text-slate-600">Nama Pemesan</p>
                     <p class="text-base font-bold text-slate-900">{{ current_user.name }}</p>
@@ -57,7 +60,7 @@
 
         <div class="bg-white rounded-[32px] shadow-lg p-8">
             <div class="mb-8">
-                <h3 class="text-3xl font-bold text-slate-900 mb-2">Detail Reservasi</h3>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">Detail Reservasi</h3>
                 <p class="text-slate-600">Lengkapi informasi di bawah ini untuk mengajukan reservasi</p>
             </div>
 
@@ -69,7 +72,7 @@
                         </div>
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Tanggal</p>
                         <div class="relative">
-                            <input type="date" x-model="tanggal" required 
+                            <input type="date" x-model="tanggal" :min="minDate" required 
                                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue text-sm font-semibold bg-white" />
                         </div>
                     </div>
@@ -172,10 +175,20 @@
             showCapacityWarning: false,
             capacityConfirmed: false,
 
+            // Tambahkan variabel minDate
+            minDate: '',
+
             // Mengambil data tabel yang telah diinjeksi
             tablesData: [],
 
             init() {
+                // Mendapatkan tanggal hari ini sesuai zona waktu lokal pengguna
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                this.minDate = `${yyyy}-${mm}-${dd}`;
+                
                 try {
                     this.tablesData = JSON.parse(document.getElementById('data-tables').textContent);
                 } catch (e) {
@@ -185,6 +198,13 @@
 
             addMeja() {
                 this.mejas.push({ id: '' });
+                
+                // Memanggil ulang render ikon setelah elemen DOM baru selesai dimuat
+                setTimeout(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
+                }, 50);
             },
             removeMeja(index) {
                 this.mejas.splice(index, 1);

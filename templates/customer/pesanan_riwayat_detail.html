@@ -5,16 +5,25 @@
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF]" x-data="pesananRiwayatApp()" @load="$watch('items', () => lucide.createIcons())" x-cloak>
     <div class="max-w-7xl mx-auto">
-        
-        <div class="mb-8">
-            <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
-                <a href="/customer/pesanan-saya" class="text-gray-400 hover:text-terralogBlue transition">Pesanan Saya</a>
-                <span class="text-gray-400">›</span>
-                <a href="/customer/pesanan-saya/history" class="text-gray-400 hover:text-terralogBlue transition">Riwayat</a>
-                <span class="text-gray-400">›</span>
-                <span class="text-terralogBlue" x-text="order.order_number || '-'"></span>
+        <div class="mb-8 flex justify-between items-start flex-wrap gap-4">
+            <div>
+                <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+                    <a href="/customer/pesanan-saya" class="text-gray-500 hover:text-terralogBlue transition">Pesanan Saya</a>
+                    <span class="text-gray-400">›</span>
+                    <a href="/customer/pesanan-saya/history" class="text-gray-500 hover:text-terralogBlue transition">Riwayat</a>
+                    <span class="text-gray-400">›</span>
+                    <span class="text-terralogBlue" x-text="order.order_number || '-'"></span>
+                </div>
+                <p class="text-gray-500 font-medium text-sm">Detail riwayat pesanan Anda</p>
             </div>
-            <p class="text-gray-500 font-medium text-sm">Detail riwayat pesanan Anda</p>
+            
+            <div class="mt-1">
+                {% if order.payment_status == 'cancelled' %}
+                    <span class="inline-block px-4 py-2 bg-red-100 text-red-700 font-bold rounded-full text-sm tracking-wide">Dibatalkan</span>
+                {% else %}
+                    <span class="inline-block px-4 py-2 bg-green-100 text-green-700 font-bold rounded-full text-sm tracking-wide">Selesai</span>
+                {% endif %}
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start relative">
@@ -46,6 +55,16 @@
                             <p class="text-slate-800 text-base font-bold" x-text="paymentMethod === 'qris' ? 'QRIS' : (paymentMethod === 'cash' ? 'Tunai' : 'Non Tunai')"></p>
                         </div>
                     </div>
+
+                    {% if order.payment_status == 'cancelled' %}
+                    <div class="mt-5 p-4 bg-red-50 rounded-xl border border-red-100 flex gap-3 items-start text-sm">
+                        <i data-lucide="info" class="w-5 h-5 text-red-500 mt-0.5 shrink-0"></i>
+                        <div>
+                            <span class="font-bold text-red-800 block mb-0.5">Alasan Pembatalan:</span>
+                            <p class="text-red-600">{{ order.cancellation_reason if order.cancellation_reason else 'Dibatalkan oleh kasir tanpa menyertakan alasan spesifik.' }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="bg-white rounded-[24px] shadow-sm border border-gray-100 p-6">

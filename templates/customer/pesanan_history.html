@@ -23,9 +23,15 @@
                 <div>
                     <div class="flex items-center gap-3 mb-2">
                         <h3 class="text-lg font-bold text-gray-800">#{{ order.order_number }}</h3>
-                        <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">
-                            {{ order.order_status }}
-                        </span>
+                        {% if order.payment_status == 'cancelled' %}
+                            <span class="px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full uppercase">
+                                Dibatalkan
+                            </span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">
+                                Selesai
+                            </span>
+                        {% endif %}
                     </div>
                     <p class="text-sm text-gray-500">
                         {{ order.created_at.strftime('%d %b %Y · %H:%M') if order.created_at else '-' }}
