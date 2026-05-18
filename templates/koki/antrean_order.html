@@ -14,50 +14,52 @@
 <div x-data="kanbanKoki()" x-cloak>
 
     <div class="grid grid-cols-4 gap-4 mb-5">
-        <div class="bg-white rounded-xl p-4 border-2 border-red-200 shadow-sm">
-            <p class="text-sm font-semibold text-gray-500 mb-1">Menunggu</p>
+        <div class="bg-red-50 rounded-xl p-4 border-2 border-red-500 shadow-sm">
+            <p class="text-sm font-bold text-gray-800 mb-1">Menunggu</p>
             <p class="text-3xl font-extrabold text-gray-900" id="count-pending" x-text="countPending">0</p>
         </div>
-        <div class="bg-white rounded-xl p-4 border-2 border-yellow-200 shadow-sm">
-            <p class="text-sm font-semibold text-gray-500 mb-1">Diproses</p>
+        <div class="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-400 shadow-sm">
+            <p class="text-sm font-bold text-gray-800 mb-1">Diproses</p>
             <p class="text-3xl font-extrabold text-gray-900" id="count-preparing" x-text="countPreparing">0</p>
         </div>
-        <div class="bg-white rounded-xl p-4 border-2 border-green-200 shadow-sm">
-            <p class="text-sm font-semibold text-gray-500 mb-1">Siap</p>
+        <div class="bg-green-50 rounded-xl p-4 border-2 border-green-400 shadow-sm">
+            <p class="text-sm font-bold text-gray-800 mb-1">Siap</p>
             <p class="text-3xl font-extrabold text-gray-900" id="count-ready" x-text="countReady">0</p>
         </div>
-        <div class="bg-white rounded-xl p-4 border-2 border-gray-200 shadow-sm">
-            <p class="text-sm font-semibold text-gray-500 mb-1">Total</p>
+        <div class="bg-[#E5EAFF] rounded-xl p-4 border-2 border-[#1B2FAA] shadow-sm">
+            <p class="text-sm font-bold text-gray-800 mb-1">Total</p>
             <p class="text-3xl font-extrabold text-gray-900" id="count-total" x-text="orders.length">0</p>
         </div>
     </div>
 
     <div class="grid grid-cols-3 gap-4">
 
-        <div class="bg-red-50 rounded-2xl p-4">
-            <h3 class="text-center text-xs font-extrabold text-red-500 tracking-widest uppercase mb-4">
+        <div class="bg-[#FCEAE8] rounded-2xl p-4">
+            <h3 class="text-center text-sm font-black text-gray-900 tracking-wider uppercase mb-4">
                 Antrean Masuk (Pending)
             </h3>
             <div id="col-pending" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1">
                 <template x-for="order in getOrdersByStatus('pending')" :key="order.id">
-                    <div class="bg-white rounded-xl border-2 border-red-200 p-4 shadow-sm">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-extrabold text-gray-900 text-base" x-text="order.id_display"></span>
-                            <span class="flex items-center gap-1 text-xs font-semibold" :class="getElapsedMin(order.waktu) >= 10 ? 'timer-urgent' : 'text-gray-400'">
-                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="getElapsedMin(order.waktu)"></span> min
+                    <div class="bg-white rounded-xl border border-red-500 p-4 shadow-sm">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="font-extrabold text-gray-900 text-lg" x-text="order.id_display"></span>
+                            <span class="flex items-center gap-1 text-xs font-semibold" :class="isUrgent(order.waktu_iso) ? 'timer-urgent' : 'text-gray-500'">
+                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="timeAgo(order.waktu_iso)"></span>
                             </span>
                         </div>
-                        <div class="flex justify-between items-center mb-3">
-                            <p class="text-xs text-gray-400 font-bold" x-text="order.meja"></p>
-                            <span class="text-[9px] font-black uppercase bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded tracking-wide" x-text="order.sumber"></span>
-                        </div>
+                        <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-2.5 mb-4">
+                        <div class="flex flex-col gap-3 mb-5">
                             <template x-for="item in order.items" :key="item.id">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-700" x-text="item.qty + 'x ' + item.nama"></span>
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-gray-800 leading-tight" x-text="item.qty + 'x ' + item.nama"></span>
+                                        <template x-if="item.catatan">
+                                            <span class="text-[11px] font-medium italic text-orange-500 mt-1 leading-tight" x-text="'* ' + item.catatan"></span>
+                                        </template>
+                                    </div>
                                     <button @click="startItem(order, item)"
-                                            class="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#1B2FAA] text-white text-xs font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
+                                            class="flex-none flex items-center gap-1 px-3 py-1 rounded-lg bg-[#1B2FAA] text-white text-xs font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
                                         <i class="fa-solid fa-play text-[9px]"></i> Start
                                     </button>
                                 </div>
@@ -65,7 +67,7 @@
                         </div>
                         
                         <button @click="prosesSemuaOrder(order.id)"
-                                class="w-full py-2 rounded-lg bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
+                                class="w-full py-2.5 rounded-lg bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
                             Proses Semua
                         </button>
                     </div>
@@ -77,50 +79,60 @@
             </div>
         </div>
 
-        <div class="bg-yellow-50 rounded-2xl p-4">
-            <h3 class="text-center text-xs font-extrabold text-yellow-600 tracking-widest uppercase mb-4">
+        <div class="bg-[#FFF5CC] rounded-2xl p-4">
+            <h3 class="text-center text-sm font-black text-gray-900 tracking-wider uppercase mb-4">
                 Sedang Diproses (Preparing)
             </h3>
             <div id="col-preparing" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1">
                 <template x-for="order in getOrdersByStatus('preparing')" :key="order.id">
-                    <div class="bg-white rounded-xl border-2 border-yellow-300 p-4 shadow-sm">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-extrabold text-gray-900 text-base" x-text="order.id_display"></span>
-                            <span class="flex items-center gap-1 text-xs font-semibold text-gray-400">
-                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="getElapsedMin(order.waktu)"></span> min
+                    <div class="bg-white rounded-xl border border-yellow-400 p-4 shadow-sm">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="font-extrabold text-gray-900 text-lg" x-text="order.id_display"></span>
+                            <span class="flex items-center gap-1 text-xs font-semibold text-gray-500">
+                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="timeAgo(order.waktu_iso)"></span>
                             </span>
                         </div>
-                        <p class="text-xs text-gray-400 mb-3" x-text="order.meja"></p>
+                        <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-2.5 mb-4">
+                        <div class="flex flex-col gap-3 mb-5">
                             <template x-for="item in order.items" :key="item.id">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm transition-all" :class="item.status === 'ready' ? 'text-gray-300 line-through' : 'text-gray-700'" x-text="item.qty + 'x ' + item.nama"></span>
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold transition-all leading-tight" :class="item.status === 'ready' ? 'text-gray-400 line-through' : 'text-gray-800'" x-text="item.qty + 'x ' + item.nama"></span>
+                                        <template x-if="item.catatan">
+                                            <span class="text-[11px] font-medium italic mt-1 leading-tight" 
+                                                  :class="item.status === 'ready' ? 'text-gray-300 line-through' : 'text-orange-500'" 
+                                                  x-text="'* ' + item.catatan">
+                                            </span>
+                                        </template>
+                                    </div>
                                     
-                                    <template x-if="item.status === 'ready'">
-                                        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
-                                    </template>
-                                    
-                                    <template x-if="item.status === 'preparing'">
-                                        <button @click="finishItem(order, item)"
-                                                class="flex items-center gap-1 px-3 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer">
-                                            <i class="fa-solid fa-flag-checkered text-[9px]"></i> Finish
-                                        </button>
-                                    </template>
+                                    <div class="flex-none">
+                                        <template x-if="item.status === 'ready'">
+                                            <i class="fa-solid fa-circle-check text-emerald-500 text-lg mt-0.5"></i>
+                                        </template>
+                                        
+                                        <template x-if="item.status === 'preparing'">
+                                            <button @click="finishItem(order, item)"
+                                                    class="flex items-center gap-1 px-3 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold hover:bg-orange-600 transition-all cursor-pointer">
+                                                <i class="fa-solid fa-flag-checkered text-[9px]"></i> Finish
+                                            </button>
+                                        </template>
 
-                                    <template x-if="item.status === 'pending'">
-                                        <button @click="startItem(order, item)"
-                                                class="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#1B2FAA] text-white text-xs font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
-                                            <i class="fa-solid fa-play text-[9px]"></i> Start
-                                        </button>
-                                    </template>
+                                        <template x-if="item.status === 'pending'">
+                                            <button @click="startItem(order, item)"
+                                                    class="flex items-center gap-1 px-3 py-1 rounded-lg bg-[#1B2FAA] text-white text-xs font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
+                                                <i class="fa-solid fa-play text-[9px]"></i> Start
+                                            </button>
+                                        </template>
+                                    </div>
                                 </div>
                             </template>
                         </div>
                         
                         <button @click="order.items.some(i => i.status === 'pending') ? prosesSemuaOrder(order.id) : selesaikanOrder(order.id)"
                                 x-text="order.items.some(i => i.status === 'pending') ? 'Proses Semua' : 'Selesaikan Semua'"
-                                class="w-full py-2 rounded-lg bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
+                                class="w-full py-2.5 rounded-lg bg-[#1B2FAA] text-white text-sm font-bold hover:bg-[#1E3ACC] transition-all cursor-pointer">
                         </button>
                     </div>
                 </template>
@@ -131,31 +143,36 @@
             </div>
         </div>
 
-        <div class="bg-green-50 rounded-2xl p-4">
-            <h3 class="text-center text-xs font-extrabold text-green-600 tracking-widest uppercase mb-4">
+        <div class="bg-[#E5FFEA] rounded-2xl p-4">
+            <h3 class="text-center text-sm font-black text-gray-900 tracking-wider uppercase mb-4">
                 Siap (Ready)
             </h3>
             <div id="col-ready" class="flex flex-col gap-3 kanban-col overflow-y-auto pr-1">
                 <template x-for="order in getOrdersByStatus('ready')" :key="order.id">
-                    <div class="bg-white rounded-xl border-2 border-green-300 p-4 shadow-sm">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="font-extrabold text-gray-900 text-base" x-text="order.id_display"></span>
-                            <span class="flex items-center gap-1 text-xs font-semibold text-gray-400">
-                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="getElapsedMin(order.waktu)"></span> min
+                    <div class="bg-white rounded-xl border border-green-500 p-4 shadow-sm">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="font-extrabold text-gray-900 text-lg" x-text="order.id_display"></span>
+                            <span class="flex items-center gap-1 text-xs font-semibold text-gray-500">
+                                <i class="fa-regular fa-clock text-[10px]"></i> <span x-text="timeAgo(order.waktu_iso)"></span>
                             </span>
                         </div>
-                        <p class="text-xs text-gray-400 mb-3" x-text="order.meja"></p>
+                        <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-2.5 mb-4">
+                        <div class="flex flex-col gap-3 mb-5">
                             <template x-for="item in order.items" :key="item.id">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm text-gray-400 line-through" x-text="item.qty + 'x ' + item.nama"></span>
-                                    <i class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                                <div class="flex items-start justify-between gap-2">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold text-gray-400 line-through leading-tight" x-text="item.qty + 'x ' + item.nama"></span>
+                                        <template x-if="item.catatan">
+                                            <span class="text-[11px] font-medium italic text-gray-300 line-through mt-1 leading-tight" x-text="'* ' + item.catatan"></span>
+                                        </template>
+                                    </div>
+                                    <i class="fa-solid fa-circle-check text-emerald-500 text-lg mt-0.5"></i>
                                 </div>
                             </template>
                         </div>
                         
-                        <button disabled class="w-full py-2 rounded-lg bg-gray-200 text-gray-500 text-sm font-bold cursor-not-allowed">
+                        <button disabled class="w-full py-2.5 rounded-lg bg-gray-300 text-white text-sm font-bold cursor-not-allowed">
                             Menunggu Pengambilan
                         </button>
                     </div>
@@ -198,12 +215,25 @@ document.addEventListener('alpine:init', () => {
             return this.orders.filter(o => o.status === status);
         },
 
-        getElapsedMin(waktuStr) {
-            if (!waktuStr) return 0;
-            const [h, m] = waktuStr.split(':').map(Number);
-            const orderTime = new Date(this.now);
-            orderTime.setHours(h, m, 0, 0);
+        getElapsedMins(isoString) {
+            if (!isoString) return 0;
+            const orderTime = new Date(isoString);
             return Math.max(0, Math.floor((this.now - orderTime) / 60000));
+        },
+
+        timeAgo(isoString) {
+            if (!isoString) return '-';
+            const diffMins = this.getElapsedMins(isoString);
+            if (diffMins < 1) return '1 min'; 
+            if (diffMins < 60) return diffMins + ' min';
+            
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            return hours + 'h ' + mins + 'm';
+        },
+
+        isUrgent(isoString) {
+            return this.getElapsedMins(isoString) >= 10;
         },
 
         syncSidebarBadge() {

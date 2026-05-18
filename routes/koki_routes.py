@@ -15,7 +15,7 @@ koki_bp = Blueprint('koki', __name__)
 @koki_bp.route('/antrean-order')
 @login_required
 def antrian():
-    # ✅ PROTEKSI ANTI-FIKTIF: Kasir boleh unpaid, Pesanan Mandiri aplikasi wajib PAID!
+    # PROTEKSI ANTI-FIKTIF: Kasir boleh unpaid, Pesanan Mandiri aplikasi wajib PAID!
     orders_db = Order.query.filter(
         Order.order_status.in_(['pending', 'preparing', 'ready']),
         Order.payment_status != 'cancelled',
@@ -36,7 +36,7 @@ def antrian():
                 "nama": item.menu.name if item.menu else "Menu Terhapus",
                 "qty": item.qty,
                 "catatan": item.notes or "",
-                "status": item.item_status # 'pending', 'preparing', 'ready', atau 'served'
+                "status": item.item_status
             })
             
         info_meja = o.table_number_snapshot if o.table_number_snapshot else "Take Away"
@@ -46,7 +46,7 @@ def antrian():
         formatted_orders.append({
             "id": o.id,
             "id_display": o.order_number,
-            "waktu": o.created_at.strftime("%H:%M"),
+            "waktu_iso": o.created_at.isoformat() + 'Z', # ✅ BARU: Mengirim string ISO UTC mentah ke browser
             "meja": info_meja,
             "sumber": "Aplikasi" if o.user_id else "Kasir",
             "status": o.order_status,
