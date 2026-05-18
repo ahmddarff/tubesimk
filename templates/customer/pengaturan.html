@@ -3,12 +3,12 @@
 {% block content %}
 <div x-data="pengaturanAkun()" class="customer-page-shell w-full" x-cloak>
 
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-terralogBlue mb-1">Pengaturan</h1>
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-terralogBlue mb-2">Pengaturan</h1>
         <p class="text-gray-500 text-sm">Kelola data profil dan keamanan akun Anda</p>
     </div>
 
-    <div class="flex flex-wrap gap-3 mb-6">
+    <div class="flex flex-wrap gap-3 mb-4">
         <button @click="switchTab('akun')"
             :class="activeTab === 'akun' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
