@@ -239,12 +239,14 @@
                     if (data.success) {
                         window.location.reload();
                     } else {
-                        alert(data.message || 'Gagal membatalkan reservasi.');
+                        // Ubah ke toast error
+                        showToast(data.message || 'Gagal membatalkan reservasi.', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Terjadi masalah koneksi ke server.');
+                    // Ubah ke toast error
+                    showToast('Terjadi masalah koneksi ke server.', 'error');
                 });
             }
         };
