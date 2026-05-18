@@ -12,9 +12,9 @@
         
         <!-- Cart Badge -->
         <button @click="goToCheckout()" class="bg-terralogGold text-gray-800 px-4 py-2 rounded-full font-bold flex items-center gap-2 text-sm hover:bg-yellow-500 transition" :disabled="cart.length === 0">
-            <span x-text="cart.length">0</span>
-            <span>item dipilih</span>
-            <span x-text="(cart.reduce((sum, item) => sum + (item.harga * item.qty), 0)).toLocaleString('id-ID')">0</span>
+            <span x-text="totalQty">0</span>
+            <span>item dipilih | Rp</span>
+            <span x-text="subtotal.toLocaleString('id-ID')">0</span>
             <i data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
     </div>
@@ -73,13 +73,9 @@
                 </div>
 
                 <!-- Add to Cart Button -->
-                {% if menu.status == 'tersedia' %}
+                {% if menu.is_available %}
                     <button @click="addToCart()" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm" type="button">
                         Keranjang
-                    </button>
-                {% else %}
-                    <button disabled class="flex-1 bg-gray-300 text-gray-600 font-bold py-2 rounded-lg cursor-not-allowed text-sm" type="button">
-                        Stok Habis
                     </button>
                 {% endif %}
             </div>
@@ -158,31 +154,43 @@
     function menuDetailApp(menuId, menuName, menuPrice) {
         return {
             qty: 1,
-            // Mengambil data keranjang yang sudah ada di localStorage agar tidak hilang saat pindah halaman
-            cart: JSON.parse(localStorage.getItem('cart')) || [],
+            cart: [],
             menuId: menuId,
             menuName: menuName,
             menuPrice: menuPrice,
             
-            addToCart() {
-                // Mencari item berdasarkan ID agar lebih aman dan akurat
-                const existingIndex = this.cart.findIndex(item => item.id === this.menuId);
-                if (existingIndex !== -1) {
-                    this.cart[existingIndex].qty += this.qty;
-                } else {
-                    this.cart.push({
-                        id: this.menuId,
-                        nama: this.menuName,
-                        harga: this.menuPrice,
-                        qty: this.qty
-                    });
+            // Memuat keranjang dari database saat halaman dibuka
+            async init() {
+                await this.loadCart();
+            },
+
+            async loadCart() {
+                try {
+                    const response = await fetch('/customer/api/cart');
+                    const data = await response.json();
+                    this.cart = data.items || [];
+                } catch (error) {
+                    console.error('Gagal memuat keranjang:', error);
                 }
-                
-                // Menyimpan state keranjang terbaru ke localStorage browser
-                localStorage.setItem('cart', JSON.stringify(this.cart));
-                
-                alert(`${this.qty}x ${this.menuName} berhasil ditambahkan ke keranjang!`);
-                this.qty = 1;
+            },
+            
+            async addToCart() {
+                try {
+                    const response = await fetch('/customer/api/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ menu_id: this.menuId, qty: this.qty })
+                    });
+                    const resData = await response.json();
+                    
+                    if (resData.success) {
+                        alert(`${this.qty}x ${this.menuName} berhasil ditambahkan ke keranjang!`);
+                        await this.loadCart(); // Perbarui data badge keranjang
+                        this.qty = 1; // Reset input kuantitas
+                    }
+                } catch (error) {
+                    console.error('Gagal menambahkan item:', error);
+                }
             },
             
             goToCheckout() {
@@ -191,6 +199,16 @@
                     return;
                 }
                 window.location.href = '/customer/checkout';
+            },
+
+            // Menghitung total kuantitas seluruh item di keranjang
+            get totalQty() {
+                return this.cart.reduce((sum, item) => sum + item.qty, 0);
+            },
+
+            // Menghitung total harga seluruh item di keranjang
+            get subtotal() {
+                return this.cart.reduce((sum, item) => sum + (item.harga * item.qty), 0);
             }
         }
     }
