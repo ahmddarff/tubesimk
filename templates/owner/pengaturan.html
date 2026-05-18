@@ -2,42 +2,7 @@
 {% block title %}Pengaturan Sistem{% endblock %}
 
 {% block content %}
-<div 
-    x-data="{ 
-        activeTab: 'profil-cafe',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-
-        savePassword() {
-            if (!this.currentPassword) { alert('Kata sandi saat ini wajib diisi!'); return; }
-            if (this.newPassword.length < 8) { alert('Kata sandi baru minimal 8 karakter!'); return; }
-            if (this.newPassword !== this.confirmPassword) { alert('Konfirmasi password tidak cocok!'); return; }
-
-            fetch('{{ url_for('owner.update_password') }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    password_lama: this.currentPassword, 
-                    password_baru: this.newPassword 
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(data.message);
-                    this.currentPassword = '';
-                    this.newPassword = '';
-                    this.confirmPassword = '';
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-    }"
-    x-init="$nextTick(() => lucide.createIcons())"
-    class="min-h-screen"
->
+<div x-data="pengaturanSistem()" x-cloak class="min-h-screen">
 
     <div class="mb-4">
         <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Pengaturan</h1>
@@ -45,19 +10,19 @@
     </div>
 
     <div class="flex flex-wrap gap-3 mb-6">
-        <button @click="activeTab = 'profil-cafe'; $nextTick(() => lucide.createIcons())"
+        <button @click="switchTab('profil-cafe')"
             :class="activeTab === 'profil-cafe' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
             <i data-lucide="coffee" class="w-4 h-4"></i> Profil Cafe
         </button>
 
-        <button @click="activeTab = 'akun-saya'; $nextTick(() => lucide.createIcons())"
+        <button @click="switchTab('akun-saya')"
             :class="activeTab === 'akun-saya' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
             <i data-lucide="user" class="w-4 h-4"></i> Akun Saya
         </button>
 
-        <button @click="activeTab = 'keamanan'; $nextTick(() => lucide.createIcons())"
+        <button @click="switchTab('keamanan')"
             :class="activeTab === 'keamanan' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
             class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
             <i data-lucide="shield-check" class="w-4 h-4"></i> Keamanan
@@ -66,30 +31,27 @@
 
     <div class="bg-white rounded-[1.8rem] shadow-sm border border-gray-100 p-6">
 
-        <div x-show="activeTab === 'profil-cafe'" x-transition x-cloak>
+        <div x-show="activeTab === 'profil-cafe'" x-transition>
             
             <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
                 <div class="relative flex-none">
                     <div class="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-50 bg-white flex items-center justify-center shadow-lg">
-                        <img id="logoPreview" 
-                             src="{% if cafe_info.logo %}{{ url_for('static', filename='images/' + cafe_info.logo) }}{% endif %}" 
-                             class="w-full h-full object-cover {% if not cafe_info.logo %}hidden{% endif %}"
-                             onerror="this.classList.add('hidden'); document.getElementById('logoPlaceholder').classList.remove('hidden');">
-                        <div id="logoPlaceholder" class="w-full h-full flex items-center justify-center bg-blue-50 text-terralogBlue font-black text-xs {% if cafe_info.logo %}hidden{% endif %}">LOGO</div>
+                        <img :src="cafeLogoPreview" x-show="cafeLogoPreview" class="w-full h-full object-cover">
+                        <div x-show="!cafeLogoPreview" class="w-full h-full flex items-center justify-center bg-blue-50 text-terralogBlue font-black text-xs">LOGO</div>
                     </div>
-                    <input type="file" id="inputLogo" name="logo" class="hidden" accept="image/*" onchange="previewLogo(this)">
-                    <button type="button" onclick="document.getElementById('inputLogo').click()" 
+                    <input type="file" x-ref="inputLogo" @change="previewLogo" class="hidden" accept="image/*">
+                    <button type="button" @click="$refs.inputLogo.click()" 
                             class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">
                         <i data-lucide="camera" class="w-4 h-4"></i>
                     </button>
                 </div>
 
                 <div>
-                    <h2 class="text-2xl font-black text-gray-800">{{ cafe_info.cafe_name if cafe_info else 'Terralog Coffee' }}</h2>
+                    <h2 class="text-2xl font-black text-gray-800" x-text="cafeNama || 'Terralog Coffee'"></h2>
                     <div class="mt-2 flex items-center gap-2">
                         <span class="text-[10px] font-black text-gray-400 uppercase">Status:</span>
                         <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                            <input type="checkbox" id="cafeStatus" {% if cafe_info.is_open %}checked{% endif %} onchange="updateStatusCafe(this)">
+                            <input type="checkbox" x-model="cafeStatus" @change="updateStatusCafe">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -99,24 +61,40 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
                 <div>
                     <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Cafe</label>
-                    <input id="editNamaCafe" type="text" value="{{ cafe_info.cafe_name if cafe_info else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    <input type="text" x-model="cafeNama" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                 </div>
                 <div>
                     <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nomor Telepon</label>
-                    <input id="editNoTelp" type="text" value="{{ cafe_info.phone if cafe_info else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    <input type="text" x-model="cafeTelp" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                 </div>
                 <div>
                     <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Email Bisnis</label>
-                    <input id="editEmailCafe" type="email" value="{{ cafe_info.email if cafe_info else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    <input type="email" x-model="cafeEmail" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                 </div>
                 <div>
                     <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Alamat Lengkap</label>
-                    <textarea id="editAlamat" rows="1" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">{{ cafe_info.address if cafe_info else '' }}</textarea>
+                    <textarea rows="1" x-model="cafeAlamat" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"></textarea>
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                        Waktu Buffer Pengingat (Menit)
+                        <i data-lucide="help-circle" @click="infoBuffer()" class="w-4 h-4 text-terralogBlue hover:text-blue-900 transition-colors cursor-pointer"></i>
+                    </label>
+                    <input type="number" x-model.number="cafeBufferTime" min="0" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm font-bold">
+                </div>
+
+                <div>
+                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                        Waktu Clearance Meja (Menit)
+                        <i data-lucide="help-circle" @click="infoClearance()" class="w-4 h-4 text-terralogBlue hover:text-blue-900 transition-colors cursor-pointer"></i>
+                    </label>
+                    <input type="number" x-model.number="cafeClearanceTime" min="0" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm font-bold">
                 </div>
             </div>
 
             <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
-                <button type="button" onclick="simpanProfilCafe()" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
+                <button type="button" @click="simpanProfilCafe" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
                     Simpan Perubahan Cafe
                 </button>
             </div>
@@ -139,15 +117,15 @@
                                 <td class="py-4 font-bold text-gray-700">{{ hari.day_of_week }}</td>
                                 <td class="py-4">
                                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                                        <input type="checkbox" {% if hari.is_open %}checked{% endif %} onchange="toggleHari(this, '{{ hari.day_of_week }}')">
+                                        <input type="checkbox" {% if hari.is_open %}checked{% endif %} @change="toggleHari($event, '{{ hari.day_of_week }}')">
                                         <span class="toggle-slider"></span>
                                     </label>
                                 </td>
                                 <td class="py-4">
-                                    <input type="time" value="{{ hari.open_time.strftime('%H:%M') if hari.open_time else '00:00' }}" onchange="updateWaktu('{{ hari.day_of_week }}', 'buka', this.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
+                                    <input type="time" value="{{ hari.open_time.strftime('%H:%M') if hari.open_time else '00:00' }}" @change="updateWaktu('{{ hari.day_of_week }}', 'buka', $event.target.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
                                 </td>
                                 <td class="py-4">
-                                    <input type="time" value="{{ hari.close_time.strftime('%H:%M') if hari.close_time else '00:00' }}" onchange="updateWaktu('{{ hari.day_of_week }}', 'tutup', this.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
+                                    <input type="time" value="{{ hari.close_time.strftime('%H:%M') if hari.close_time else '00:00' }}" @change="updateWaktu('{{ hari.day_of_week }}', 'tutup', $event.target.value)" class="bg-gray-50 px-2 py-1 rounded-lg border border-gray-100 outline-none focus:border-terralogBlue text-xs font-bold shadow-sm">
                                 </td>
                             </tr>
                             {% endfor %}
@@ -161,23 +139,17 @@
             <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
                 <div class="relative">
                     <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
-                        
-                        <img id="userPhotoPreview" src="{% if current_user.photo %}{{ url_for('static', filename=current_user.photo) }}{% endif %}" 
-                             class="w-full h-full object-cover {% if not current_user.photo %}hidden{% endif %}"
-                             onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
-                        
-                        <span id="userInitial" class="{% if current_user.photo %}hidden{% endif %}">{{ current_user.name[:2] }}</span>
+                        <img :src="akunPhotoPreview" x-show="akunPhotoPreview" class="w-full h-full object-cover">
+                        <span x-show="!akunPhotoPreview">{{ current_user.name[:2] }}</span>
                     </div>
-                    
-                    <input type="file" id="inputPhotoAkun" name="photo" class="hidden" accept="image/*" onchange="previewPhotoAkun(this)">
-                    
-                    <button type="button" onclick="document.getElementById('inputPhotoAkun').click()" 
+                    <input type="file" x-ref="inputPhotoAkun" @change="previewPhotoAkun" class="hidden" accept="image/*">
+                    <button type="button" @click="$refs.inputPhotoAkun.click()" 
                             class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">
                         <i data-lucide="camera" class="w-4 h-4"></i>
                     </button>
                 </div>
                 <div>
-                    <h2 class="text-2xl font-black text-gray-800">{{ current_user.name }}</h2>
+                    <h2 class="text-2xl font-black text-gray-800" x-text="akunNama"></h2>
                     <p class="text-gray-400 font-medium mt-1 text-sm capitalize">Owner Terralog</p>
                 </div>
             </div>
@@ -186,23 +158,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
                     <div>
                         <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Lengkap</label>
-                        <input id="editNamaLengkapAkun" type="text" value="{{ current_user.name }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                        <input type="text" x-model="akunNama" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
                         <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Username</label>
-                        <input id="editNamaPanggilan" type="text" value="{{ current_user.username }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                        <input type="text" x-model="akunUsername" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
                         <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Email Pribadi</label>
-                        <input id="editEmailPribadi" type="email" value="{{ current_user.email or '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                        <input type="email" x-model="akunEmail" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                     <div>
                         <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">No. Handphone</label>
-                        <input id="editNoHpAkun" type="text" value="{{ current_user.phone or '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                        <input type="text" x-model="akunNoHp" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
                     </div>
                 </div>
                 <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
-                    <button type="button" onclick="simpanAkunSaya()" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
+                    <button type="button" @click="simpanAkunSaya" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
                         Simpan Akun
                     </button>
                 </div>
@@ -236,7 +208,7 @@
                     </div>
                     <p class="text-xs text-gray-400">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
                     <div class="flex mt-2">
-                        <button @click="savePassword()" 
+                        <button @click="savePassword" 
                                 class="w-full py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-[0.98]">
                             Perbarui Kata Sandi
                         </button>
@@ -249,92 +221,183 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function previewLogo(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById('logoPreview');
-            const placeholder = document.getElementById('logoPlaceholder');
-            img.src = e.target.result;
-            img.classList.remove('hidden');
-            placeholder.classList.add('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// PERBAIKAN 3: Ubah nama fungsi menjadi previewPhotoAkun
-function previewPhotoAkun(input) {
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = document.getElementById('userPhotoPreview');
-            const initial = document.getElementById('userInitial');
-            img.src = e.target.result;
-            img.classList.remove('hidden');
-            initial.classList.add('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-function simpanProfilCafe() {
-    const formData = new FormData();
-    formData.append('nama', document.getElementById('editNamaCafe').value);
-    formData.append('telp', document.getElementById('editNoTelp').value);
-    formData.append('alamat', document.getElementById('editAlamat').value);
-    formData.append('email', document.getElementById('editEmailCafe').value);
-    const logoInput = document.getElementById('inputLogo');
-    if (logoInput.files[0]) formData.append('logo', logoInput.files[0]);
-
-    fetch('/owner/api/update-profil-cafe', { method: 'POST', body: formData })
-    .then(r => r.json()).then(data => {
-        if (data.success) { showToast(data.message); setTimeout(() => location.reload(), 1000); }
-        else alert(data.message);
-    });
-}
-
-function simpanAkunSaya() {
-    const formData = new FormData();
-    formData.append('nama', document.getElementById('editNamaLengkapAkun').value);
-    formData.append('username', document.getElementById('editNamaPanggilan').value);
-    formData.append('email', document.getElementById('editEmailPribadi').value);
-    formData.append('no_hp', document.getElementById('editNoHpAkun').value);
+<script id="pengaturan-data" type="application/json">
+{
+    "cafeNama": {{ (cafe_info.cafe_name if cafe_info else '') | tojson }},
+    "cafeTelp": {{ (cafe_info.phone if cafe_info else '') | tojson }},
+    "cafeEmail": {{ (cafe_info.email if cafe_info else '') | tojson }},
+    "cafeAlamat": {{ (cafe_info.address if cafe_info else '') | tojson }},
+    "cafeStatus": {{ 'true' if cafe_info and cafe_info.is_open else 'false' }},
+    "cafeLogoPreview": "{{ url_for('static', filename='images/' + cafe_info.logo) if cafe_info and cafe_info.logo else '' }}",
     
-    // PERBAIKAN 4: Ganti nama variabel JS dan key 'foto' menjadi 'photo'
-    const photoInput = document.getElementById('inputPhotoAkun');
-    if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
-
-    fetch('/owner/api/update-akun', { method: 'POST', body: formData })
-    .then(r => r.json()).then(data => {
-        if (data.success) { showToast(data.message); setTimeout(() => location.reload(), 1000); }
-        else alert(data.message);
-    });
+    "cafeBufferTime": {{ cafe_info.reservation_buffer_time if cafe_info else 90 }},
+    "cafeClearanceTime": {{ cafe_info.table_clearance_time if cafe_info else 15 }},
+    
+    "akunNama": {{ (current_user.name or '') | tojson }},
+    "akunUsername": {{ (current_user.username or '') | tojson }},
+    "akunEmail": {{ (current_user.email or '') | tojson }},
+    "akunNoHp": {{ (current_user.phone or '') | tojson }},
+    "akunPhotoPreview": "{{ url_for('static', filename=current_user.photo) if current_user.photo else '' }}"
 }
+</script>
 
-function updateStatusCafe(checkbox) {
-    fetch('/owner/api/toggle-cafe-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: checkbox.checked })
-    }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
-}
+<script>
+document.addEventListener('alpine:init', () => {
+    const initData = JSON.parse(document.getElementById('pengaturan-data').textContent || '{}');
 
-function toggleHari(checkbox, namaHari) {
-    fetch('/owner/api/toggle-jam-operasional', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hari: namaHari, buka: checkbox.checked })
-    }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
-}
+    Alpine.data('pengaturanSistem', () => ({
+        activeTab: 'profil-cafe',
+        
+        // ── STATE: PROFIL CAFE ──
+        cafeNama: initData.cafeNama,
+        cafeTelp: initData.cafeTelp,
+        cafeEmail: initData.cafeEmail,
+        cafeAlamat: initData.cafeAlamat,
+        cafeStatus: initData.cafeStatus,
+        cafeLogoPreview: initData.cafeLogoPreview,
+        
+        // ✅ DEKLARASI VARIABEL BARU DI ALPINE
+        cafeBufferTime: initData.cafeBufferTime,
+        cafeClearanceTime: initData.cafeClearanceTime,
 
-function updateWaktu(namaHari, jenisWaktu, nilaiWaktu) {
-    fetch('/owner/api/update-waktu-operasional', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hari: namaHari, jenis: jenisWaktu, waktu: nilaiWaktu })
-    }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
-}
+        // ── STATE: AKUN SAYA ──
+        akunNama: initData.akunNama,
+        akunUsername: initData.akunUsername,
+        akunEmail: initData.akunEmail,
+        akunNoHp: initData.akunNoHp,
+        akunPhotoPreview: initData.akunPhotoPreview,
+
+        // ── STATE: KEAMANAN ──
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+
+        switchTab(tab) {
+            this.activeTab = tab;
+            this.$nextTick(() => lucide.createIcons());
+        },
+
+        previewLogo(e) {
+            const file = e.target.files[0];
+            if (file) this.cafeLogoPreview = URL.createObjectURL(file);
+        },
+
+        previewPhotoAkun(e) {
+            const file = e.target.files[0];
+            if (file) this.akunPhotoPreview = URL.createObjectURL(file);
+        },
+
+        simpanProfilCafe() {
+            const formData = new FormData();
+            formData.append('nama', this.cafeNama);
+            formData.append('telp', this.cafeTelp);
+            formData.append('alamat', this.cafeAlamat);
+            formData.append('email', this.cafeEmail);
+            
+            // ✅ SUNTIKKAN NILAI MENIT BARU KE FORMDATA
+            formData.append('reservation_buffer_time', this.cafeBufferTime);
+            formData.append('table_clearance_time', this.cafeClearanceTime);
+            
+            const logoInput = this.$refs.inputLogo;
+            if (logoInput.files[0]) formData.append('logo', logoInput.files[0]);
+
+            fetch('/owner/api/update-profil-cafe', { method: 'POST', body: formData })
+            .then(r => r.json()).then(data => {
+                if (data.success) { showToast(data.message); setTimeout(() => location.reload(), 1000); }
+                else showToast(data.message, 'error');
+            });
+        },
+
+        simpanAkunSaya() {
+            const formData = new FormData();
+            formData.append('nama', this.akunNama);
+            formData.append('username', this.akunUsername);
+            formData.append('email', this.akunEmail);
+            formData.append('no_hp', this.akunNoHp);
+            
+            const photoInput = this.$refs.inputPhotoAkun;
+            if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
+
+            fetch('/owner/api/update-akun', { method: 'POST', body: formData })
+            .then(r => r.json()).then(data => {
+                if (data.success) { showToast(data.message); setTimeout(() => location.reload(), 1000); }
+                else showToast(data.message, 'error');
+            });
+        },
+
+        updateStatusCafe() {
+            fetch('/owner/api/toggle-cafe-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: this.cafeStatus })
+            }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
+        },
+
+        // ==========================================
+        // INFO MODAL GLOBAL
+        // ==========================================
+        infoBuffer() {
+            Alpine.store('confirmModal').open({
+                title: 'Waktu Jeda Reservasi (Buffer)',
+                message: 'Jeda waktu aman sebelum meja dipakai tamu reservasi. \n\nContoh jika diisi 90 menit: Meja tersebut tidak akan diberikan lagi kepada tamu biasa dalam rentang waktu 1,5 jam sebelum jam reservasi tiba, agar meja dipastikan kosong dan tidak direbut.',
+                confirmText: 'Paham',
+                cancelText: 'Tutup',
+                type: 'primary',
+                action: () => {}
+            });
+        },
+
+        infoClearance() {
+            Alpine.store('confirmModal').open({
+                title: 'Waktu Bersih-Bersih Meja',
+                message: 'Waktu yang dibutuhkan oleh staf (Kasir/Pelayan) untuk membereskan piring dan mengelap meja setelah pelanggan pergi, sebelum meja tersebut siap digunakan oleh tamu selanjutnya.',
+                confirmText: 'Paham',
+                cancelText: 'Tutup',
+                type: 'primary',
+                action: () => {}
+            });
+        },
+
+        toggleHari(event, namaHari) {
+            fetch('/owner/api/toggle-jam-operasional', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hari: namaHari, buka: event.target.checked })
+            }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
+        },
+
+        updateWaktu(namaHari, jenisWaktu, nilaiWaktu) {
+            fetch('/owner/api/update-waktu-operasional', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hari: namaHari, jenis: jenisWaktu, waktu: nilaiWaktu })
+            }).then(r => r.json()).then(data => { if (data.success) showToast(data.message); });
+        },
+
+        savePassword() {
+            if (!this.currentPassword) return showToast('Kata sandi saat ini wajib diisi!', 'error');
+            if (this.newPassword.length < 8) return showToast('Kata sandi baru minimal 8 karakter!', 'error');
+            if (this.newPassword !== this.confirmPassword) return showToast('Konfirmasi kata sandi tidak cocok!', 'error');
+
+            fetch("{{ url_for('owner.update_password') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password_lama: this.currentPassword, 
+                    password_baru: this.newPassword 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message);
+                    this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
+                } else {
+                    showToast(data.message, 'error');
+                }
+            });
+        }
+    }));
+});
 </script>
 {% endblock %}

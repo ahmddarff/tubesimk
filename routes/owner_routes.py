@@ -618,6 +618,8 @@ def update_profil_cafe():
         cafe_info.phone = telp or cafe_info.phone
         cafe_info.address = alamat or cafe_info.address
         cafe_info.email = email or cafe_info.email
+        cafe_info.reservation_buffer_time = int(request.form.get('reservation_buffer_time', 90))
+        cafe_info.table_clearance_time = int(request.form.get('table_clearance_time', 15))
         
         if 'logo' in request.files:
             file = request.files['logo']

@@ -33,7 +33,7 @@ class CafeSetting(db.Model):
     email                   = db.Column(db.String(100), nullable=True)
     address                 = db.Column(db.Text, nullable=True)
     is_open                 = db.Column(db.Boolean, default=True)
-    reservation_buffer_time = db.Column(db.Integer, default=90) # Dalam menit, waktu pengingat bahwa reservasi akan datang (misal: 90 menit sebelum waktu reservasi)
+    reservation_buffer_time = db.Column(db.Integer, default=90) # Dalam menit, waktu pengingat bahwa reservasi akan datang (misal: 90 menit sebelum waktu reservasi) atau waktu minimal untuk buat reservasi jika mejanya masih dipakai tamu walk in
     table_clearance_time    = db.Column(db.Integer, default=15) # Dalam menit, waktu wajib kosongkan meja sebelum waktu reservasi menggunakan meja yang sama
     
     updated_at              = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
