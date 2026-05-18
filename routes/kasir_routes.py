@@ -303,7 +303,6 @@ def pesanan_aktif():
 
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
         nama_pelanggan = order.customer_name or (order.customer.name if order.customer else "Tamu")
-        waktu_iso_str = order.created_at.isoformat() + 'Z'
 
         # AMBIL DATA METODE DARI DB (Ubah jadi huruf besar, default CASH jika kosong)
         pm_raw = order.payment_method
@@ -312,8 +311,7 @@ def pesanan_aktif():
         pesanan_aktif_data.append({
             'id': order.order_number,
             'nama': nama_pelanggan,
-            'waktu_asli': order.created_at.strftime('%H:%M'),
-            'waktu_iso': waktu_iso_str,
+            'waktu_iso': order.created_at.isoformat() + 'Z',
             'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
             'status': str(order.order_status).upper(), 
@@ -431,11 +429,8 @@ def riwayat_transaksi():
 
         data_transaksi.append({
             'id': order.order_number,
-            # ✅ REVISI: Tanggal visual dalam Bahasa Indonesia
-            'tanggal': f"{order.created_at.day} {bulan_indo[order.created_at.month]} {order.created_at.year}",
-            # ✅ REVISI: Tanggal mentah untuk filter kalender HTML (YYYY-MM-DD)
+            'waktu_iso': order.created_at.isoformat() + 'Z',
             'tanggal_mentah': order.created_at.strftime('%Y-%m-%d'),
-            'waktu': order.created_at.strftime('%H:%M'),
             'kasir': nama_kasir,
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
@@ -918,7 +913,7 @@ def add_reservation():
         new_end = new_start + timedelta(minutes=duration)
         
         # ── BARIKADE 1: CEK APAKAH WAKTU SUDAH TERLEWAT ──
-        if new_start < datetime.now():
+        if new_start < datetime.now(datetime.timezone.utc):
             return jsonify({"success": False, "message": "Gagal! Tidak dapat membuat reservasi untuk waktu yang sudah terlewat."})
         
         # Tarik Pengaturan Kafe dari Database
@@ -1081,8 +1076,8 @@ def update_reservation():
 # INTERNAL HELPER: LAZY CLEANUP ORDER MANDIRI KEDALUWARSA (5 MENIT)
 # ==========================================
 def auto_cleanup_expired_orders():
-    # Tentukan batas toleransi (5 menit yang lalu dari detik ini)
-    threshold_time = datetime.now() - timedelta(minutes=5)
+    # ✅ FIX FATAL BUG: Gunakan utcnow() agar sejajar apple-to-apple dengan data di DB!
+    threshold_time = datetime.utcnow() - timedelta(minutes=5)
     
     # Cari order mandiri (user_id TIDAK NULL) yang belum bayar, masih pending, & lewat 5 menit
     expired_orders = Order.query.filter(

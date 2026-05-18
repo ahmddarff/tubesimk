@@ -13,22 +13,34 @@
 {% block content %}
 <div x-data="kanbanKoki()" x-cloak>
 
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Papan Antrean Dapur</h1>
+            <p class="text-sm text-gray-500 font-medium mt-0.5">Pantau pesanan dan atur alur masak</p>
+        </div>
+        
+        <button @click="showModalRekap = true" 
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-terralogGold text-terralogBlue text-sm font-bold hover:bg-yellow-400 hover:shadow-lg transition-all active:scale-95 border-2 border-yellow-500/20">
+            <i class="fa-solid fa-clipboard-list"></i> Lihat Rekap Masak
+        </button>
+    </div>
+
     <div class="grid grid-cols-4 gap-4 mb-5">
-        <div class="bg-red-50 rounded-xl p-4 border-2 border-red-500 shadow-sm">
-            <p class="text-sm font-bold text-gray-800 mb-1">Menunggu</p>
-            <p class="text-3xl font-extrabold text-gray-900" id="count-pending" x-text="countPending">0</p>
+        <div class="bg-red-50 rounded-xl p-4 border-2 border-red-500 shadow-sm flex flex-col justify-center">
+            <p class="text-sm font-bold text-gray-800 mb-1 leading-none">Menunggu</p>
+            <p class="text-3xl font-extrabold text-gray-900 leading-none" id="count-pending" x-text="countPending">0</p>
         </div>
-        <div class="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-400 shadow-sm">
-            <p class="text-sm font-bold text-gray-800 mb-1">Diproses</p>
-            <p class="text-3xl font-extrabold text-gray-900" id="count-preparing" x-text="countPreparing">0</p>
+        <div class="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-400 shadow-sm flex flex-col justify-center">
+            <p class="text-sm font-bold text-gray-800 mb-1 leading-none">Diproses</p>
+            <p class="text-3xl font-extrabold text-gray-900 leading-none" id="count-preparing" x-text="countPreparing">0</p>
         </div>
-        <div class="bg-green-50 rounded-xl p-4 border-2 border-green-400 shadow-sm">
-            <p class="text-sm font-bold text-gray-800 mb-1">Siap</p>
-            <p class="text-3xl font-extrabold text-gray-900" id="count-ready" x-text="countReady">0</p>
+        <div class="bg-green-50 rounded-xl p-4 border-2 border-green-400 shadow-sm flex flex-col justify-center">
+            <p class="text-sm font-bold text-gray-800 mb-1 leading-none">Siap</p>
+            <p class="text-3xl font-extrabold text-gray-900 leading-none" id="count-ready" x-text="countReady">0</p>
         </div>
-        <div class="bg-[#E5EAFF] rounded-xl p-4 border-2 border-[#1B2FAA] shadow-sm">
-            <p class="text-sm font-bold text-gray-800 mb-1">Total</p>
-            <p class="text-3xl font-extrabold text-gray-900" id="count-total" x-text="orders.length">0</p>
+        <div class="bg-[#E5EAFF] rounded-xl p-4 border-2 border-[#1B2FAA] shadow-sm flex flex-col justify-center">
+            <p class="text-sm font-bold text-gray-800 mb-1 leading-none">Total Aktif</p>
+            <p class="text-3xl font-extrabold text-gray-900 leading-none" id="count-total" x-text="orders.length">0</p>
         </div>
     </div>
 
@@ -49,7 +61,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-3 mb-5">
+                        <div class="flex flex-col gap-2.5 mb-4">
                             <template x-for="item in order.items" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
@@ -94,7 +106,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-3 mb-5">
+                        <div class="flex flex-col gap-2.5 mb-4">
                             <template x-for="item in order.items" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
@@ -158,7 +170,7 @@
                         </div>
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
-                        <div class="flex flex-col gap-3 mb-5">
+                        <div class="flex flex-col gap-2.5 mb-4">
                             <template x-for="item in order.items" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
@@ -185,6 +197,54 @@
         </div>
 
     </div>
+
+    <div x-show="showModalRekap" 
+         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" 
+         x-transition.opacity 
+         x-cloak>
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]" 
+             @click.away="showModalRekap = false" 
+             x-transition.scale.origin.bottom>
+            
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#FCEAE8]">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center">
+                        <i class="fa-solid fa-fire text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-red-600 text-lg leading-none">Rekap Kebutuhan Masak</h3>
+                        <p class="text-xs font-bold text-red-400 mt-1">Total porsi antrean dapur saat ini</p>
+                    </div>
+                </div>
+                <button @click="showModalRekap = false" class="text-red-400 hover:text-red-600 hover:bg-red-100 p-2 rounded-xl transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+                <div class="flex flex-col gap-3">
+                    <template x-for="rekap in rekapBahan" :key="rekap.nama">
+                        <div class="flex justify-between items-center px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-terralogGold transition-colors">
+                            <span class="font-extrabold text-gray-800 text-base" x-text="rekap.nama"></span>
+                            <span class="bg-terralogGold text-terralogBlue font-black px-4 py-1.5 rounded-xl shadow-sm text-sm" x-text="rekap.qty + ' Porsi'"></span>
+                        </div>
+                    </template>
+                    
+                    <div x-show="rekapBahan.length === 0" class="text-center py-12 text-gray-400">
+                        <i class="fa-solid fa-mug-hot text-5xl mb-4 opacity-30"></i>
+                        <p class="text-base font-bold text-gray-500">Dapur sedang santai.</p>
+                        <p class="text-xs mt-1">Tidak ada item yang perlu dimasak saat ini.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-white border-t border-gray-100">
+                <button @click="showModalRekap = false" class="w-full py-3.5 bg-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-300 transition-colors">
+                    Tutup Rekap
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -198,6 +258,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('kanbanKoki', () => ({
         orders: JSON.parse(document.getElementById('orders-data').textContent || '[]'),
         now: new Date(),
+        showModalRekap: false, // ✅ State Modal Rekap
 
         init() {
             setInterval(() => {
@@ -205,6 +266,26 @@ document.addEventListener('alpine:init', () => {
                 this.syncSidebarBadge();
             }, 60000);
             this.syncSidebarBadge();
+        },
+
+        // ✅ LOGIKA CERDAS: Merekap semua masakan yang statusnya belum matang (Pending & Preparing)
+        get rekapBahan() {
+            let rekap = {};
+            this.orders.forEach(order => {
+                if (['pending', 'preparing'].includes(order.status)) {
+                    order.items.forEach(item => {
+                        // Hanya merekap item yang murni belum selesai (mengabaikan yang status individualnya ready)
+                        if (['pending', 'preparing'].includes(item.status)) {
+                            if (!rekap[item.nama]) rekap[item.nama] = 0;
+                            rekap[item.nama] += item.qty;
+                        }
+                    });
+                }
+            });
+            // Mengubah objek menjadi array lalu mengurutkannya dari porsi terbanyak ke terkecil
+            return Object.entries(rekap)
+                         .map(([nama, qty]) => ({nama, qty}))
+                         .sort((a, b) => b.qty - a.qty);
         },
 
         get countPending() { return this.orders.filter(o => o.status === 'pending').length; },

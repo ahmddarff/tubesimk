@@ -1,5 +1,47 @@
 from datetime import datetime
 from models import Order, Reservation
+from zoneinfo import ZoneInfo # Jika Python < 3.9, gunakan: from datetime import timezone, timedelta
+
+def format_tanggal_lokal(dt_utc):
+    """
+    Mengonversi datetime UTC dari DB ke Asia/Jakarta (WIB) 
+    dan mengembalikan string format tanggal: 19 Mei 2026
+    """
+    if not dt_utc:
+        return ""
+    
+    # 1. Pastikan objek datetime memiliki info timezone UTC jika belum ada
+    if dt_utc.tzinfo is None:
+        dt_utc = dt_utc.replace(tzinfo=ZoneInfo("UTC"))
+        
+    # 2. Konversi ke WIB
+    dt_wib = dt_utc.astimezone(ZoneInfo("Asia/Jakarta"))
+    
+    # 3. Format nama bulan Indonesia
+    bulan_indo = [
+        "Jan", "Feb", "Mar", "Apr", "Mei", "Juni",
+        "Juli", "Ags", "Sep", "Okt", "Nov", "Des"
+    ]
+    
+    day = dt_wib.day
+    month = bulan_indo[dt_wib.month - 1]
+    year = dt_wib.year
+    
+    return f"{day} {month} {year}"
+
+def format_waktu_lokal(dt_utc):
+    """
+    Mengonversi datetime UTC dari DB ke Asia/Jakarta (WIB)
+    dan mengembalikan string format waktu: 14:25
+    """
+    if not dt_utc:
+        return ""
+        
+    if dt_utc.tzinfo is None:
+        dt_utc = dt_utc.replace(tzinfo=ZoneInfo("UTC"))
+        
+    dt_wib = dt_utc.astimezone(ZoneInfo("Asia/Jakarta"))
+    return dt_wib.strftime('%H:%M')
 
 def generate_order_number():
     """

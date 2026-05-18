@@ -106,6 +106,16 @@
         </div>
 
         <div class="w-48 relative">
+            <i data-lucide="check-circle" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterStatus" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Status</option>
+                <option value="LUNAS">Lunas</option>
+                <option value="BATAL">Batal</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+        </div>
+
+        <div class="w-48 relative">
             <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
             <input type="date" x-model="filterTanggal" @change="currentPage = 1" 
                 class="w-full pl-10 pr-4 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition cursor-pointer">
@@ -235,6 +245,7 @@ document.addEventListener('alpine:init', () => {
         filterTanggal: '',
         filterSumber: 'SEMUA',
         filterMetode: 'SEMUA',
+        filterStatus: 'SEMUA',
         
         showModal: false,
         selectedTrx: {},
@@ -250,7 +261,10 @@ document.addEventListener('alpine:init', () => {
                 const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
                 const matchMetode = this.filterMetode === 'SEMUA' || t.metode === this.filterMetode;
                 const matchTanggal = this.filterTanggal === '' || t.tanggal_mentah === this.filterTanggal;
-                return matchSearch && matchSumber && matchMetode && matchTanggal;
+                let matchStatus = true;
+                if (this.filterStatus === 'LUNAS') matchStatus = t.status === 'paid';
+                if (this.filterStatus === 'BATAL') matchStatus = t.status === 'cancelled';
+                return matchSearch && matchSumber && matchMetode && matchTanggal && matchStatus;
             });
             return res;
         },

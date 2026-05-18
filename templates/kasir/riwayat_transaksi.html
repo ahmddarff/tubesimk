@@ -58,6 +58,16 @@
             </select>
         </div>
 
+        <div class="w-48 relative">
+            <i data-lucide="check-circle" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterStatus" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Status</option>
+                <option value="LUNAS">Lunas</option>
+                <option value="BATAL">Batal</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+        </div>
+
         <div class="w-44 relative">
             <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
             <input type="date" x-model="filterDate" class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:border-terralogBlue shadow-sm outline-none transition cursor-pointer">
@@ -83,7 +93,7 @@
                     <template x-for="trx in pagedTransactions" :key="trx.id">
                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
                             <td class="px-6 py-4 text-terralogBlue font-bold" x-text="trx.id"></td>
-                            <td class="px-6 py-4 text-gray-500" x-text="trx.tanggal + ' ' + trx.waktu"></td>
+                            <td class="px-6 py-4 text-gray-500" x-text="formatTanggalLokal(trx.waktu_iso) + ', ' + formatWaktuLokal(trx.waktu_iso)"></td>
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="trx.pelanggan"></td>
                             
                             <td class="px-6 py-4 text-center">
@@ -184,6 +194,7 @@ document.addEventListener('alpine:init', () => {
         filterMethod: '',
         filterDate: '',
         filterSumber: 'SEMUA',
+        filterStatus: 'SEMUA',
         currentUserName: '{{ current_user.name }}', // Jinja akan menyuntikkan nama akun yang sedang login
         
         showModal: false,
@@ -202,12 +213,28 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ==========================================
+        // FUNGSI KONVERSI UTC KE WAKTU LOKAL
+        // ==========================================
+        formatWaktuLokal(isoString) {
+            if (!isoString) return '-';
+            const d = new Date(isoString);
+            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        },
+
+        formatTanggalLokal(isoString) {
+            if (!isoString) return '-';
+            const d = new Date(isoString);
+            const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+            return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
+        },
+
+        // ==========================================
         // FUNGSI CETAK ULANG STRUK (RIWAYAT TRANSAKSI)
         // ==========================================
         printReceipt(trx) {
             this.receiptData = {
                 no: trx.id,
-                date: trx.tanggal + ' ' + (trx.waktu || ''),
+                date: this.formatTanggalLokal(trx.waktu_iso) + ' - ' + this.formatWaktuLokal(trx.waktu_iso),
                 customer: trx.pelanggan,
                 type: trx.tipe,
                 table: trx.meja,
@@ -262,10 +289,12 @@ document.addEventListener('alpine:init', () => {
             return this.transactions.filter(t => {
                 const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
                 const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
-                // ✅ UBAH t.tanggal menjadi t.tanggal_mentah
                 const matchDate = this.filterDate === '' || t.tanggal_mentah === this.filterDate;
                 const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
-                return matchName && matchMethod && matchDate && matchSumber;
+                let matchStatus = true;
+                if (this.filterStatus === 'LUNAS') matchStatus = t.status_pembayaran === 'paid';
+                if (this.filterStatus === 'BATAL') matchStatus = t.status_pembayaran === 'cancelled';
+                return matchName && matchMethod && matchDate && matchSumber && matchStatus;
             });
         },
 

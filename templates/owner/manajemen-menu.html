@@ -356,6 +356,27 @@ document.addEventListener('alpine:init', () => {
             this.showModalEdit = true;
         },
 
+        handleDrop(event, type) {
+            const file = event.dataTransfer.files[0];
+            
+            // Validasi apakah yang di-drop benar-benar sebuah gambar
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    if (type === 'tambah') { 
+                        this.formMenu.imgPreview = e.target.result; 
+                        this.formMenu.file = file; 
+                    } else { 
+                        this.editMenuForm.imgPreview = e.target.result; 
+                        this.editMenuForm.file = file; 
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showToast('Hanya file gambar (JPG/PNG) yang diperbolehkan!', 'error');
+            }
+        },
+
         previewImage(event, type) {
             const file = event.target.files[0];
             if (file) {

@@ -367,9 +367,8 @@ document.addEventListener('alpine:init', () => {
                     // 2. Perbarui status induk (kartu pesanan) berdasarkan hasil dari Python Auto-Sync!
                     this.updateStatus(data.new_order_status);
                     
-                    // 3. Jika Python memutuskan seluruh orderan sudah 'SERVED', tutup modal
+                    // 3. REVISI: Modal tidak ditutup paksa. Biarkan kasir melihat tombol berubah.
                     if (data.new_order_status === 'SERVED') {
-                        this.showDetail = false;
                         showToast('Semua pesanan telah diantar!', 'success');
                     } else {
                         showToast(data.message, 'success');
