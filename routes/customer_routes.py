@@ -779,8 +779,11 @@ def pesanan_detail(order_id):
         user_id=current_user.id
     ).first_or_404()
 
-    # Menentukan apakah pesanan termasuk dalam kategori riwayat/selesai
-    is_history = order.payment_status == 'cancelled' or order.order_status == 'served'
+    # PERBAIKAN LOGIKA: Cek apakah pesanan sudah memiliki ulasan pada item-itemnya
+    has_review = any(item.review is not None for item in order.items)
+
+    # Pesanan masuk ke riwayat HANYA JIKA dibatalkan, ATAU (sudah served DAN sudah diulas)
+    is_history = order.payment_status == 'cancelled' or (order.order_status == 'served' and has_review)
 
     order_dict = {
         'id': order.id,
@@ -799,8 +802,8 @@ def pesanan_detail(order_id):
             'qty': item.qty,
             'img': item.menu.image_url,
             'note': item.notes,
-            'rating': item.review.rating if item.review else None, # Menambahkan data rating
-            'comment': item.review.comment if item.review else None # Menambahkan data komentar ulasan
+            'rating': item.review.rating if item.review else None, 
+            'comment': item.review.comment if item.review else None 
         } for item in order.items]
     }
 
