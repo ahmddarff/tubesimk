@@ -184,9 +184,10 @@
                     const resData = await response.json();
                     
                     if (resData.success) {
-                        alert(`${this.qty}x ${this.menuName} berhasil ditambahkan ke keranjang!`);
-                        await this.loadCart(); // Perbarui data badge keranjang
-                        this.qty = 1; // Reset input kuantitas
+                        // Ubah ke toast success (hijau)
+                        showToast(`${this.qty}x ${this.menuName} berhasil ditambahkan ke keranjang!`, 'success');
+                        await this.loadCart(); 
+                        this.qty = 1; 
                     }
                 } catch (error) {
                     console.error('Gagal menambahkan item:', error);
@@ -195,7 +196,8 @@
             
             goToCheckout() {
                 if (this.cart.length === 0) {
-                    alert('Pilih minimal 1 item!');
+                    // Ubah ke toast error
+                    showToast('Pilih minimal 1 item!', 'error');
                     return;
                 }
                 window.location.href = '/customer/checkout';

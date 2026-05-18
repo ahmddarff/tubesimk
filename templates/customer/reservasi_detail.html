@@ -102,7 +102,7 @@
                 <div class="space-y-6">
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Nama Pemesan</p>
-                        <p class="text-base font-bold text-slate-900">{{ reservation.customer_name if reservation.customer_name else 'Tamu' }}</p>
+                        <p class="text-base font-bold text-slate-900">{{ reservation.customer_name if reservation.customer_name else current_user.name }}</p>
                     </div>
                     
                     <div class="pt-6 border-t border-gray-100">
@@ -239,12 +239,14 @@
                     if (data.success) {
                         window.location.reload();
                     } else {
-                        alert(data.message || 'Gagal membatalkan reservasi.');
+                        // Ubah ke toast error
+                        showToast(data.message || 'Gagal membatalkan reservasi.', 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Terjadi masalah koneksi ke server.');
+                    // Ubah ke toast error
+                    showToast('Terjadi masalah koneksi ke server.', 'error');
                 });
             }
         };

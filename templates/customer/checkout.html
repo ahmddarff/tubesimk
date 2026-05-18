@@ -125,7 +125,7 @@
                                         <i data-lucide="message-square" class="w-3.5 h-3.5 text-slate-400"></i>
                                         <label class="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Catatan (Opsional)</label>
                                     </div>
-                                    <input type="text" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-transparent text-sm text-slate-700 p-0 placeholder-slate-400 font-medium">
+                                    <input type="text" maxlength="255" placeholder="Cth: Pedas dikit, jangan pake bawang..." @change="updateNote(index, $event.target.value)" :value="item.note" class="w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 focus:border-transparent text-sm text-slate-700 p-0 placeholder-slate-400 font-medium">
                                 </div>
 
                             </div>
@@ -295,13 +295,14 @@
 
             async submitOrder() {
                 if(this.items.length === 0){
-                    alert('Keranjang anda masih kosong!')
-                    return
+                    // Ubah ke toast error
+                    showToast('Keranjang anda masih kosong!', 'error');
+                    return;
                 }
-                // 2. Sesuaikan validasi: meja hanya wajib jika Dine In
                 if(this.orderType === 'dine_in' && !this.meja){
-                    alert('Pilih meja terlebih dahulu!')
-                    return
+                    // Ubah ke toast error
+                    showToast('Pilih meja terlebih dahulu!', 'error');
+                    return;
                 }
                 try {
                     const response = await fetch('/customer/submit-order', {
@@ -311,7 +312,7 @@
                             nama: this.nama,
                             table_id: this.meja,
                             payment_method: this.paymentMethod,
-                            order_type: this.orderType, // <-- 3. Tambahkan ke payload
+                            order_type: this.orderType,
                             items: this.items
                         })
                     })
@@ -324,12 +325,14 @@
                             window.location.href = `/customer/pesanan/${result.order_id}`
                         }
                     } else {
-                        alert(result.message)
+                        // Ubah ke toast error
+                        showToast(result.message, 'error');
                     }
 
                 } catch(error){
                     console.error(error)
-                    alert('Ada error koneksi.')
+                    // Ubah ke toast error
+                    showToast('Ada error koneksi.', 'error');
                 }
             }
         }
