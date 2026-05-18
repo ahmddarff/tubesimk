@@ -578,7 +578,7 @@ def remove_cart_item(item_id):
 @customer_bp.route('/pesanan-saya')
 @login_required
 def pesanan_saya():
-    # Mengambil semua pesanan milik user beserta relasi items dan review untuk mencegah N+1 query
+    # Mengambil semua pesanan milik user beserta relasi items dan review
     user_orders = Order.query.options(
         joinedload(Order.items).joinedload(OrderItem.review)
     ).filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
@@ -587,6 +587,11 @@ def pesanan_saya():
     history_orders = []
     
     for o in user_orders:
+        # PERBAIKAN: Jika payment_method masih kosong (None), artinya ini masih berupa keranjang belanja aktif dan BELUM di-checkout.
+        # Maka, lewati (skip) dan jangan masukkan ke Pesanan Aktif maupun Riwayat.
+        if o.payment_method is None:
+            continue
+            
         # Jika pesanan dibatalkan, langsung masukkan ke riwayat
         if o.payment_status == 'cancelled':
             history_orders.append(o)
