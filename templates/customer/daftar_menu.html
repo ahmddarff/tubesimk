@@ -243,8 +243,8 @@
                 </div>
 
                 <div>
-                    <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-bold py-3 rounded-lg transition cursor-pointer">
-                        <span x-text="totalQty + ' Item | Bayar Rp ' + total.toLocaleString('id-ID')"></span>
+                    <button @click="window.location.href='/customer/checkout'" :disabled="cart.length === 0" class="w-full bg-terralogGold hover:bg-terralogGold/90 disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition cursor-pointer">
+                        <span x-text="totalQty + ' Item | Rp ' + total.toLocaleString('id-ID')"></span>
                     </button>
                 </div>
             </div>

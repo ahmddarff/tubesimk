@@ -95,16 +95,21 @@
     </div>
 
     <div class="min-h-screen flex">
+        {% if not is_404 %}
         <aside class="fixed left-0 top-0 w-72 h-screen z-40 shadow-lg">
             {% include 'includes/sidebar.html' %}
         </aside>
+        {% endif %}
 
-        <div class="flex-1 ml-72 flex flex-col min-h-screen">
+        <div class="flex-1 {% if not is_404 %}ml-72{% endif %} flex flex-col min-h-screen">
+            
+            {% if not is_404 %}
             <header class="sticky top-0 z-30 bg-white shadow-sm">
                 {% include 'includes/navbar.html' %}
             </header>
+            {% endif %}
 
-            <main class="flex-1 p-8 overflow-x-hidden">
+            <main class="flex-1 {% if not is_404 %}p-8{% endif %} overflow-x-hidden">
                 {% block content %}{% endblock %}
             </main>
         </div>
