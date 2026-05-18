@@ -399,15 +399,18 @@ def reservasi():
 @kasir_bp.route('/riwayat-transaksi')
 @login_required
 def riwayat_transaksi():
-    # PERBAIKAN: Menerapkan logika bersyarat (PAID wajib SERVED, CANCELLED bebas)
+    # PAID & SERVED wajib memiliki table_id NULL (artinya kasir sudah lepas meja)
     orders_db = Order.query.filter(
         db.or_(
-            db.and_(Order.payment_status == 'paid', Order.order_status == 'served'),
+            db.and_(Order.payment_status == 'paid', Order.order_status == 'served', Order.table_id.is_(None)),
             Order.payment_status == 'cancelled'
         )
     ).order_by(Order.created_at.desc()).all()
     
     data_transaksi = []
+    
+    # ✅ KAMUS BULAN INDONESIA
+    bulan_indo = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'}
     
     for order in orders_db:
         items_list = []
@@ -417,22 +420,21 @@ def riwayat_transaksi():
                 'harga': item.price_at_order,
                 'jumlah': item.qty,
                 'subtotal': item.price_at_order * item.qty,
-                'note': item.notes or '' # ✅ SEKARANG MENGIRIM DATA NOTES RIIL
+                'note': item.notes or '' 
             })
 
         nama_pelanggan = order.customer_name or (order.customer.name if order.customer else "Tamu")
-        
         pm_raw = order.payment_method
         metode_bayar = str(pm_raw).upper() if pm_raw else '-'
-
         tipe_map = {'dine_in': 'DINE IN', 'take_away': 'TAKE AWAY'}
-
-        # ✅ BENAR: Tarik nama dari tabel User melalui relasi cashier (atau 'Self-Service' jika pesan sendiri)
         nama_kasir = order.cashier.name if order.cashier else 'Self-Service'
 
         data_transaksi.append({
             'id': order.order_number,
-            'tanggal': order.created_at.strftime('%Y-%m-%d'),
+            # ✅ REVISI: Tanggal visual dalam Bahasa Indonesia
+            'tanggal': f"{order.created_at.day} {bulan_indo[order.created_at.month]} {order.created_at.year}",
+            # ✅ REVISI: Tanggal mentah untuk filter kalender HTML (YYYY-MM-DD)
+            'tanggal_mentah': order.created_at.strftime('%Y-%m-%d'),
             'waktu': order.created_at.strftime('%H:%M'),
             'kasir': nama_kasir,
             'pelanggan': nama_pelanggan,
@@ -440,8 +442,8 @@ def riwayat_transaksi():
             'total': order.total_amount,
             'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
-            'status_pembayaran': order.payment_status, # ✅ DATA BARU: 'paid' atau 'cancelled'
-            'alasan_batal': order.cancellation_reason or '', # ✅ DATA BARU: Alasan pembatalan dari DB
+            'status_pembayaran': order.payment_status, 
+            'alasan_batal': order.cancellation_reason or '', 
             'items': items_list,
             'sumber': 'APLIKASI' if order.user_id else 'KASIR'
         })

@@ -72,10 +72,11 @@
                     <tr>
                         <th class="px-6 py-4 w-[15%]">No. Order</th>
                         <th class="px-6 py-4 w-[15%]">Tanggal</th>
-                        <th class="px-6 py-4 w-[25%]">Pelanggan</th>
-                        <th class="px-6 py-4 text-center w-[15%]">Metode</th>
-                        <th class="px-6 py-4 w-[15%]">Total</th>
-                        <th class="px-6 py-4 text-center w-[15%]">Aksi</th>
+                        <th class="px-6 py-4 w-[22%]">Pelanggan</th>
+                        <th class="px-6 py-4 text-center w-[13%]">Metode</th>
+                        <th class="px-6 py-4 w-[13%]">Total</th>
+                        <th class="px-6 py-4 text-center w-[12%]">Status</th>
+                        <th class="px-6 py-4 text-center w-[10%]">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm font-medium text-gray-700">
@@ -84,28 +85,41 @@
                             <td class="px-6 py-4 text-terralogBlue font-bold" x-text="trx.id"></td>
                             <td class="px-6 py-4 text-gray-500" x-text="trx.tanggal + ' ' + trx.waktu"></td>
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="trx.pelanggan"></td>
+                            
                             <td class="px-6 py-4 text-center">
-                                <template x-if="trx.status_pembayaran === 'cancelled'">
-                                    <span class="px-3 py-1 rounded-lg text-[10px] font-black bg-red-500 text-white shadow-sm uppercase tracking-wider">BATAL</span>
+                                <template x-if="trx.metode === 'QRIS'">
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm bg-terralogBlue text-white tracking-wider">QRIS</span>
                                 </template>
-                                <template x-if="trx.status_pembayaran !== 'cancelled'">
-                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm" 
-                                          :class="trx.metode === 'QRIS' ? 'bg-terralogBlue text-white' : 'bg-emerald-500 text-white'" 
-                                          x-text="trx.metode"></span>
+                                <template x-if="trx.metode === 'CASH'">
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm bg-emerald-500 text-white tracking-wider">CASH</span>
+                                </template>
+                                <template x-if="trx.metode === '-'">
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold bg-gray-100 text-gray-400 border border-gray-200 inline-block w-14 text-center">-</span>
                                 </template>
                             </td>
+                            
                             <td class="px-6 py-4 font-bold text-gray-900" x-text="'Rp ' + trx.total.toLocaleString('id-ID')"></td>
+                            
+                            <td class="px-6 py-4 text-center">
+                                <template x-if="trx.status_pembayaran === 'paid'">
+                                    <span class="text-[10px] font-bold text-white bg-emerald-500 px-2.5 py-1 rounded-lg shadow-sm">LUNAS</span>
+                                </template>
+                                <template x-if="trx.status_pembayaran === 'cancelled'">
+                                    <span class="text-[10px] font-bold text-white bg-red-500 px-2.5 py-1 rounded-lg shadow-sm">BATAL</span>
+                                </template>
+                            </td>
+
                             <td class="px-6 py-4 text-center flex justify-center gap-2">
                                 <button @click="openDetail(trx)" 
                                         title="Lihat Detail"
-                                        class="p-2 text-terralogBlue bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-xl transition shadow-sm">
+                                        class="p-2 text-terralogBlue bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-xl transition shadow-sm cursor-pointer">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </button>
                                 
                                 <button @click="printReceipt(trx)" 
                                         x-show="trx.status_pembayaran !== 'cancelled'"
                                         title="Cetak Ulang Struk"
-                                        class="p-2 text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-xl transition shadow-sm">
+                                        class="p-2 text-gray-500 bg-gray-100 hover:bg-gray-200 hover:text-gray-800 rounded-xl transition shadow-sm cursor-pointer">
                                     <i data-lucide="printer" class="w-4 h-4"></i>
                                 </button>
                             </td>
@@ -113,7 +127,7 @@
                     </template>
                     
                     <tr x-show="filteredTransactions.length === 0">
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-bold">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-bold">
                             <i data-lucide="inbox" class="w-10 h-10 mx-auto mb-3 opacity-50"></i>
                             Tidak ada data transaksi yang ditemukan.
                         </td>
@@ -236,7 +250,8 @@ document.addEventListener('alpine:init', () => {
         // 1. DATA KHUSUS STATISTIK (Hanya merespons filter kalender)
         get dailyTransactions() {
             return this.transactions.filter(t => {
-                const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
+                // ✅ UBAH t.tanggal menjadi t.tanggal_mentah
+                const matchDate = this.filterDate === '' || t.tanggal_mentah === this.filterDate;
                 const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
                 return matchDate && matchSumber;
             });
@@ -247,7 +262,8 @@ document.addEventListener('alpine:init', () => {
             return this.transactions.filter(t => {
                 const matchName = t.pelanggan.toLowerCase().includes(this.searchQuery.toLowerCase()) || t.id.toLowerCase().includes(this.searchQuery.toLowerCase());
                 const matchMethod = this.filterMethod === '' || t.metode === this.filterMethod;
-                const matchDate = this.filterDate === '' || t.tanggal === this.filterDate;
+                // ✅ UBAH t.tanggal menjadi t.tanggal_mentah
+                const matchDate = this.filterDate === '' || t.tanggal_mentah === this.filterDate;
                 const matchSumber = this.filterSumber === 'SEMUA' || t.sumber === this.filterSumber;
                 return matchName && matchMethod && matchDate && matchSumber;
             });

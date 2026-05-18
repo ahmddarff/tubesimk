@@ -10,22 +10,38 @@
             <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Laporan Penjualan</h1>
             <p class="text-gray-500 mt-1 text-sm">Pantau statistik pendapatan, tren transaksi, dan riwayat pesanan kafe Anda</p>
         </div>
-        <button @click="unduhLaporan()"
-                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:shadow-lg transition-all active:scale-95">
-            <i data-lucide="download" class="w-5 h-5"></i>
-            Unduh Laporan
-        </button>
+        
+        <div class="relative" x-data="{ openExport: false }">
+            <button @click="openExport = !openExport" @click.outside="openExport = false"
+                    class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:shadow-lg transition-all active:scale-95">
+                <i data-lucide="download" class="w-5 h-5"></i>
+                Unduh Laporan
+                <i data-lucide="chevron-down" class="w-4 h-4 ml-1 transition-transform" :class="openExport ? 'rotate-180' : ''"></i>
+            </button>
+
+            <div x-show="openExport" x-cloak
+                x-transition.opacity.duration.200ms
+                class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50">
+                <a href="#" @click.prevent="confirmExport('excel'); openExport = false" 
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    Export ke Excel
+                </a>
+                <a href="#" @click.prevent="confirmExport('pdf'); openExport = false" 
+                    class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors border-t border-gray-50">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    Cetak Dokumen (PDF)
+                </a>
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-3 gap-4 mb-6">
-        
         <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
             <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
-            
             <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
                 <i data-lucide="banknote" class="w-5 h-5"></i>
             </div>
-
             <div class="relative z-10">
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Pendapatan Bersih</p>
                 <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">Rp {{ "{:,.0f}".format(total_penjualan).replace(',', '.') }}</h3>
@@ -34,11 +50,9 @@
 
         <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
             <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
-            
             <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
                 <i data-lucide="receipt" class="w-5 h-5"></i>
             </div>
-
             <div class="relative z-10">
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Transaksi Sukses</p>
                 <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">{{ total_order }}</h3>
@@ -47,17 +61,14 @@
 
         <div class="bg-white p-5 rounded-2xl border-2 border-blue-200 flex items-center gap-4 shadow-md relative overflow-hidden group hover:border-terralogBlue/40 hover:shadow-lg transition-all duration-300">
             <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-50 rounded-full opacity-60 group-hover:scale-[2.5] transition-transform duration-500"></div>
-            
             <div class="bg-blue-50 p-2.5 rounded-xl text-terralogBlue border border-blue-100 relative z-10 shrink-0">
                 <i data-lucide="calculator" class="w-5 h-5"></i>
             </div>
-
             <div class="relative z-10">
                 <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Rata-rata Nilai Transaksi</p>
                 <h3 class="text-xl font-black text-gray-900 tracking-tight leading-none">Rp {{ "{:,.0f}".format(rata_rata).replace(',', '.') }}</h3>
             </div>
         </div>
-
     </div>
 
     <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-gray-100">
@@ -68,7 +79,6 @@
     </div>
 
     <div class="flex flex-wrap gap-3 mb-4 items-center">
-        
         <div class="relative flex-1 min-w-[250px]">
             <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
             <input type="text" x-model="searchQuery" @input="currentPage = 1" placeholder="Cari Order ID..." 
@@ -98,9 +108,8 @@
         <div class="w-48 relative">
             <i data-lucide="calendar" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
             <input type="date" x-model="filterTanggal" @change="currentPage = 1" 
-                   class="w-full pl-10 pr-4 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition cursor-pointer">
+                class="w-full pl-10 pr-4 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition cursor-pointer">
         </div>
-        
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
@@ -109,22 +118,22 @@
         </div>
 
         <div class="overflow-x-auto w-full">
-            <table class="w-full text-sm border-collapse text-left">
-                <thead>
-                    <tr class="border-b border-gray-100 bg-white">
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Order ID</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Sumber</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Metode</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Total (Rp)</th>
-                        <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Status</th>
-                    </tr>
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50/50 border-b text-sm font-bold text-gray-800 sticky top-0 bg-white z-10">
+                    <tr>
+                        <th class="px-6 py-4 w-[15%]">No. Order</th>
+                        <th class="px-6 py-4 w-[18%]">Tanggal</th>
+                        <th class="px-6 py-4 text-center w-[14%]">Sumber</th>
+                        <th class="px-6 py-4 text-center w-[13%]">Metode</th>
+                        <th class="px-6 py-4 w-[15%]">Total</th>
+                        <th class="px-6 py-4 text-center w-[15%]">Status</th>
+                        <th class="px-6 py-4 text-center w-[10%]">Aksi</th> </tr>
                 </thead>
-                <tbody>
+                <tbody class="text-sm font-medium text-gray-700">
                     <template x-for="t in pagedTransaksi" :key="t.order_number">
-                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                            <td class="px-6 py-4 font-bold text-gray-800" x-text="t.order_number"></td>
-                            <td class="px-6 py-4 text-gray-600 font-medium" x-text="t.tanggal"></td>
+                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
+                            <td class="px-6 py-4 text-terralogBlue font-bold" x-text="t.order_number"></td>
+                            <td class="px-6 py-4 text-gray-500" x-text="t.tanggal"></td>
                             
                             <td class="px-6 py-4 text-center">
                                 <template x-if="t.sumber === 'App Mandiri'">
@@ -137,33 +146,38 @@
 
                             <td class="px-6 py-4 text-center">
                                 <template x-if="t.metode === 'QRIS'">
-                                    <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">QRIS</span>
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm bg-terralogBlue text-white tracking-wider">QRIS</span>
                                 </template>
                                 <template x-if="t.metode === 'CASH'">
-                                    <span class="text-xs font-black text-amber-600 bg-amber-50 px-2 py-1 rounded">CASH</span>
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase shadow-sm bg-emerald-500 text-white tracking-wider">CASH</span>
                                 </template>
                                 <template x-if="t.metode === '-'">
-                                    <span class="text-xs font-bold text-gray-400">-</span>
+                                    <span class="px-3 py-1 rounded-lg text-[10px] font-bold bg-gray-100 text-gray-400 border border-gray-200 inline-block w-14 text-center">-</span>
                                 </template>
                             </td>
                             
-                            <td class="px-6 py-4 font-black text-terralogBlue text-right" x-text="Number(t.total).toLocaleString('id-ID')"></td>
+                            <td class="px-6 py-4 font-bold text-gray-900" x-text="'Rp ' + Number(t.total).toLocaleString('id-ID')"></td>
 
                             <td class="px-6 py-4 text-center">
                                 <template x-if="t.status === 'paid'">
-                                    <span class="text-[10px] font-bold text-white bg-emerald-500 px-2.5 py-1 rounded-lg shadow-sm">LUNAS</span>
+                                    <span class="text-[10px] font-bold text-white bg-emerald-500 px-2.5 py-1 rounded-lg shadow-sm inline-block w-16 text-center">LUNAS</span>
                                 </template>
                                 <template x-if="t.status === 'cancelled'">
-                                    <span class="text-[10px] font-bold text-white bg-red-500 px-2.5 py-1 rounded-lg shadow-sm">BATAL</span>
+                                    <span class="text-[10px] font-bold text-white bg-red-500 px-2.5 py-1 rounded-lg shadow-sm inline-block w-16 text-center">BATAL</span>
                                 </template>
-                                <template x-if="t.status === 'unpaid'">
-                                    <span class="text-[10px] font-bold text-white bg-orange-500 px-2.5 py-1 rounded-lg shadow-sm">BELUM BAYAR</span>
-                                </template>
+                            </td>
+                            
+                            <td class="px-6 py-4 text-center">
+                                <button @click="openDetail(t)" 
+                                        title="Lihat Detail Transaksi"
+                                        class="p-1.5 text-terralogBlue bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-lg transition shadow-sm cursor-pointer inline-flex items-center justify-center">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
                     <tr x-show="filteredTransaksi.length === 0">
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-bold">Data tidak ditemukan.</td>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-bold">Data tidak ditemukan.</td>
                     </tr>
                 </tbody>
             </table>
@@ -201,24 +215,15 @@
         </div>
     </div>
 
+    {% include 'owner/includes/modal_detail_transaksi.html' %}
+
 </div>
 
 <script id="chart-labels" type="application/json">{{ chart_labels | tojson | safe }}</script>
 <script id="chart-data" type="application/json">{{ chart_data | tojson | safe }}</script>
+
 <script id="transaksi-data" type="application/json">
-[
-    {% for t in transaksi_list %}
-    {
-        "order_number": "{{ t.order_number }}",
-        "tanggal": "{{ t.created_at.strftime('%d %b %Y, %H:%M') }}",
-        "tanggal_mentah": "{{ t.created_at.strftime('%Y-%m-%d') }}",
-        "sumber": "{{ 'App Mandiri' if t.user_id else 'Kasir' }}",
-        "metode": "{{ t.payment_method | upper if t.payment_method else '-' }}",
-        "total": {{ t.total_amount }},
-        "status": "{{ t.payment_status }}"
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-]
+    {{ transaksi_list | tojson | safe }}
 </script>
 {% endblock %}
 
@@ -230,6 +235,9 @@ document.addEventListener('alpine:init', () => {
         filterTanggal: '',
         filterSumber: 'SEMUA',
         filterMetode: 'SEMUA',
+        
+        showModal: false,
+        selectedTrx: {},
         
         currentPage: 1,
         itemsPerPage: 25,
@@ -256,6 +264,11 @@ document.addEventListener('alpine:init', () => {
 
         get totalPages() {
             return Math.ceil(this.filteredTransaksi.length / this.itemsPerPage);
+        },
+
+        openDetail(trx) {
+            this.selectedTrx = trx;
+            this.showModal = true;
         },
 
         init() {
@@ -307,8 +320,78 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        unduhLaporan() {
-            showToast('Menyiapkan data laporan...', 'success');
+        // =====================================
+        // LOGIKA KONFIRMASI & EKSPOR LAPORAN
+        // =====================================
+        confirmExport(type) {
+            // Cegah konfirmasi jika data kosong
+            if (this.filteredTransaksi.length === 0) {
+                return showToast('Tidak ada data yang tersedia untuk diekspor!', 'error');
+            }
+
+            // Panggil Modal Konfirmasi Global
+            Alpine.store('confirmModal').open({
+                title: 'Konfirmasi Cetak Laporan',
+                message: `Laporan akan memuat ${this.filteredTransaksi.length} data transaksi berdasarkan filter yang sedang aktif saat ini. Lanjutkan?`,
+                confirmText: type === 'excel' ? 'Unduh Excel' : 'Cetak PDF',
+                cancelText: 'Batal',
+                type: 'primary', // Gunakan warna biru (primary) karena ini bukan aksi berbahaya
+                action: () => {
+                    // Eksekusi fungsi sesuai tipe yang dipilih jika ditekan 'Ya'
+                    if (type === 'excel') this.executeExportExcel();
+                    else if (type === 'pdf') this.executeCetakPDF();
+                }
+            });
+        },
+
+        async executeExportExcel() {
+            showToast('Menyiapkan file spreadsheet...', 'success');
+            
+            try {
+                const res = await fetch('/owner/api/export-excel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.filteredTransaksi)
+                });
+                
+                if (!res.ok) throw new Error('Gagal dari server');
+                
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                let fileName = 'Laporan_Terralog_Penjualan.xlsx';
+                const contentDisposition = res.headers.get('Content-Disposition');
+                if (contentDisposition) {
+                    const match = contentDisposition.match(/filename="?([^"]+)"?/);
+                    if (match && match.length === 2) fileName = match[1];
+                }
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                showToast('Laporan berhasil diunduh!', 'success');
+                
+            } catch(e) {
+                showToast('Gagal mengunduh laporan', 'error');
+            }
+        },
+
+        executeCetakPDF() {
+            showToast('Menyiapkan dokumen cetak...', 'success');
+
+            const dataToPrint = {
+                data: this.filteredTransaksi,
+                total: this.filteredTransaksi.reduce((sum, item) => sum + item.total, 0),
+                tglCetak: new Date().toLocaleString('id-ID')
+            };
+            localStorage.setItem('printData_Terralog', JSON.stringify(dataToPrint));
+
+            window.open('/owner/cetak-laporan', '_blank');
         }
     }));
 });

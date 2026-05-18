@@ -1,12 +1,13 @@
-import os
+import os, io, openpyxl
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, jsonify, current_app
+from flask import Blueprint, render_template, request, jsonify, current_app, Response
 from flask_login import login_required, current_user 
 from models import User, CafeSetting, OperationalHour, Menu, Category, Table, Order, OrderItem
 from sqlalchemy import func
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from openpyxl.styles import Font, PatternFill, Alignment
 
 owner_bp = Blueprint('owner', __name__)
 
@@ -169,16 +170,44 @@ def laporan_penjualan():
         chart_labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
         chart_data = [0, 0, 0, 0, 0, 0, 0]
 
-    # 3. Hanya ambil order lunas (paid & served) ATAU yang dibatalkan (cancelled)
-    orders = Order.query.filter(
+    # 3. Kueri Database Utama
+    orders_db = Order.query.filter(
         db.or_(
-            db.and_(Order.payment_status == 'paid', Order.order_status == 'served'),
+            db.and_(Order.payment_status == 'paid', Order.order_status == 'served', Order.table_id.is_(None)),
             Order.payment_status == 'cancelled'
         )
     ).order_by(Order.created_at.desc()).all()
     
+    # ✅ 4. REVISI: DATA SERIALIZATION DIPINDAH KE ROUTE (Konsisten dengan Kasir)
+    bulan_indo = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'}
+    data_transaksi = []
+    
+    for t in orders_db:
+        items_list = []
+        for item in t.items:
+            items_list.append({
+                'nama': item.menu.name if item.menu else 'Item Terhapus',
+                'harga': item.price_at_order,
+                'jumlah': item.qty,
+                'subtotal': item.price_at_order * item.qty,
+                'note': item.notes or ''
+            })
+            
+        data_transaksi.append({
+            'order_number': t.order_number,
+            'tanggal': f"{t.created_at.day} {bulan_indo[t.created_at.month]} {t.created_at.year}, {t.created_at.strftime('%H:%M')}",
+            'tanggal_mentah': t.created_at.strftime('%Y-%m-%d'),
+            'sumber': 'App Mandiri' if t.user_id else 'Kasir',
+            'nama_kasir': t.cashier.name if t.cashier else 'Self-Service',
+            'metode': t.payment_method.upper() if t.payment_method else '-',
+            'total': t.total_amount,
+            'status': t.payment_status,
+            'alasan_batal': t.cancellation_reason or '',
+            'items': items_list
+        })
+    
     return render_template('owner/laporan-penjualan.html', 
-                            transaksi_list=orders,
+                            transaksi_list=data_transaksi, # Mengirim data yang sudah rapi
                             total_penjualan=total_penjualan,
                             total_order=total_order,
                             rata_rata=rata_rata,
@@ -497,7 +526,84 @@ def edit_kasir(kasir_id):
         return jsonify({"success": True, "message": "Profil staf kasir berhasil diperbarui!"})
     return jsonify({"success": False, "message": "Staff tidak ditemukan."})
 
-# ── 6. CAFE SETTINGS APIS ─────────────────────────────────────────────────────
+# ── 6. Laporan APIS ───────────────────────────────────────────────────────────
+@owner_bp.route('/api/export-excel', methods=['POST'])
+@login_required
+def export_excel():
+    data = request.json
+    
+    # 1. Buat Buku Kerja (Workbook) Excel Asli
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Laporan Penjualan"
+    
+    # 2. Definisikan Gaya (Styling) untuk Header
+    header_fill = PatternFill(start_color="0022AA", end_color="0022AA", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    align_center = Alignment(horizontal="center", vertical="center")
+    
+    headers = [
+        'Nomor Order', 'Tanggal Transaksi', 'Sumber', 'Penerima Dana', 
+        'Metode Pembayaran', 'Total Transaksi (Rp)', 'Status Final', 'Catatan Batal'
+    ]
+    
+    # 3. Tulis Header dan Terapkan Gaya
+    ws.append(headers)
+    for col_num, cell in enumerate(ws[1], 1):
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = align_center
+
+    # 4. Looping Baris Data
+    for t in data:
+        ws.append([
+            t.get('order_number', ''),
+            t.get('tanggal', ''),
+            t.get('sumber', ''),
+            t.get('nama_kasir', ''),
+            t.get('metode', ''),
+            int(t.get('total', 0)),  # Pastikan berupa angka (integer)
+            str(t.get('status', '')).upper(),
+            t.get('alasan_batal', '')
+        ])
+        
+    # 5. (Opsional) Rapikan Lebar Kolom Otomatis
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter # Dapatkan huruf kolom (A, B, C...)
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2)
+        ws.column_dimensions[column].width = adjusted_width
+
+    # 6. Simpan File ke dalam Memori RAM (BytesIO)
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    # 7. Susun File Download dengan ekstensi .xlsx
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    nama_file = f"Laporan_Terralog_{timestamp}.xlsx"
+    
+    return Response(
+        output.getvalue(),
+        # Mimetype biner khusus .xlsx
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={"Content-Disposition": f"attachment;filename={nama_file}"}
+    )
+
+@owner_bp.route('/cetak-laporan')
+@login_required
+def cetak_laporan():
+    # Ambil info cafe untuk kop surat (opsional, pastikan model CafeSetting sudah di-import)
+    cafe_info = CafeSetting.query.first()
+    return render_template('owner/includes/cetak_laporan.html', cafe=cafe_info)
+
+# ── 7. CAFE SETTINGS APIS ─────────────────────────────────────────────────────
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
 @login_required
 def update_profil_cafe():

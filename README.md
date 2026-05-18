@@ -24,6 +24,7 @@ pip install flask_sqlalchemy
 pip install sqlalchemy-utils
 pip install Flask-SQLAlchemy pymysql
 pip install flask_login
+pip install openpyxl
 ```
 
 ### 3. Copy File Environment
