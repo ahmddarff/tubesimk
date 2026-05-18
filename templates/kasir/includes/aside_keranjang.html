@@ -23,11 +23,15 @@
 
     <div class="grid grid-cols-3 gap-3 mb-4 text-[11px] font-bold">
         <div class="col-span-2">
-            <label class="text-gray-400 uppercase tracking-widest mb-1.5 block">Nama Pelanggan</label>
+            <label class="text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
+                Nama Pelanggan
+                <i x-show="(editingOrderNumber && isAccountOrder) || isMandiriCheckin" data-lucide="lock" class="w-3 h-3 text-terralogBlue" title="Terkunci (Akun Pelanggan)"></i>
+            </label>
+            
             <input type="text" 
                 x-model="customerName" 
-                :disabled="editingOrderNumber && isAccountOrder"
-                :class="editingOrderNumber && isAccountOrder ? 'bg-gray-200 text-gray-400 cursor-not-allowed font-bold' : 'bg-gray-50 focus:bg-white focus:border-terralogBlue'"
+                :disabled="(editingOrderNumber && isAccountOrder) || isMandiriCheckin"
+                :class="(editingOrderNumber && isAccountOrder) || isMandiriCheckin ? 'bg-gray-200 text-gray-400 cursor-not-allowed font-bold' : 'bg-gray-50 focus:bg-white focus:border-terralogBlue'"
                 placeholder="Nama..." 
                 class="w-full p-2.5 border border-gray-200 rounded-xl outline-none font-medium transition-all">
         </div>

@@ -167,6 +167,7 @@ document.addEventListener('alpine:init', () => {
         paymentMethod: 'CASH', 
         receivedAmount: '0',
         customerName: '', 
+        isMandiriCheckin: false,
         
         // ✅ REVISI MULTI MEJA: 
         selectedTableIds: [], // Tadinya selectedTable (String), sekarang Array
@@ -221,6 +222,7 @@ document.addEventListener('alpine:init', () => {
                     this.selectedTableIds = checkinData.table_ids ? checkinData.table_ids.map(String) : [];
                     this.orderType = checkinData.order_type || 'dine-in';
                     this.checkinResId = checkinData.id; // Simpan ID reservasinya
+                    this.isMandiriCheckin = checkinData.is_mandiri || false;
                     
                     // Tembakkan Toast Hijau jika berhasil!
                     setTimeout(() => { showToast('Tamu Reservasi Check-In! Silakan input pesanan.', 'success'); }, 400);

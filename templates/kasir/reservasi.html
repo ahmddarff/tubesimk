@@ -215,7 +215,7 @@ document.addEventListener('alpine:init', () => {
         itemsPerPage: 25,
 
         // Data State Form Objek Bersih Kebal Tipe Data
-        formRes: { id: '', nomor_reservasi: '', nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', status: '', original_status: '', notes: '', alasan_batal: '' },
+        formRes: { id: '', nomor_reservasi: '', nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', status: '', original_status: '', notes: '', alasan_batal: '', is_mandiri: false },
         newRes: { nama: '', telepon: '', table_ids: [], tanggal: '', jamMulai: '', durasi: 90, tamu: '', notes: '' },
 
         get today() {
@@ -316,7 +316,8 @@ document.addEventListener('alpine:init', () => {
                 status: res.status,
                 original_status: res.status,
                 notes: res.notes || '',
-                alasan_batal: res.alasan_batal || ''
+                alasan_batal: res.alasan_batal || '',
+                is_mandiri: res.is_mandiri
             };
             this.showEditModal = true;
         },

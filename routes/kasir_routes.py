@@ -182,7 +182,8 @@ def dashboard():
                 "id": res_to_checkin.id,
                 "customer_name": res_to_checkin.customer_name or (res_to_checkin.user.name if res_to_checkin.user else "Tamu"),
                 "table_ids": table_ids_array,
-                "order_type": "dine-in"
+                "order_type": "dine-in",
+                "is_mandiri": True if res_to_checkin.user_id else False
             }
 
     # ==========================================
@@ -339,6 +340,7 @@ def pesanan_aktif():
 @kasir_bp.route('/reservasi')
 @login_required
 def reservasi():
+    auto_cleanup_expired_reservations()
     reservations_db = Reservation.query.order_by(
         Reservation.reservation_date.desc(),
         Reservation.reservation_time.asc()
@@ -379,7 +381,8 @@ def reservasi():
             'meja': meja_str,
             'table_ids': meja_ids,
             'notes': res.notes or '',
-            'alasan_batal': res.cancellation_reason or ''
+            'alasan_batal': res.cancellation_reason or '',
+            'is_mandiri': True if res.user_id else False
         })
 
     return render_template(
@@ -1109,6 +1112,32 @@ def auto_cleanup_expired_orders():
                 
     # Jika ada data yang dibersihkan, lakukan commit massal sekaligus
     if expired_orders:
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+
+# ==========================================
+# INTERNAL HELPER: LAZY CLEANUP RESERVASI KEDALUWARSA (NO-SHOW)
+# ==========================================
+def auto_cleanup_expired_reservations():
+    # Ambil tanggal hari ini
+    hari_ini = date.today()
+    
+    # Cari reservasi yang tanggalnya sudah lewat (kemarin atau sebelumnya)
+    # dan statusnya masih menggantung (belum selesai / belum batal)
+    expired_res = Reservation.query.filter(
+        Reservation.reservation_date < hari_ini,
+        Reservation.status.in_(['pending', 'confirmed'])
+    ).all()
+    
+    for res in expired_res:
+        # Ubah status menjadi batal secara otomatis
+        res.status = 'cancelled'
+        res.cancellation_reason = 'Dibatalkan otomatis oleh sistem (No-Show: Tanggal kedatangan telah terlewat dan pelanggan tidak hadir)'
+        
+    # Jika ada data yang dibersihkan, lakukan commit
+    if expired_res:
         try:
             db.session.commit()
         except Exception as e:
