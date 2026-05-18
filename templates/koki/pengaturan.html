@@ -1,91 +1,220 @@
-{% extends "layout.html" %}
-{% block title %}Pengaturan{% endblock %}
-{% block page_title %}Pengaturan{% endblock %}
+{% extends 'layout.html' %}
+{% block title %}Pengaturan Akun Koki{% endblock %}
 
 {% block content %}
+<div x-data="pengaturanPOS()" class="min-h-screen" x-cloak>
 
-<div class="max-w-sm">
-    <h3 class="text-base font-bold text-[#1B2FAA] mb-5">Ubah Kata Sandi</h3>
+    <div class="mb-6">
+        <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Pengaturan</h1>
+        <p class="text-gray-500 mt-1 text-sm">Kelola data profil dan keamanan akun koki Anda</p>
+    </div>
 
-    <div class="flex flex-col gap-4">
-        <!-- Kata Sandi Saat Ini -->
-        <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold text-gray-800">Kata Sandi Saat Ini</label>
-            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                <input type="password" id="passSaatIni" placeholder="Masukkan kata sandi"
-                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                <button type="button" onclick="togglePwd('passSaatIni', this)"
-                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                    <i class="fa-regular fa-eye"></i>
-                </button>
+    <div class="flex flex-wrap gap-3 mb-6">
+        <button @click="switchTab('akun')"
+            :class="activeTab === 'akun' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
+            <i data-lucide="user" class="w-4 h-4"></i> Profil Akun
+        </button>
+
+        <button @click="switchTab('keamanan')"
+            :class="activeTab === 'keamanan' ? 'bg-terralogBlue text-white shadow-lg' : 'bg-white text-gray-500 hover:text-terralogBlue'"
+            class="flex items-center gap-3 px-5 py-2.5 rounded-2xl font-semibold transition-all duration-300 border border-gray-100 text-sm">
+            <i data-lucide="shield-check" class="w-4 h-4"></i> Keamanan
+        </button>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+
+        <div x-show="activeTab === 'akun'" x-transition>
+            <form @submit.prevent="saveProfile($event)" enctype="multipart/form-data">
+                
+                <div class="flex flex-col md:flex-row md:items-center gap-6 pb-6 border-b border-gray-100">
+                    <div class="relative">
+                        <div class="w-24 h-24 rounded-full bg-terralogBlue flex items-center justify-center text-white text-3xl font-black shadow-lg uppercase border-4 border-blue-50 overflow-hidden">
+                            
+                            <img id="userPhotoPreview" 
+                                 src="{% if current_user.photo %}{{ url_for('static', filename=current_user.photo) }}{% endif %}" 
+                                 class="w-full h-full object-cover {% if not current_user.photo %}hidden{% endif %}"
+                                 onerror="this.classList.add('hidden'); document.getElementById('userInitial').classList.remove('hidden');">
+                            
+                            <span id="userInitial" class="{% if current_user.photo %}hidden{% endif %}">{{ current_user.name[:2] }}</span>
+                        </div>
+
+                        <input type="file" name="photo" id="inputPhotoAkun" class="hidden" accept="image/*" @change="previewPhoto($event)">
+
+                        <button type="button" @click="triggerPhotoInput()"
+                            class="absolute bottom-0 right-0 bg-white shadow border border-gray-100 p-2 rounded-full hover:bg-gray-50 transition active:scale-95 text-terralogBlue">
+                            <i data-lucide="camera" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800">{{ current_user.name }}</h2>
+                        <p class="text-gray-400 font-medium mt-1 text-sm capitalize">{{ current_user.role }} Terralog</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mt-8">
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Nama Lengkap</label>
+                        <input name="name" type="text" value="{{ current_user.name }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Username</label>
+                        <input name="username" type="text" value="{{ current_user.username }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">Email</label>
+                        <input name="email" type="email" value="{{ current_user.email if current_user.email else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-xs font-bold text-gray-500 uppercase tracking-wide">No. Telepon</label>
+                        <input name="phone" type="text" value="{{ current_user.phone if current_user.phone else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                    </div>
+                </div>
+
+                <div class="flex justify-end mt-10 pt-6 border-t border-gray-50">
+                    <button type="submit" class="px-8 py-3 bg-terralogBlue hover:bg-blue-900 text-white rounded-xl font-bold tracking-wide transition shadow-md hover:shadow-lg active:scale-95 text-sm">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div> 
+        
+        <div x-show="activeTab === 'keamanan'" x-transition x-cloak>
+            <div class="max-w-sm">
+                <h3 class="text-base font-bold text-terralogBlue mb-5">Ubah Kata Sandi</h3>
+
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold text-gray-800">Kata Sandi Saat Ini</label>
+                        <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-terralogBlue transition-colors">
+                            <input type="password" x-model="currentPassword" placeholder="Masukkan kata sandi saat ini"
+                                   class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold text-gray-800">Kata Sandi Baru</label>
+                        <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-terralogBlue transition-colors">
+                            <input type="password" x-model="newPassword" placeholder="Masukkan kata sandi baru"
+                                   class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1">
+                        <label class="text-sm font-semibold text-gray-800">Konfirmasi Kata Sandi Baru</label>
+                        <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-terralogBlue transition-colors">
+                            <input type="password" x-model="confirmPassword" placeholder="Ulangi kata sandi baru"
+                                   class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-gray-400 mt-1">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
+
+                    <div class="flex mt-2">
+                        <button @click="savePassword('{{ url_for('koki.update_password') }}')"
+                                class="w-full py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-[0.98]">
+                            Perbarui Kata Sandi
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <!-- Kata Sandi Baru -->
-        <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold text-gray-800">Kata Sandi Baru</label>
-            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                <input type="password" id="passBaru" placeholder="Masukkan kata sandi"
-                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                <button type="button" onclick="togglePwd('passBaru', this)"
-                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                    <i class="fa-regular fa-eye"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Konfirmasi -->
-        <div class="flex flex-col gap-1">
-            <label class="text-sm font-semibold text-gray-800">Konfirmasi Kata Sandi Baru</label>
-            <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-[#1B2FAA] transition-colors">
-                <input type="password" id="passKonfirmasi" placeholder="Masukkan kata sandi"
-                       class="flex-1 px-4 py-2.5 text-sm outline-none bg-transparent">
-                <button type="button" onclick="togglePwd('passKonfirmasi', this)"
-                        class="px-3 text-gray-400 hover:text-[#1B2FAA] transition-colors">
-                    <i class="fa-regular fa-eye"></i>
-                </button>
-            </div>
-        </div>
-
-        <p class="text-xs text-gray-400">Minimal 8 karakter dengan kombinasi huruf dan angka.</p>
-
-        <div class="flex justify-end">
-            <button onclick="perbaruiPassword()"
-                    class="px-6 py-2.5 rounded-xl bg-[#1B2FAA] text-white text-sm font-bold
-                           hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
-                Perbarui Kata Sandi
-            </button>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-function perbaruiPassword() {
-    const lama    = document.getElementById('passSaatIni').value;
-    const baru    = document.getElementById('passBaru').value;
-    const konfirm = document.getElementById('passKonfirmasi').value;
+document.addEventListener('alpine:init', () => {
+    Alpine.data('pengaturanPOS', () => ({
+        activeTab: 'akun',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
 
-    if (!lama)            { alert('Kata sandi saat ini wajib diisi!'); return; }
-    if (baru.length < 8)  { alert('Kata sandi baru minimal 8 karakter!'); return; }
-    if (baru !== konfirm) { alert('Konfirmasi kata sandi tidak cocok!'); return; }
+        init() {
+            this.renderIcons();
+        },
 
-    fetch('/api/update-password', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ password_lama: lama, password_baru: baru })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            ['passSaatIni','passBaru','passKonfirmasi'].forEach(id => {
-                document.getElementById(id).value = '';
+        switchTab(tabName) {
+            this.activeTab = tabName;
+            this.renderIcons();
+        },
+
+        triggerPhotoInput() {
+            document.getElementById('inputPhotoAkun').click();
+        },
+
+        previewPhoto(event) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('userPhotoPreview');
+                    const initial = document.getElementById('userInitial');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    initial.classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        },
+
+        saveProfile(event) {
+            const formData = new FormData(event.target);
+
+            // ✅ Menembak langsung ke rute pengaturan koki
+            fetch("{{ url_for('koki.pengaturan') }}", {
+                method: 'POST',
+                body: formData 
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => { window.location.reload(); }, 1200);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Gagal terhubung ke server untuk menyimpan profil.', 'error'));
+        },
+
+        savePassword(endpointUrl) {
+            if (!this.currentPassword) { showToast('Kata sandi saat ini wajib diisi!', 'error'); return; }
+            if (this.newPassword.length < 8) { showToast('Kata sandi baru minimal 8 karakter!', 'error'); return; }
+            if (this.newPassword !== this.confirmPassword) { showToast('Konfirmasi kata sandi tidak cocok!', 'error'); return; }
+
+            fetch(endpointUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    password_lama: this.currentPassword, 
+                    password_baru: this.newPassword 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    this.currentPassword = '';
+                    this.newPassword = '';
+                    this.confirmPassword = '';
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(err => showToast('Terjadi kesalahan sistem saat memperbarui kata sandi.', 'error'));
+        },
+
+        renderIcons() {
+            this.$nextTick(() => {
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             });
-            showToast('Kata sandi berhasil diperbarui!');
         }
-    });
-}
+    }));
+});
 </script>
 {% endblock %}

@@ -1,11 +1,17 @@
-from flask import Blueprint, render_template, request, jsonify
+import os
+from datetime import datetime
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from models import Order, OrderItem, Menu
 from extensions import db
 
 koki_bp = Blueprint('koki', __name__)
 
-# ── 1. ROUTE ANTREAN ORDER (KITCHEN DISPLAY SYSTEM) ───────────────────────────
+# =========================
+# ANTREAN ORDER KOKI
+# =========================
 @koki_bp.route('/antrean-order')
 @login_required
 def antrian():
@@ -42,13 +48,15 @@ def antrian():
             "items": items_list
         })
 
-    return render_template('koki/antrean-order.html',
+    return render_template('koki/antrean_order.html',
         username=current_user.name,
         orders=formatted_orders,
         pending_count=pending_count
     )
 
-# ── 2. ROUTE MANAJEMEN STOK KOKI ───────────────────────────────────────────────
+# =========================
+# STOK MENU KOKI
+# =========================
 @koki_bp.route('/stok-menu')
 @login_required
 def stok():
@@ -62,26 +70,82 @@ def stok():
             "nama": m.name,
             "kategori": m.category.name if m.category else "-",
             "stok": m.stock,
-            "status": m.is_available
+            "status": m.is_available,
+            "img": m.image_url or "" # ✅ BARU: Sekarang data foto dikirim ke frontend koki
         })
 
-    return render_template('koki/stok-menu.html',
+    return render_template('koki/stok_menu.html',
         username=current_user.name,
         menu_list=formatted_menus,
         pending_count=pending_count
     )
 
-# ── 3. ROUTE PENGATURAN KOKI ──────────────────────────────────────────────────
-@koki_bp.route('/pengaturan')
+# =========================
+# PENGATURAN PROFIL KOKI
+# =========================
+@koki_bp.route('/pengaturan', methods=['GET', 'POST'])
 @login_required
 def pengaturan():
+    if request.method == 'POST':
+        current_user.name = request.form.get('name')
+        current_user.username = request.form.get('username')
+        current_user.email = request.form.get('email')
+        current_user.phone = request.form.get('phone')
+
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename != '':
+                upload_path = os.path.join(current_app.root_path, 'static/uploads/profile')
+                if not os.path.exists(upload_path):
+                    os.makedirs(upload_path)
+
+                if current_user.photo:
+                    old_path = os.path.join(current_app.root_path, 'static', current_user.photo)
+                    if not os.path.exists(old_path) and not current_user.photo.startswith('uploads/'):
+                        old_path = os.path.join(current_app.root_path, 'static/images', current_user.photo)
+                        
+                    if os.path.exists(old_path) and os.path.isfile(old_path):
+                        try: os.remove(old_path)
+                        except: pass
+                
+                filename = secure_filename(file.filename)
+                unique_filename = f"{current_user.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{filename}"
+                file.save(os.path.join(upload_path, unique_filename))
+                current_user.photo = f"uploads/profile/{unique_filename}"
+
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": "Profil berhasil diperbarui!"})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Gagal memperbarui profil. Username atau email mungkin sudah digunakan."})
+
     pending_count = Order.query.filter_by(order_status='pending').count()
     return render_template('koki/pengaturan.html',
         username=current_user.name,
         pending_count=pending_count
     )
 
-# ── 4. API UPDATE STATUS PESANAN ──────────────────────────────────────────────
+@koki_bp.route('/api/update-password', methods=['POST'])
+@login_required
+def update_password():
+    data = request.json
+    password_lama = data.get("password_lama")
+    password_baru = data.get("password_baru")
+    
+    if not check_password_hash(current_user.password, password_lama):
+        return jsonify({"success": False, "message": "Kata sandi saat ini salah!"})
+    
+    current_user.password = generate_password_hash(password_baru)
+    
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "message": "Kata sandi berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
+
+# ── STOCK MENU APIS ──────────────────────────────────────────────
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
 @login_required
 def update_order_status(order_id):
@@ -99,8 +163,7 @@ def update_order_status(order_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
-
-# ── 5. API UPDATE STOK CEPAT DARI KOKI ────────────────────────────────────────
+    
 @koki_bp.route('/api/koki/update-stok/<int:menu_id>', methods=['POST'])
 @login_required
 def update_stok(menu_id):
@@ -124,3 +187,18 @@ def update_stok(menu_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
+    
+@koki_bp.route('/api/koki/toggle-menu-status/<int:menu_id>', methods=['POST'])
+@login_required
+def toggle_menu_status(menu_id):
+    data = request.json
+    menu = db.session.get(Menu, menu_id)
+    if menu:
+        menu.is_available = data.get("status")
+        try:
+            db.session.commit()
+            return jsonify({"success": True, "message": f"Status menu {menu.name} berhasil diperbarui!"})
+        except:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Gagal memperbarui status menu."})
+    return jsonify({"success": False, "message": "Menu tidak ditemukan."}), 404

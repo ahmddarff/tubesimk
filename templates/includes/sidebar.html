@@ -9,220 +9,220 @@
     </div>
 
     <nav class="space-y-1.5 relative z-10">
-        
-        {% if current_user.role == 'owner' %}
-            <a href="{{ url_for('owner.dashboard') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.dashboard' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="house" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Dashboard</span>
-            </a>
-
-            <a href="{{ url_for('owner.manajemen_menu') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.manajemen_menu' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="utensils-crossed" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Manajemen Menu</span>
-            </a>
-
-            <a href="{{ url_for('owner.manajemen_meja') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.manajemen_meja' %}
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %} group">
-                <i data-lucide="layout-grid" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Manajemen Meja</span>
-            </a>
-
-            <a href="{{ url_for('owner.manajemen_kasir') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.manajemen_kasir' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %} group">
-                <i data-lucide="users" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Manajemen Staff</span>
-            </a>
-
-            <a href="{{ url_for('owner.laporan_penjualan') }}"  
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.laporan_penjualan' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="trending-up" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Laporan Penjualan</span>
-            </a>
-
-            <a href="{{ url_for('owner.pengaturan') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'owner.pengaturan' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pengaturan</span>
-            </a>
-
-        {% elif current_user.role == 'kasir' %}
-            <a href="{{ url_for('kasir.dashboard') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'dashboard' %} 
+        {% if current_user.is_authenticated %}
+            {% if current_user.role == 'owner' %}
+                <a href="{{ url_for('owner.dashboard') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.dashboard' %} 
                         bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
+                    {% else %} 
                         text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="house" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Dashboard</span>
-            </a>
+                    {% endif %}">
+                    <i data-lucide="house" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Dashboard</span>
+                </a>
 
-            <a href="{{ url_for('kasir.pesanan_aktif') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'pesanan_aktif' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pesanan Aktif</span>
-            </a>
+                <a href="{{ url_for('owner.manajemen_menu') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.manajemen_menu' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="utensils-crossed" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Manajemen Menu</span>
+                </a>
 
-            <a href="{{ url_for('kasir.reservasi') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'reservasi' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %} group">
-                <i data-lucide="calendar" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Reservasi</span>
-            </a>
+                <a href="{{ url_for('owner.manajemen_meja') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.manajemen_meja' %}
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %} group">
+                    <i data-lucide="layout-grid" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Manajemen Meja</span>
+                </a>
 
-            <a href="{{ url_for('kasir.riwayat_transaksi') }}"  
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'riwayat_transaksi' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="history" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Riwayat Transaksi</span>
-            </a>
+                <a href="{{ url_for('owner.manajemen_kasir') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.manajemen_kasir' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %} group">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Manajemen Staff</span>
+                </a>
 
-            <a href="{{ url_for('kasir.pengaturan') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'pengaturan' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pengaturan</span>
-            </a>
+                <a href="{{ url_for('owner.laporan_penjualan') }}"  
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.laporan_penjualan' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Laporan Penjualan</span>
+                </a>
 
-        {% elif current_user.role == 'koki' %}
-            <a href="{{ url_for('koki.antrian') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'koki.antrian' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Antrean Order</span>
-            </a>
-                
-            <a href="{{ url_for('koki.stok') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'koki.stok' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="utensils" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Stok Menu</span>
-            </a>
+                <a href="{{ url_for('owner.pengaturan') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'owner.pengaturan' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pengaturan</span>
+                </a>
 
-            <a href="{{ url_for('koki.pengaturan') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if request.endpoint == 'koki.pengaturan' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pengaturan</span>
-            </a>
+            {% elif current_user.role == 'kasir' %}
+                <a href="{{ url_for('kasir.dashboard') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'dashboard' %} 
+                            bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                            text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="house" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Dashboard</span>
+                </a>
 
-        {% elif current_user.role == 'customer' %}
-            <a href="/customer" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'customer' or segment == 'home' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="home" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Beranda</span>
-            </a>
+                <a href="{{ url_for('kasir.pesanan_aktif') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'pesanan_aktif' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pesanan Aktif</span>
+                </a>
 
-            <a href="/customer/daftar-menu" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'daftar_menu' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="utensils" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Daftar Menu</span>
-            </a>
+                <a href="{{ url_for('kasir.reservasi') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'reservasi' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %} group">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Reservasi</span>
+                </a>
 
-            <a href="/customer/pesanan-saya" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'pesanan_saya' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %} group">
-                <i data-lucide="clipboard-list" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pesanan Saya</span>
-            </a>
+                <a href="{{ url_for('kasir.riwayat_transaksi') }}"  
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'riwayat_transaksi' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="history" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Riwayat Transaksi</span>
+                </a>
 
-            <a href="/customer/buat-reservasi" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'buat_reservasi' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="calendar" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Buat Reservasi</span>
-            </a>
+                <a href="{{ url_for('kasir.pengaturan') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'pengaturan' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pengaturan</span>
+                </a>
 
-            <a href="{{ url_for('customer.pengaturan') }}" 
-                class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
-                {% if segment == 'pengaturan' %} 
-                    bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
-                {% else %} 
-                    text-blue-100 hover:bg-white/10 
-                {% endif %}">
-                <i data-lucide="settings" class="w-5 h-5"></i>
-                <span class="font-semibold text-sm">Pengaturan</span>
-            </a>
-            
+            {% elif current_user.role == 'koki' %}
+                <a href="{{ url_for('koki.antrian') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'koki.antrian' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Antrean Order</span>
+                </a>
+                    
+                <a href="{{ url_for('koki.stok') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'koki.stok' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="utensils" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Stok Menu</span>
+                </a>
+
+                <a href="{{ url_for('koki.pengaturan') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if request.endpoint == 'koki.pengaturan' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pengaturan</span>
+                </a>
+
+            {% elif current_user.role == 'customer' %}
+                <a href="/customer" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'customer' or segment == 'home' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="home" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Beranda</span>
+                </a>
+
+                <a href="/customer/daftar-menu" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'daftar_menu' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="utensils" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Daftar Menu</span>
+                </a>
+
+                <a href="/customer/pesanan-saya" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'pesanan_saya' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %} group">
+                    <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pesanan Saya</span>
+                </a>
+
+                <a href="/customer/buat-reservasi" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'buat_reservasi' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Buat Reservasi</span>
+                </a>
+
+                <a href="{{ url_for('customer.pengaturan') }}" 
+                    class="flex items-center gap-3 py-3 px-4 rounded-xl transition-all duration-200 
+                    {% if segment == 'pengaturan' %} 
+                        bg-gray-100/10 border-x-4 border-terralogGold text-terralogGold shadow-md
+                    {% else %} 
+                        text-blue-100 hover:bg-white/10 
+                    {% endif %}">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-semibold text-sm">Pengaturan</span>
+                </a>
+            {% endif %}
         {% endif %}
         
     </nav>

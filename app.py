@@ -26,6 +26,11 @@ def handle_db_error(e):
 def page_not_found(e):
     return render_template('404.html', is_404=True), 404
 
+# ✅ BARU: Tangkap API yang diakses manual lewat URL (GET ke route POST)
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return render_template('404.html', is_404=True), 405
+
 # ==========================================
 # KONFIGURASI DATABASE
 # ==========================================
