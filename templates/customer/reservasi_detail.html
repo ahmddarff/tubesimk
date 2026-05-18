@@ -5,16 +5,19 @@
 {% block content %}
 <div class="customer-page-shell flex-1 p-8 bg-[#F5F7FF] font-['Inter']" x-data="reservasiDetail({{ reservation.id }})" x-cloak>
     <div>
-        
-        <div class="mb-6 flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap">
-            <a href="/customer/buat-reservasi" class="text-terralogBlue hover:text-blue-900 transition">Reservasi Saya</a>
-            <span class="text-terralogBlue/60">›</span>
-            <span class="text-black">Detail Reservasi</span>
+        <div class="mb-8">
+            <div class="flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+                <a href="/customer/buat-reservasi" class="text-gray-400 hover:text-terralogBlue transition">Reservasi Saya</a>
+                <span class="text-gray-400">›</span>
+                <a href="/customer/reservasi/history" class="text-gray-400 hover:text-terralogBlue transition">Riwayat</a>
+                <span class="text-gray-400">›</span>
+                <span class="text-terralogBlue">{{ reservation.reservation_number }}</span>
+            </div>
+            <p class="text-gray-500 font-medium text-sm">Detail riwayat reservasi Anda</p>
         </div>
 
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight">#{{ reservation.reservation_number }}</h1>
                 <p class="text-sm font-medium text-slate-500 mt-1">Dibuat pada {{ reservation.created_at.strftime('%d %B %Y, %H:%M') if reservation.created_at else '-' }}</p>
             </div>
             

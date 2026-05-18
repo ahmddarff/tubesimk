@@ -3,22 +3,13 @@
 {% block content %}
 <div class="customer-page-shell w-full">
     <!-- Breadcrumb -->
-    <div class="mb-8 flex items-center gap-2 text-gray-600">
-        <a href="/customer/buat-reservasi" class="hover:text-terralogBlue transition">Reservasi Saya</a>
-        <span class="text-gray-400">›</span>
-        <span class="text-gray-800 font-semibold">Riwayat Lengkap</span>
-    </div>
-
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8">
-        <div>
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Riwayat Reservasi</h1>
-            <p class="text-gray-600">Semua riwayat reservasi Anda</p>
+    <div class="mb-8">
+        <div class= "flex items-center gap-2 text-3xl font-bold leading-tight flex-wrap mb-2">
+            <a href="/customer/buat-reservasi" class="text-gray-500 hover:text-terralogBlue transition">Reservasi Saya</a>
+            <span class="text-gray-400">›</span>
+            <span class="text-terralogBlue">Riwayat</span>
         </div>
-        <a href="/customer/buat-reservasi" class="bg-terralogGold hover:bg-terralogGold/90 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition inline-flex">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-            Kembali
-        </a>
+        <p class="text-gray-500 font-medium text-sm">Daftar riwayat reservasi Anda</p>
     </div>
 
     <!-- Reservasi List -->
