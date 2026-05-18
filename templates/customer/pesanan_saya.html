@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="customer-page-shell w-full">
-    
     <div class="flex justify-between items-center mb-8">
         <div>
             <h1 class="text-3xl font-bold text-terralogBlue mb-1">Pesanan Saya</h1>
@@ -88,9 +87,6 @@
                 {% endfor %}
             </div>
 
-            <a href="/customer/pesanan-saya/history" class="w-full mt-6 py-3 bg-terralogBlue text-white rounded-lg font-bold hover:bg-blue-900 transition inline-block text-center">
-                Lihat Semua Riwayat
-            </a>
         {% else %}
             <div class="text-center py-16 bg-gray-50 rounded-xl">
                 <i data-lucide="shopping-cart" class="w-16 h-16 mx-auto text-gray-300 mb-4"></i>
@@ -102,8 +98,14 @@
         {% endif %}
     </div>
 
-    <div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Riwayat</h2>
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Riwayat</h2>
+        
+        <a href="/customer/pesanan-saya/history" class="text-terralogBlue text-sm font-bold hover:underline flex items-center gap-1">
+            Lihat Semua Riwayat
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </a>
+    </div>
         
         {% if history_orders %}
             <div class="grid grid-cols-2 gap-6">
