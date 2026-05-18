@@ -864,7 +864,7 @@ def pembayaran_nontunai(order_id):
     # Ambil data penting untuk dikirim ke Alpine.js secara aman
     order_data = {
         'order_id': order.id,
-        'customer_name': order.customer_name,
+        'customer_name': order.customer_name or current_user.name,
         'total_amount': order.total_amount
     }
     
