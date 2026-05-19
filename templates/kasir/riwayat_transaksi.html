@@ -93,7 +93,7 @@
                     <template x-for="trx in pagedTransactions" :key="trx.id">
                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
                             <td class="px-6 py-4 text-terralogBlue font-bold" x-text="trx.id"></td>
-                            <td class="px-6 py-4 text-gray-500" x-text="formatTanggalLokal(trx.waktu_iso) + ', ' + formatWaktuLokal(trx.waktu_iso)"></td>
+                            <td class="px-6 py-4 text-gray-500" x-text="trx.tanggal"></td>
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="trx.pelanggan"></td>
                             
                             <td class="px-6 py-4 text-center">
@@ -213,28 +213,12 @@ document.addEventListener('alpine:init', () => {
         },
 
         // ==========================================
-        // FUNGSI KONVERSI UTC KE WAKTU LOKAL
-        // ==========================================
-        formatWaktuLokal(isoString) {
-            if (!isoString) return '-';
-            const d = new Date(isoString);
-            return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-        },
-
-        formatTanggalLokal(isoString) {
-            if (!isoString) return '-';
-            const d = new Date(isoString);
-            const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-            return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
-        },
-
-        // ==========================================
         // FUNGSI CETAK ULANG STRUK (RIWAYAT TRANSAKSI)
         // ==========================================
         printReceipt(trx) {
             this.receiptData = {
                 no: trx.id,
-                date: this.formatTanggalLokal(trx.waktu_iso) + ' - ' + this.formatWaktuLokal(trx.waktu_iso),
+                date: trx.tanggal,
                 customer: trx.pelanggan,
                 type: trx.tipe,
                 table: trx.meja,

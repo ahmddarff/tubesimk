@@ -191,7 +191,7 @@ document.addEventListener('alpine:init', () => {
         printReceipt() {
             this.receiptData = {
                 no: this.selectedOrder.id,
-                date: this.formatWaktuLokal(this.selectedOrder.waktu_iso) + ' (Jam Pesan)',
+                date: this.formatTanggalLokal(this.selectedOrder.waktu_iso) + ' - ' + this.formatWaktuLokal(this.selectedOrder.waktu_iso),
                 customer: this.selectedOrder.nama,
                 type: this.selectedOrder.tipe,
                 table: this.selectedOrder.meja,
@@ -292,6 +292,13 @@ document.addEventListener('alpine:init', () => {
             const hours = Math.floor(diffMins / 60);
             const mins = diffMins % 60;
             return hours + 'j ' + mins + 'm';
+        },
+
+        formatTanggalLokal(isoString) {
+            if (!isoString) return '-';
+            const d = new Date(isoString);
+            const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+            return `${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
         },
 
         formatWaktuLokal(isoString) {

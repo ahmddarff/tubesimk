@@ -8,6 +8,7 @@ from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from openpyxl.styles import Font, PatternFill, Alignment
+from utils import *
 
 owner_bp = Blueprint('owner', __name__)
 
@@ -197,8 +198,6 @@ def laporan_penjualan():
         )
     ).order_by(Order.created_at.desc()).all()
     
-    # ✅ 4. REVISI: DATA SERIALIZATION DIPINDAH KE ROUTE (Konsisten dengan Kasir)
-    bulan_indo = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'}
     data_transaksi = []
     
     for t in orders_db:
@@ -214,8 +213,8 @@ def laporan_penjualan():
             
         data_transaksi.append({
             'order_number': t.order_number,
-            'tanggal': f"{t.created_at.day} {bulan_indo[t.created_at.month]} {t.created_at.year}, {t.created_at.strftime('%H:%M')}",
-            'tanggal_mentah': t.created_at.strftime('%Y-%m-%d'),
+            'tanggal': f"{format_tanggal_lokal(t.created_at)}, {format_waktu_lokal(t.created_at)}",
+            'tanggal_mentah': format_tanggal_mentah(t.created_at),
             'sumber': 'App Mandiri' if t.user_id else 'Kasir',
             'nama_kasir': t.cashier.name if t.cashier else 'Self-Service',
             'metode': t.payment_method.upper() if t.payment_method else '-',

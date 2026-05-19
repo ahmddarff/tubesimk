@@ -2,22 +2,45 @@ from datetime import datetime
 from models import Order, Reservation
 from zoneinfo import ZoneInfo # Jika Python < 3.9, gunakan: from datetime import timezone, timedelta
 
+def to_wib(dt_utc):
+    """
+    Mengonversi objek datetime UTC (baik naive maupun aware) dari database
+    menjadi objek datetime aware dengan zona waktu Asia/Jakarta (WIB).
+    Output: datetime.datetime(2026, 5, 19, 21, 25, tzinfo=ZoneInfo(key='Asia/Jakarta'))
+    """
+    if not dt_utc:
+        return None
+        
+    if dt_utc.tzinfo is None:
+        dt_utc = dt_utc.replace(tzinfo=ZoneInfo("UTC"))
+        
+    return dt_utc.astimezone(ZoneInfo("Asia/Jakarta"))
+
+def format_tanggal_mentah(dt_utc):
+    """
+    Mengonversi datetime UTC dari DB ke Asia/Jakarta (WIB)
+    dan mengembalikan string format kaku YYYY-MM-DD khusus untuk mesin filter kalender HTML.
+    Output: string '2026-05-19'
+    """
+    if not dt_utc:
+        return ""
+    
+    # Panggil fungsi to_wib yang ada di atasnya
+    dt_wib = to_wib(dt_utc)
+    
+    return dt_wib.strftime('%Y-%m-%d') if dt_wib else ""
+
 def format_tanggal_lokal(dt_utc):
     """
     Mengonversi datetime UTC dari DB ke Asia/Jakarta (WIB) 
     dan mengembalikan string format tanggal: 19 Mei 2026
     """
-    if not dt_utc:
+    # ✅ Panggil to_wib() sebagai pondasi utamanya
+    dt_wib = to_wib(dt_utc)
+    if not dt_wib:
         return ""
     
-    # 1. Pastikan objek datetime memiliki info timezone UTC jika belum ada
-    if dt_utc.tzinfo is None:
-        dt_utc = dt_utc.replace(tzinfo=ZoneInfo("UTC"))
-        
-    # 2. Konversi ke WIB
-    dt_wib = dt_utc.astimezone(ZoneInfo("Asia/Jakarta"))
-    
-    # 3. Format nama bulan Indonesia
+    # Format nama bulan Indonesia
     bulan_indo = [
         "Jan", "Feb", "Mar", "Apr", "Mei", "Juni",
         "Juli", "Ags", "Sep", "Okt", "Nov", "Des"
@@ -32,16 +55,14 @@ def format_tanggal_lokal(dt_utc):
 def format_waktu_lokal(dt_utc):
     """
     Mengonversi datetime UTC dari DB ke Asia/Jakarta (WIB)
-    dan mengembalikan string format waktu: 14:25
+    dan mengembalikan string format waktu: 14:25 WIB
     """
-    if not dt_utc:
+    # ✅ Panggil to_wib() juga di sini!
+    dt_wib = to_wib(dt_utc)
+    if not dt_wib:
         return ""
         
-    if dt_utc.tzinfo is None:
-        dt_utc = dt_utc.replace(tzinfo=ZoneInfo("UTC"))
-        
-    dt_wib = dt_utc.astimezone(ZoneInfo("Asia/Jakarta"))
-    return dt_wib.strftime('%H:%M')
+    return dt_wib.strftime('%H:%M') + ' WIB'
 
 def generate_order_number():
     """

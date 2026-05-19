@@ -16,7 +16,7 @@
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-black text-terralogBlue bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-md" x-text="selectedTrx.id"></span>
-                        <span class="text-xs font-bold text-gray-500" x-text="formatTanggalLokal(selectedTrx.waktu_iso) + ', ' + formatWaktuLokal(selectedTrx.waktu_iso)"></span>
+                        <span class="text-xs font-bold text-gray-500" x-text="selectedTrx.tanggal"></span>
                     </div>
                     
                     <div>
@@ -44,9 +44,9 @@
             </div>
 
             <template x-if="selectedTrx.status_pembayaran === 'cancelled'">
-                <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 shrink-0 flex items-center gap-2">
-                    <span class="font-black text-[10px] uppercase tracking-widest text-red-500 shrink-0">Alasan Batal:</span>
-                    <p class="font-bold text-xs truncate" x-text="selectedTrx.alasan_batal || 'Tidak ada alasan spesifik yang dicatat.'"></p>
+                <div class="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 shrink-0 flex items-start gap-2.5">
+                    <span class="font-black text-[10px] uppercase tracking-widest text-red-500 shrink-0 mt-0.5">Alasan Batal:</span>
+                    <p class="font-bold text-xs leading-relaxed" x-text="selectedTrx.alasan_batal || 'Tidak ada alasan spesifik yang dicatat.'"></p>
                 </div>
             </template>
 

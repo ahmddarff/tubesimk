@@ -407,9 +407,6 @@ def riwayat_transaksi():
     
     data_transaksi = []
     
-    # ✅ KAMUS BULAN INDONESIA
-    bulan_indo = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'Mei', 6: 'Jun', 7: 'Jul', 8: 'Ags', 9: 'Sep', 10: 'Okt', 11: 'Nov', 12: 'Des'}
-    
     for order in orders_db:
         items_list = []
         for item in order.items:
@@ -429,8 +426,10 @@ def riwayat_transaksi():
 
         data_transaksi.append({
             'id': order.order_number,
-            'waktu_iso': order.created_at.isoformat() + 'Z',
-            'tanggal_mentah': order.created_at.strftime('%Y-%m-%d'),
+            
+            'tanggal': f"{format_tanggal_lokal(order.created_at)}, {format_waktu_lokal(order.created_at)}",
+            'tanggal_mentah': format_tanggal_mentah(order.created_at),
+            
             'kasir': nama_kasir,
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
