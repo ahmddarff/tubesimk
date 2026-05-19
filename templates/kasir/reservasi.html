@@ -261,8 +261,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         async saveReservation() {
-            if (!this.newRes.nama || !this.newRes.tanggal || !this.newRes.jamMulai || !this.newRes.telepon || this.newRes.table_ids.length === 0) {
-                showToast("Mohon lengkapi semua data wajib beserta pilihan meja!", "error");
+            if (!this.newRes.nama || !this.newRes.tanggal || !this.newRes.jamMulai || 
+                !this.newRes.telepon || this.newRes.table_ids.length === 0 || 
+                !this.newRes.tamu || this.newRes.tamu <= 0) {
+                
+                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu minimal 1!", "error");
                 return;
             }
 
@@ -333,8 +336,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         async updateRes() {
-            if (!this.formRes.nama || !this.formRes.tanggal || !this.formRes.jamMulai || !this.formRes.telepon || this.formRes.table_ids.length === 0) {
-                showToast("Mohon lengkapi semua data wajib beserta pilihan meja!", "error");
+            if (!this.formRes.nama || !this.formRes.tanggal || !this.formRes.jamMulai || 
+                !this.formRes.telepon || this.formRes.table_ids.length === 0 || 
+                !this.formRes.tamu || this.formRes.tamu <= 0) {
+                
+                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu minimal 1!", "error");
                 return;
             }
 
@@ -348,7 +354,7 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
 
-            if (this.formRes.status === 'Dibatalkan' && (!this.formRes.alasan_batal || this.formRes.alasan_batal.trim() === '')) {
+            if (this.formRes.status === 'cancelled' && (!this.formRes.alasan_batal || this.formRes.alasan_batal.trim() === '')) {
                 showToast("Mohon isi alasan pembatalan!", "error");
                 return;
             }
