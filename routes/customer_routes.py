@@ -519,7 +519,8 @@ def get_cart():
             'harga': item.price_at_order,
             'qty': item.qty,
             'img': item.menu.image_url,
-            'subtotal': item.qty * item.price_at_order
+            'subtotal': item.qty * item.price_at_order,
+            'note': item.notes if item.notes else ''
         })
 
     return jsonify({

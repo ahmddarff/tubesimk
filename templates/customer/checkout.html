@@ -258,7 +258,7 @@
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1, note: item.note })
                 })
                 await this.loadCart()
             },
@@ -272,7 +272,7 @@
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1, note: item.note })
                 })
                 await this.loadCart()
             },
