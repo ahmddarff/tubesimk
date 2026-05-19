@@ -495,24 +495,26 @@ def hapus_meja(id):
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
 @login_required
 def tambah_staff():
-    # ✅ SEKARANG DINAMIS: Membuat baris baru di tabel users
     data = request.json
     nama = data.get("nama")
     username = data.get("username") or nama.lower().replace(" ", "")
-    password = data.get("password") or "123456" # Default password
+    password = data.get("password") or "123456" 
+    jabatan = data.get("jabatan", "kasir").lower() # ✅ Ambil pilihan jabatan dari Frontend
     
     if User.query.filter_by(username=username).first():
         return jsonify({"success": False, "message": "Username staff sudah terdaftar!"})
         
     new_staff = User(
-        name=nama, username=username,
+        name=nama, 
+        username=username,
         password=generate_password_hash(password),
-        role='kasir', is_active=True
+        role=jabatan, # ✅ Simpan sesuai pilihan dropdown
+        is_active=True
     )
     try:
         db.session.add(new_staff)
         db.session.commit()
-        return jsonify({"success": True, "message": f"Staff kasir '{nama}' berhasil didaftarkan!"})
+        return jsonify({"success": True, "message": f"Staff '{nama}' berhasil didaftarkan sebagai {jabatan.capitalize()}!"})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})

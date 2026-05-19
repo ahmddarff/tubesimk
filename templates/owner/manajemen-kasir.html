@@ -5,6 +5,7 @@
 {% block content %}
 <div x-data="staffManager" x-cloak>
 
+    {% include 'owner/includes/modal_tambah_staff.html' %}
     <div class="grid grid-cols-3 gap-5 mb-6">
         <div class="bg-white border-2 border-terralogBlue/20 rounded-2xl p-5 shadow-sm">
             <p class="text-sm font-semibold text-gray-500 mb-2">Total Staff Aktif</p>
@@ -107,7 +108,7 @@
     </div>
 
     <div class="flex justify-end">
-        <button onclick="openModal('modalTambahStaff')"
+        <button @click="openModalTambahStaff()"
                 class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-95">
             <i class="fa-solid fa-user-plus"></i>
             Tambah Staff Baru
@@ -161,11 +162,49 @@ document.addEventListener('alpine:init', () => {
         kasirList: {{ kasir_list | tojson }},
         kokiList: {{ koki_list | tojson }},
 
+        // ✅ 1. State untuk Modal Tambah Staff
+        showModalTambah: false,
+        formTambah: { nama: '', username: '', jabatan: 'kasir', password: '' },
+
+        // ✅ 2. Fungsi Buka Modal
+        openModalTambahStaff() {
+            this.formTambah = { nama: '', username: '', jabatan: 'kasir', password: '' };
+            this.showModalTambah = true;
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+        },
+
+        // ✅ 3. Fungsi Kirim Data ke API
+        async simpanStaff() {
+            if (!this.formTambah.nama || !this.formTambah.username || !this.formTambah.password) {
+                return showToast('Semua kolom wajib diisi!', 'error');
+            }
+
+            try {
+                const res = await fetch('/owner/api/tambah-staff', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.formTambah)
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    this.showModalTambah = false;
+                    showToast(data.message, 'success');
+                    // Muat ulang halaman agar staff baru muncul di tabel
+                    setTimeout(() => location.reload(), 1000); 
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('Gagal menghubungi server.', 'error');
+            }
+        },
+
         // Fungsi untuk memanggil API toggle status
         toggleStatus(id, event) {
             let isOnline = event.target.checked;
             
-            fetch(`/api/toggle-kasir-status/${id}`, {
+            fetch(`/owner/api/toggle-kasir-status/${id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: isOnline ? 'online' : 'offline' })
