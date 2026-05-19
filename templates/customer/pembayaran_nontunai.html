@@ -12,38 +12,28 @@
             <p class="text-gray-500 font-medium text-sm">Selesaikan pembayaran Anda menggunakan QRIS</p>
         </div>
 
-        <div class="flex gap-8">
-            <div class="flex-1">
-                <div class="bg-white rounded-2xl p-6 mb-8 shadow-sm">
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            <div class="flex-1 w-full flex flex-col gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
                     <p class="text-gray-700 font-semibold text-sm mb-2">Nama pemesan</p>
                     <p class="text-gray-800 font-bold text-lg" x-text="nama">Memuat...</p>
                 </div>
 
-                <div class="bg-white rounded-2xl p-6 mb-8 shadow-sm">
-                    <h2 class="text-xl font-bold text-gray-800 mb-2">Pembayaran Non Tunai (QRIS)</h2>
-                    <p class="text-gray-600 text-sm mb-4">Total yang harus dibayar:</p>
-                    <p class="text-3xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 0</p>
-                </div>
-
-                <div class="bg-white rounded-2xl p-8 mb-8 shadow-sm">
-                    <div class="flex items-center justify-center py-8">
-                        <div class="bg-gray-100 rounded-lg p-8 flex items-center justify-center">
-                            <div class="w-64 h-64 bg-white rounded-xl flex items-center justify-center shadow-md overflow-hidden p-2 border border-gray-200">
-                                <img src="https://via.placeholder.com/250x250.png?text=QR+Code+Sistem" 
-                                     alt="QRIS Terralog Cafe" 
-                                     class="w-full h-full object-contain mix-blend-multiply">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-gray-600 text-sm font-bold tracking-wide">TERRALOG CAFE</p>
-                        <p class="text-gray-400 text-xs mt-1">NMID : ID102501050800</p>
-                    </div>
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
+                    <img src="{{ url_for('static', filename='images/qris.jpeg') }}" 
+                        alt="QRIS Terralog Cafe" 
+                        class="w-full max-w-md h-auto object-contain mix-blend-multiply">
                 </div>
             </div>
 
-            <div class="flex-1">
-                <div class="bg-white rounded-2xl p-8 sticky top-24 shadow-sm">
+            <div class="flex-1 w-full flex flex-col gap-6">
+                <div class="bg-white rounded-2xl p-6 shadow-sm">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Pembayaran Non Tunai (QRIS)</h2>
+                    <p class="text-gray-600 text-sm mb-4">Total yang harus dibayar:</p>
+                    <p class="text-xl font-bold text-terralogBlue" x-text="`Rp ${total.toLocaleString('id-ID')}`">Rp 0</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-8 shadow-sm">
                     <h3 class="text-lg font-bold text-gray-800 mb-6">Langkah-langkah melakukan pembayaran:</h3>
                     
                     <div class="space-y-4 mb-8">
@@ -89,9 +79,8 @@
                     </button>
                 </div>
             </div>
+            
         </div>
-    </div>
-</div>
 
 <script>
     function paymentNonTunaiApp() {
