@@ -6,7 +6,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
-
+from utils import format_tanggal_lokal, format_waktu_lokal
 from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review
 from extensions import db
 
@@ -601,12 +601,12 @@ def pesanan_saya():
     history_orders = []
     
     for o in user_orders:
-        # PERBAIKAN: Jika payment_method masih kosong (None), artinya ini masih berupa keranjang belanja aktif dan BELUM di-checkout.
-        # Maka, lewati (skip) dan jangan masukkan ke Pesanan Aktif maupun Riwayat.
+        setattr(o, 'tanggal_lokal', format_tanggal_lokal(o.created_at))
+        setattr(o, 'waktu_lokal', format_waktu_lokal(o.created_at))
+
         if o.payment_method is None:
             continue
             
-        # Jika pesanan dibatalkan, langsung masukkan ke riwayat
         if o.payment_status == 'cancelled':
             history_orders.append(o)
             continue
