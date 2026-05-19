@@ -917,6 +917,30 @@ def submit_reviews():
         db.session.rollback()
         return jsonify({"success": False, "message": f"Terjadi kesalahan: {str(e)}"}), 500
 
+# API Endpoint DELETE: Menghapus Semua Item dari Keranjang (dari Alpine.js)
+@customer_bp.route('/api/cart/clear', methods=['DELETE'])
+@login_required
+def clear_cart():
+    order = get_active_cart(current_user.id)
+
+    if not order:
+        return jsonify({
+            'success': False,
+            'message': 'Keranjang sudah kosong'
+        }), 400
+
+    # Menghapus seluruh item yang terhubung dengan pesanan aktif ini
+    for item in order.items:
+        db.session.delete(item)
+    
+    order.total_amount = 0
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': 'Semua item berhasil dihapus'
+    })
+
 # =========================
 # PENGATURAN PROFIL
 # =========================
