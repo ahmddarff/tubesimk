@@ -1,6 +1,24 @@
+from functools import wraps
+from flask import abort
+from flask_login import current_user
 from datetime import datetime
 from models import Order, Reservation
 from zoneinfo import ZoneInfo # Jika Python < 3.9, gunakan: from datetime import timezone, timedelta
+
+def role_required(*roles):
+    """
+    Decorator untuk membatasi hak akses rute berdasarkan role user.
+    Jika tidak memiliki akses, otomatis dialihkan ke error 404.
+    """
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # 1. Pastikan user sudah login, dan role-nya terdaftar di yang diizinkan
+            if not current_user.is_authenticated or current_user.role not in roles:
+                abort(404) # Lempar error 404 sesuai permintaanmu
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 def to_wib(dt_utc):
     """

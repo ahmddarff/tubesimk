@@ -24,6 +24,7 @@ def inject_cafe_setting():
 # =========================
 @kasir_bp.route('/dashboard')
 @login_required
+@role_required('kasir')
 def dashboard():
     auto_cleanup_expired_orders()
     # ==========================================
@@ -226,6 +227,7 @@ def dashboard():
 # =========================
 @kasir_bp.route('/pesanan-aktif')
 @login_required
+@role_required('kasir')
 def pesanan_aktif():
     auto_cleanup_expired_orders()
     # ==========================================
@@ -337,6 +339,7 @@ def pesanan_aktif():
 # =========================
 @kasir_bp.route('/reservasi')
 @login_required
+@role_required('kasir')
 def reservasi():
     auto_cleanup_expired_reservations()
     reservations_db = Reservation.query.order_by(
@@ -396,6 +399,7 @@ def reservasi():
 # =========================
 @kasir_bp.route('/riwayat-transaksi')
 @login_required
+@role_required('kasir')
 def riwayat_transaksi():
     # PAID & SERVED wajib memiliki table_id NULL (artinya kasir sudah lepas meja)
     orders_db = Order.query.filter(
@@ -454,6 +458,7 @@ def riwayat_transaksi():
 # =========================
 @kasir_bp.route('/pengaturan', methods=['GET', 'POST'])
 @login_required
+@role_required('kasir')
 def pengaturan():
     if request.method == 'POST':
         # Menggunakan request.form karena dikirim melalui FormData dari Fetch API
@@ -501,6 +506,7 @@ def pengaturan():
 
 @kasir_bp.route('/api/update-password', methods=['POST'])
 @login_required
+@role_required('kasir')
 def update_password():
     data = request.json
     password_lama = data.get("password_lama")
@@ -523,6 +529,7 @@ def update_password():
 # ── Dashboard APIs ─────────────────────────────────────────
 @kasir_bp.route('/api/submit-order', methods=['POST'])
 @login_required
+@role_required('kasir')
 def submit_order():
     data = request.json
     cart = data.get('cart', [])
@@ -654,6 +661,7 @@ def submit_order():
 
 @kasir_bp.route('/api/update-order', methods=['POST'])
 @login_required
+@role_required('kasir')
 def update_order():
     data = request.json
     order_number = data.get('order_number')
@@ -758,6 +766,7 @@ def update_order():
 # ── Pesanan Aktif APIs ─────────────────────────────────────────
 @kasir_bp.route('/api/cancel-order', methods=['POST'])
 @login_required
+@role_required('kasir')
 def cancel_order():
     data = request.json
     order_id = data.get('order_id')
@@ -803,6 +812,7 @@ def cancel_order():
 
 @kasir_bp.route('/api/pay-order', methods=['POST'])
 @login_required
+@role_required('kasir')
 def pay_order():
     data = request.json
     order_number = data.get('order_number')
@@ -836,6 +846,7 @@ def pay_order():
 
 @kasir_bp.route('/api/release-table', methods=['POST'])
 @login_required
+@role_required('kasir')
 def release_table():
     data = request.json
     order_number = data.get('order_number')
@@ -869,6 +880,7 @@ def release_table():
 
 @kasir_bp.route('/api/complete-takeaway', methods=['POST'])
 @login_required
+@role_required('kasir')
 def complete_takeaway():
     data = request.json
     order_number = data.get('order_number')
@@ -896,6 +908,7 @@ def complete_takeaway():
     
 @kasir_bp.route('/api/serve-item', methods=['POST'])
 @login_required
+@role_required('kasir')
 def serve_item():
     data = request.json
     item_id = data.get('item_id')
@@ -930,6 +943,7 @@ def serve_item():
 # ── Reservasi APIs ─────────────────────────────────────────
 @kasir_bp.route('/api/add-reservation', methods=['POST'])
 @login_required
+@role_required('kasir')
 def add_reservation():
     data = request.json
     try:
@@ -1041,6 +1055,7 @@ def add_reservation():
 
 @kasir_bp.route('/api/update-reservation', methods=['POST'])
 @login_required
+@role_required('kasir')
 def update_reservation():
     data = request.json
     res_id = data.get('id')

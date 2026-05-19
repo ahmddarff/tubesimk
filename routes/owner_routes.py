@@ -15,6 +15,7 @@ owner_bp = Blueprint('owner', __name__)
 # ── 1. DASHBOARD ENDPOINT ─────────────────────────────────────────────────────
 @owner_bp.route('/dashboard')
 @login_required
+@role_required('owner')
 def dashboard():
     # Hitung Stat Utama dari Database (Menggunakan total_amount sesuai murni DB paid)
     total_penjualan_val = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid').scalar() or 0
@@ -95,6 +96,7 @@ def dashboard():
 # ── 2. CORE MANAGEMENT PAGES (DINAMIS DB) ────────────────────────────────────
 @owner_bp.route('/manajemen-menu')
 @login_required
+@role_required('owner')
 def manajemen_menu():
     menus = Menu.query.all()
     categories = Category.query.all()
@@ -112,12 +114,14 @@ def manajemen_menu():
 
 @owner_bp.route('/manajemen-meja')
 @login_required
+@role_required('owner')
 def manajemen_meja():
     tables = Table.query.order_by(Table.table_number).all()
     return render_template('owner/manajemen-meja.html', tables=tables)
 
 @owner_bp.route('/manajemen-kasir')
 @login_required
+@role_required('owner')
 def manajemen_kasir():
     # 1. Ambil Data Kasir
     kasir_users = User.query.filter_by(role='kasir').all()
@@ -164,6 +168,7 @@ def manajemen_kasir():
 
 @owner_bp.route('/laporan-penjualan')
 @login_required
+@role_required('owner')
 def laporan_penjualan():
     # 1. Hitung Statistik Utama (Hanya pesanan LUNAS)
     paid_orders = Order.query.filter_by(payment_status='paid').all()
@@ -234,6 +239,7 @@ def laporan_penjualan():
 
 @owner_bp.route('/pengaturan')
 @login_required
+@role_required('owner')
 def pengaturan():
     cafe_info = CafeSetting.query.first()
     jam_db = OperationalHour.query.all()
@@ -245,6 +251,7 @@ def pengaturan():
 # ── 3. KATEGORI & MENU APIS ───────────────────────────────────────────────────
 @owner_bp.route('/api/tambah-kategori', methods=['POST'])
 @login_required
+@role_required('owner')
 def tambah_kategori():
     nama = request.form.get('nama')
     if not nama:
@@ -263,6 +270,7 @@ def tambah_kategori():
 
 @owner_bp.route('/api/edit-kategori/<int:id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def edit_kategori(id):
     cat = db.session.get(Category, id)
     if not cat:
@@ -285,6 +293,7 @@ def edit_kategori(id):
 
 @owner_bp.route('/api/hapus-kategori/<int:id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def hapus_kategori(id):
     cat = db.session.get(Category, id)
     if not cat:
@@ -303,6 +312,7 @@ def hapus_kategori(id):
 
 @owner_bp.route('/api/tambah-menu', methods=['POST'])
 @login_required
+@role_required('owner')
 def tambah_menu():
     try:
         nama = request.form.get('nama')
@@ -340,6 +350,7 @@ def tambah_menu():
 
 @owner_bp.route('/api/toggle-menu-status/<int:menu_id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def toggle_menu_status(menu_id):
     data = request.json
     menu = db.session.get(Menu, menu_id)
@@ -355,6 +366,7 @@ def toggle_menu_status(menu_id):
 
 @owner_bp.route('/api/edit-menu/<int:menu_id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def edit_menu(menu_id):
     try:
         menu = db.session.get(Menu, menu_id)
@@ -394,6 +406,7 @@ def edit_menu(menu_id):
 
 @owner_bp.route('/api/update-stok/<int:menu_id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def update_stok_cepat(menu_id):
     data = request.json
     try:
@@ -410,6 +423,7 @@ def update_stok_cepat(menu_id):
 
 @owner_bp.route('/api/menu-reviews/<int:menu_id>', methods=['GET'])
 @login_required
+@role_required('owner')
 def get_menu_reviews(menu_id):
     menu = db.session.get(Menu, menu_id)
     if not menu:
@@ -432,6 +446,7 @@ def get_menu_reviews(menu_id):
 # ── 4. MEJA APIS ──────────────────────────────────────────────────────────────
 @owner_bp.route('/api/tambah-meja', methods=['POST'])
 @login_required
+@role_required('owner')
 def tambah_meja():
     nomor = request.form.get('nomor')
     kapasitas = request.form.get('kapasitas')
@@ -452,6 +467,7 @@ def tambah_meja():
 
 @owner_bp.route('/api/edit-meja/<int:id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def edit_meja(id):
     table = db.session.get(Table, id)
     if not table:
@@ -477,6 +493,7 @@ def edit_meja(id):
 
 @owner_bp.route('/api/hapus-meja/<int:id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def hapus_meja(id):
     table = db.session.get(Table, id)
     if not table.is_available:
@@ -493,6 +510,7 @@ def hapus_meja(id):
 # ── 5. STAFF / KASIR APIS (DINAMIS DATABASE) ──────────────────────────────────
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
 @login_required
+@role_required('owner')
 def tambah_staff():
     data = request.json
     nama = data.get("nama")
@@ -520,6 +538,7 @@ def tambah_staff():
 
 @owner_bp.route('/api/toggle-kasir-status/<int:kasir_id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def toggle_kasir_status(kasir_id):
     # ✅ SEKARANG DINAMIS: Mengubah keaktifan user kasir di database
     data = request.json
@@ -533,6 +552,7 @@ def toggle_kasir_status(kasir_id):
 
 @owner_bp.route('/api/edit-staff/<int:id>', methods=['POST'])
 @login_required
+@role_required('owner')
 def edit_staff(id):
     staff = User.query.get_or_404(id)
     data = request.json
@@ -555,6 +575,7 @@ def edit_staff(id):
 # ── 6. Laporan APIS ───────────────────────────────────────────────────────────
 @owner_bp.route('/api/export-excel', methods=['POST'])
 @login_required
+@role_required('owner')
 def export_excel():
     data = request.json
     
@@ -624,6 +645,7 @@ def export_excel():
 
 @owner_bp.route('/cetak-laporan')
 @login_required
+@role_required('owner')
 def cetak_laporan():
     # Ambil info cafe untuk kop surat (opsional, pastikan model CafeSetting sudah di-import)
     cafe_info = CafeSetting.query.first()
@@ -632,6 +654,7 @@ def cetak_laporan():
 # ── 7. CAFE SETTINGS APIS ─────────────────────────────────────────────────────
 @owner_bp.route('/api/update-profil-cafe', methods=['POST'])
 @login_required
+@role_required('owner')
 def update_profil_cafe():
     nama = request.form.get("nama")
     telp = request.form.get("telp")
@@ -670,6 +693,7 @@ def update_profil_cafe():
 
 @owner_bp.route('/api/update-akun', methods=['POST'])
 @login_required
+@role_required('owner')
 def update_akun():
     user = db.session.get(User, current_user.id)
     if user:
@@ -704,6 +728,7 @@ def update_akun():
 
 @owner_bp.route('/api/update-password', methods=['POST'])
 @login_required
+@role_required('owner')
 def update_password():
     data = request.json
     user = db.session.get(User, current_user.id)
@@ -720,6 +745,7 @@ def update_password():
     
 @owner_bp.route('/api/toggle-cafe-status', methods=['POST'])
 @login_required
+@role_required('owner')
 def toggle_cafe_status():
     data = request.json
     cafe = CafeSetting.query.first()
@@ -735,6 +761,7 @@ def toggle_cafe_status():
 
 @owner_bp.route('/api/toggle-jam-operasional', methods=['POST'])
 @login_required
+@role_required('owner')
 def toggle_jam_operasional():
     data = request.json
     jadwal = OperationalHour.query.filter_by(day_of_week=data.get("hari")).first()

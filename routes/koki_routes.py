@@ -1,4 +1,5 @@
 import os
+from utils import role_required
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
@@ -14,6 +15,7 @@ koki_bp = Blueprint('koki', __name__)
 # =========================
 @koki_bp.route('/antrean-order')
 @login_required
+@role_required('koki')
 def antrian():
     # PROTEKSI ANTI-FIKTIF: Kasir boleh unpaid, Pesanan Mandiri aplikasi wajib PAID!
     orders_db = Order.query.filter(
@@ -64,6 +66,7 @@ def antrian():
 # =========================
 @koki_bp.route('/stok-menu')
 @login_required
+@role_required('koki')
 def stok():
     pending_count = Order.query.filter_by(order_status='pending').count()
     menus_db = Menu.query.all()
@@ -90,6 +93,7 @@ def stok():
 # =========================
 @koki_bp.route('/pengaturan', methods=['GET', 'POST'])
 @login_required
+@role_required('koki')
 def pengaturan():
     if request.method == 'POST':
         current_user.name = request.form.get('name')
@@ -133,6 +137,7 @@ def pengaturan():
 
 @koki_bp.route('/api/update-password', methods=['POST'])
 @login_required
+@role_required('koki')
 def update_password():
     data = request.json
     password_lama = data.get("password_lama")
@@ -153,6 +158,7 @@ def update_password():
 # ── ANTREAN ORDER APIS ──────────────────────────────────────────────
 @koki_bp.route('/api/koki/update-kitchen-status', methods=['POST'])
 @login_required
+@role_required('koki')
 def update_kitchen_status():
     data = request.json
     order_id = data.get('order_id')
@@ -212,6 +218,7 @@ def update_kitchen_status():
 # ── STOCK MENU APIS ──────────────────────────────────────────────
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])
 @login_required
+@role_required('koki')
 def update_order_status(order_id):
     data = request.json
     status_baru = data.get('status')
@@ -230,6 +237,7 @@ def update_order_status(order_id):
     
 @koki_bp.route('/api/koki/update-stok/<int:menu_id>', methods=['POST'])
 @login_required
+@role_required('koki')
 def update_stok(menu_id):
     data = request.json
     stok_baru = data.get('stok')
@@ -254,6 +262,7 @@ def update_stok(menu_id):
     
 @koki_bp.route('/api/koki/toggle-menu-status/<int:menu_id>', methods=['POST'])
 @login_required
+@role_required('koki')
 def toggle_menu_status(menu_id):
     data = request.json
     menu = db.session.get(Menu, menu_id)
