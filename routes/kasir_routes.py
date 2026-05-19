@@ -1,7 +1,6 @@
 import os
-from datetime import date
 from utils import *
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
 from models import Category, Menu, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable
@@ -1084,7 +1083,7 @@ def update_reservation():
 # ==========================================
 def auto_cleanup_expired_orders():
     # ✅ FIX FATAL BUG: Gunakan utcnow() agar sejajar apple-to-apple dengan data di DB!
-    threshold_time = datetime.utcnow() - timedelta(minutes=5)
+    threshold_time = datetime.now(timezone.utc) - timedelta(minutes=5)
     
     # Cari order mandiri (user_id TIDAK NULL) yang belum bayar, masih pending, & lewat 5 menit
     expired_orders = Order.query.filter(
