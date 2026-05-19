@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terralog - Lupa Kata Sandi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        syne: ['Syne', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Toast */
+        @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(-80px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+        @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(-80px); } }
+        #toast { left: 50%; transform: translateX(-50%) translateY(-80px); }
+        .toast.show { animation: toastIn  0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .toast.hide { animation: toastOut 0.3s ease forwards; }
+
+        /* Step transition */
+        @keyframes stepIn  { from { opacity:0; transform:translateX(30px); }  to { opacity:1; transform:translateX(0); } }
+        @keyframes stepOut { from { opacity:1; transform:translateX(0); }      to { opacity:0; transform:translateX(-30px); } }
+        .step-enter { animation: stepIn  0.3s ease forwards; }
+        .step-exit  { animation: stepOut 0.3s ease forwards; }
+
+        /* OTP input */
+        .otp-input::-webkit-outer-spin-button,
+        .otp-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .otp-input { -moz-appearance: textfield; }
+
+        /* Progress bar */
+        .progress-bar { transition: width 0.4s cubic-bezier(0.34, 1.2, 0.64, 1); }
+
+        /* Strength bar */
+        .strength-bar { transition: width 0.3s ease, background-color 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen font-sans flex items-center justify-center p-4"
+      style="background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f5f0ff 100%)">
+
+<!-- Toast -->
+<div id="toast"
+     class="toast fixed top-5 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 border-green-500 z-[2000] opacity-0 pointer-events-none min-w-[280px]">
+    <i id="toast-icon" class="fa-solid fa-circle-check text-green-500 text-base"></i>
+    <span id="toast-message">Berhasil!</span>
+</div>
+
+<!-- Background decorations -->
+<div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-10"
+         style="background: #1B2FAA;"></div>
+    <div class="absolute -bottom-16 -left-16 w-64 h-64 rounded-full opacity-10"
+         style="background: #1B2FAA;"></div>
+    <div class="absolute top-1/3 right-1/4 w-32 h-32 rounded-full opacity-5"
+         style="background: #F5C842;"></div>
+</div>
+
+<!-- Card -->
+<div class="relative w-full max-w-md">
+
+    <!-- Logo -->
+    <div class="text-center mb-6">
+        <div class="font-syne text-4xl font-extrabold text-[#1B2FAA] leading-none">terralog</div>
+        <span class="text-[0.62rem] font-semibold tracking-[0.2em] text-gray-400 uppercase">Coffee N Eatery</span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+        <!-- Progress Bar -->
+        <div class="h-1.5 bg-gray-100">
+            <div id="progressBar" class="progress-bar h-full bg-[#1B2FAA] rounded-full" style="width: 33.33%"></div>
+        </div>
+
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-center gap-3 pt-6 px-8">
+            <!-- Step 1 -->
+            <div class="flex items-center gap-2">
+                <div id="step-indicator-1"
+                     class="w-8 h-8 rounded-full bg-[#1B2FAA] text-white flex items-center justify-center text-xs font-bold transition-all">
+                    1
+                </div>
+                <span id="step-label-1" class="text-xs font-semibold text-[#1B2FAA]">Email</span>
+            </div>
+            <div id="line-1-2" class="flex-1 h-0.5 bg-gray-200 max-w-[60px] rounded-full transition-all"></div>
+
+            <!-- Step 2 -->
+            <div class="flex items-center gap-2">
+                <div id="step-indicator-2"
+                     class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold transition-all">
+                    2
+                </div>
+                <span id="step-label-2" class="text-xs font-semibold text-gray-400">Verifikasi</span>
+            </div>
+            <div id="line-2-3" class="flex-1 h-0.5 bg-gray-200 max-w-[60px] rounded-full transition-all"></div>
+
+            <!-- Step 3 -->
+            <div class="flex items-center gap-2">
+                <div id="step-indicator-3"
+                     class="w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold transition-all">
+                    3
+                </div>
+                <span id="step-label-3" class="text-xs font-semibold text-gray-400">Password Baru</span>
+            </div>
+        </div>
+
+        <div class="px-8 pb-8 pt-6">
+
+            <!-- ========================
+                 STEP 1: INPUT EMAIL
+                 ======================== -->
+            <div id="step-1">
+                <!-- Icon -->
+                <div class="flex justify-center mb-5">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
+                        <i class="fa-solid fa-envelope text-[#1B2FAA] text-2xl"></i>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-extrabold text-gray-900 text-center mb-1">Lupa Kata Sandi?</h2>
+                <p class="text-sm text-gray-400 text-center mb-6">
+                    Masukkan email yang terdaftar. Kami akan mengirimkan kode verifikasi.
+                </p>
+
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-semibold text-gray-700">Alamat Email</label>
+                        <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1B2FAA] transition-colors">
+                            <span class="px-3 text-gray-300">
+                                <i class="fa-solid fa-envelope text-sm"></i>
+                            </span>
+                            <input type="email" id="inputEmail"
+                                   placeholder="contoh@email.com"
+                                   class="flex-1 px-2 py-3 text-sm outline-none bg-transparent"
+                                   onkeydown="if(event.key==='Enter') kirimOTP()">
+                        </div>
+                        <p id="emailError" class="text-xs text-red-500 hidden">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                            Format email tidak valid.
+                        </p>
+                    </div>
+
+                    <button onclick="kirimOTP()" id="btnKirimOTP"
+                            class="w-full py-3 rounded-xl bg-[#1B2FAA] text-white font-bold text-sm
+                                   hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg
+                                   transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        Kirim Kode Verifikasi
+                    </button>
+
+                    <a href="/login"
+                       class="flex items-center justify-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-[#1B2FAA] transition-colors">
+                        <i class="fa-solid fa-arrow-left text-xs"></i> Kembali ke Login
+                    </a>
+                </div>
+            </div>
+
+            <!-- ========================
+                 STEP 2: VERIFIKASI OTP
+                 ======================== -->
+            <div id="step-2" class="hidden">
+                <!-- Icon -->
+                <div class="flex justify-center mb-5">
+                    <div class="w-16 h-16 rounded-2xl bg-yellow-50 flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved text-yellow-500 text-2xl"></i>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-extrabold text-gray-900 text-center mb-1">Cek Email Kamu</h2>
+                <p class="text-sm text-gray-400 text-center mb-1">
+                    Kode verifikasi 6 digit telah dikirim ke
+                </p>
+                <p id="displayEmail" class="text-sm font-bold text-[#1B2FAA] text-center mb-6">-</p>
+
+                <!-- OTP Inputs -->
+                <div class="flex justify-center gap-2.5 mb-2">
+                    {% for i in range(1, 7) %}
+                    <input type="number" id="otp-{{ i }}" maxlength="1"
+                           class="otp-input w-11 h-12 text-center text-xl font-extrabold border-2 border-gray-200
+                                  rounded-xl outline-none focus:border-[#1B2FAA] transition-colors
+                                  bg-gray-50 focus:bg-white"
+                           oninput="handleOTPInput(this, {{ i }})"
+                           onkeydown="handleOTPKeydown(event, {{ i }})">
+                    {% endfor %}
+                </div>
+
+                <!-- Timer & Resend -->
+                <div class="flex items-center justify-center gap-2 mb-6 mt-3">
+                    <span class="text-xs text-gray-400">Kode berlaku selama</span>
+                    <span id="otpTimer" class="text-xs font-bold text-[#1B2FAA]">02:00</span>
+                    <span class="text-xs text-gray-300">•</span>
+                    <button id="btnResend" onclick="resendOTP()" disabled
+                            class="text-xs font-bold text-gray-300 cursor-not-allowed transition-colors"
+                            id="btnResend">
+                        Kirim Ulang
+                    </button>
+                </div>
+
+                <p id="otpError" class="text-xs text-red-500 text-center mb-3 hidden">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>
+                    Kode verifikasi salah. Silakan coba lagi.
+                </p>
+
+                <button onclick="verifikasiOTP()" id="btnVerifikasi"
+                        class="w-full py-3 rounded-xl bg-[#1B2FAA] text-white font-bold text-sm
+                               hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg
+                               transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check-circle"></i>
+                    Verifikasi Kode
+                </button>
+
+                <button onclick="goToStep(1)"
+                        class="w-full mt-3 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold
+                               text-gray-400 hover:bg-gray-50 transition-colors">
+                    Ganti Email
+                </button>
+            </div>
+
+            <!-- ========================
+                 STEP 3: PASSWORD BARU
+                 ======================== -->
+            <div id="step-3" class="hidden">
+                <!-- Icon -->
+                <div class="flex justify-center mb-5">
+                    <div class="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center">
+                        <i class="fa-solid fa-lock text-green-500 text-2xl"></i>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-extrabold text-gray-900 text-center mb-1">Buat Password Baru</h2>
+                <p class="text-sm text-gray-400 text-center mb-6">
+                    Pastikan password baru kamu kuat dan mudah diingat.
+                </p>
+
+                <div class="flex flex-col gap-4">
+                    <!-- Password Baru -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-semibold text-gray-700">Password Baru</label>
+                        <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1B2FAA] transition-colors">
+                            <span class="px-3 text-gray-300">
+                                <i class="fa-solid fa-lock text-sm"></i>
+                            </span>
+                            <input type="password" id="newPassword"
+                                   placeholder="Minimal 8 karakter"
+                                   oninput="checkStrength(this.value)"
+                                   class="flex-1 px-2 py-3 text-sm outline-none bg-transparent">
+                            <button type="button" onclick="togglePwd('newPassword', this)"
+                                    class="px-3 text-gray-300 hover:text-[#1B2FAA] transition-colors">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+
+                        <!-- Strength Indicator -->
+                        <div class="flex flex-col gap-1.5 mt-1">
+                            <div class="flex gap-1">
+                                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div id="bar1" class="strength-bar h-full w-0 rounded-full bg-red-400"></div>
+                                </div>
+                                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div id="bar2" class="strength-bar h-full w-0 rounded-full bg-orange-400"></div>
+                                </div>
+                                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div id="bar3" class="strength-bar h-full w-0 rounded-full bg-yellow-400"></div>
+                                </div>
+                                <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                    <div id="bar4" class="strength-bar h-full w-0 rounded-full bg-green-500"></div>
+                                </div>
+                            </div>
+                            <p id="strengthLabel" class="text-[11px] text-gray-400"></p>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div class="flex flex-col gap-1 mt-1">
+                            <div class="flex items-center gap-1.5" id="req-length">
+                                <i class="fa-solid fa-circle text-[8px] text-gray-300"></i>
+                                <span class="text-[11px] text-gray-400">Minimal 8 karakter</span>
+                            </div>
+                            <div class="flex items-center gap-1.5" id="req-upper">
+                                <i class="fa-solid fa-circle text-[8px] text-gray-300"></i>
+                                <span class="text-[11px] text-gray-400">Mengandung huruf kapital</span>
+                            </div>
+                            <div class="flex items-center gap-1.5" id="req-number">
+                                <i class="fa-solid fa-circle text-[8px] text-gray-300"></i>
+                                <span class="text-[11px] text-gray-400">Mengandung angka</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Konfirmasi Password -->
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-sm font-semibold text-gray-700">Konfirmasi Password</label>
+                        <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden focus-within:border-[#1B2FAA] transition-colors"
+                             id="confirmWrapper">
+                            <span class="px-3 text-gray-300">
+                                <i class="fa-solid fa-lock text-sm"></i>
+                            </span>
+                            <input type="password" id="confirmPassword"
+                                   placeholder="Ulangi password baru"
+                                   oninput="checkMatch()"
+                                   class="flex-1 px-2 py-3 text-sm outline-none bg-transparent">
+                            <button type="button" onclick="togglePwd('confirmPassword', this)"
+                                    class="px-3 text-gray-300 hover:text-[#1B2FAA] transition-colors">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                        <p id="matchMsg" class="text-[11px] hidden"></p>
+                    </div>
+
+                    <button onclick="resetPassword()" id="btnReset"
+                            class="w-full py-3 rounded-xl bg-[#1B2FAA] text-white font-bold text-sm
+                                   hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg
+                                   transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Simpan Password Baru
+                    </button>
+                </div>
+            </div>
+
+            <!-- ========================
+                 STEP 4: SUCCESS
+                 ======================== -->
+            <div id="step-4" class="hidden text-center">
+                <!-- Animated checkmark -->
+                <div class="flex justify-center mb-5">
+                    <div class="w-20 h-20 rounded-full bg-green-50 border-4 border-green-100 flex items-center justify-center">
+                        <i class="fa-solid fa-check text-green-500 text-3xl"></i>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-extrabold text-gray-900 mb-2">Password Berhasil Diubah!</h2>
+                <p class="text-sm text-gray-400 mb-6">
+                    Password kamu telah diperbarui. Silakan login dengan password baru.
+                </p>
+
+                <!-- Countdown -->
+                <div class="bg-blue-50 rounded-xl px-4 py-3 mb-5 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-clock text-[#1B2FAA] text-sm"></i>
+                    <span class="text-sm text-gray-500">Otomatis ke halaman login dalam</span>
+                    <span id="redirectCountdown" class="text-sm font-bold text-[#1B2FAA]">5</span>
+                    <span class="text-sm text-gray-500">detik</span>
+                </div>
+
+                <a href="/login"
+                   class="block w-full py-3 rounded-xl bg-[#1B2FAA] text-white font-bold text-sm text-center
+                          hover:bg-[#1E3ACC] hover:-translate-y-0.5 hover:shadow-lg transition-all">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i>
+                    Login Sekarang
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-xs text-gray-400 mt-5">
+        © 2026 Terralog Coffee N Eatery. All rights reserved.
+    </p>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let currentStep   = 1;
+let userEmail     = '';
+let otpTimerInterval = null;
+let otpSeconds    = 120; // 2 menit
+const DUMMY_OTP   = '123456'; // Simulasi OTP
+
+// ── Step Navigation ────────────────────────────────────
+function goToStep(step) {
+    // Hide current
+    document.getElementById(`step-${currentStep}`).classList.add('hidden');
+
+    // Show next with animation
+    const nextEl = document.getElementById(`step-${step}`);
+    nextEl.classList.remove('hidden');
+    nextEl.classList.add('step-enter');
+    setTimeout(() => nextEl.classList.remove('step-enter'), 300);
+
+    currentStep = step;
+    updateStepUI();
+}
+
+function updateStepUI() {
+    // Progress bar
+    const progress = { 1: '33.33%', 2: '66.66%', 3: '100%', 4: '100%' };
+    document.getElementById('progressBar').style.width = progress[currentStep] || '33.33%';
+
+    // Step indicators
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step-indicator-${i}`);
+        const label     = document.getElementById(`step-label-${i}`);
+
+        if (i < currentStep) {
+            // Completed
+            indicator.className = 'w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold transition-all';
+            indicator.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+            label.className     = 'text-xs font-semibold text-green-500';
+        } else if (i === currentStep) {
+            // Active
+            indicator.className = 'w-8 h-8 rounded-full bg-[#1B2FAA] text-white flex items-center justify-center text-xs font-bold transition-all';
+            indicator.innerHTML = i;
+            label.className     = 'text-xs font-semibold text-[#1B2FAA]';
+        } else {
+            // Inactive
+            indicator.className = 'w-8 h-8 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs font-bold transition-all';
+            indicator.innerHTML = i;
+            label.className     = 'text-xs font-semibold text-gray-400';
+        }
+    }
+
+    // Line connectors
+    const line12 = document.getElementById('line-1-2');
+    const line23 = document.getElementById('line-2-3');
+    if (currentStep >= 2) line12.classList.replace('bg-gray-200', 'bg-green-400');
+    else line12.classList.replace('bg-green-400', 'bg-gray-200');
+    if (currentStep >= 3) line23.classList.replace('bg-gray-200', 'bg-green-400');
+    else line23.classList.replace('bg-green-400', 'bg-gray-200');
+}
+
+// ── STEP 1: Kirim OTP ─────────────────────────────────
+function kirimOTP() {
+    const email = document.getElementById('inputEmail').value.trim();
+    const emailError = document.getElementById('emailError');
+    const btn = document.getElementById('btnKirimOTP');
+
+    // Validasi
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        emailError.classList.remove('hidden');
+        document.getElementById('inputEmail').parentElement.classList.add('border-red-300');
+        return;
+    }
+    emailError.classList.add('hidden');
+
+    // Loading state
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+    btn.disabled  = true;
+
+    // Simulate API call
+    fetch('/api/forgot-password/kirim-otp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email })
+    })
+    .then(r => r.json())
+    .then(data => {
+        userEmail = email;
+        document.getElementById('displayEmail').textContent = maskEmail(email);
+        showToast(`Kode OTP dikirim ke ${maskEmail(email)}`, 'success');
+        goToStep(2);
+        startOTPTimer();
+    })
+    .catch(() => {
+        // Fallback untuk demo (tanpa backend aktif)
+        userEmail = email;
+        document.getElementById('displayEmail').textContent = maskEmail(email);
+        showToast(`Kode OTP dikirim ke ${maskEmail(email)}`, 'success');
+        goToStep(2);
+        startOTPTimer();
+    })
+    .finally(() => {
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Kode Verifikasi';
+        btn.disabled  = false;
+    });
+}
+
+function maskEmail(email) {
+    const [user, domain] = email.split('@');
+    const masked = user.slice(0, 2) + '***' + user.slice(-1);
+    return `${masked}@${domain}`;
+}
+
+// ── STEP 2: OTP Input & Timer ─────────────────────────
+function handleOTPInput(input, index) {
+    // Hanya terima 1 digit
+    input.value = input.value.replace(/[^0-9]/g, '').slice(-1);
+
+    // Auto focus next
+    if (input.value && index < 6) {
+        document.getElementById(`otp-${index + 1}`).focus();
+    }
+
+    // Auto verify jika semua terisi
+    const allFilled = [1,2,3,4,5,6].every(i => document.getElementById(`otp-${i}`).value !== '');
+    if (allFilled) setTimeout(verifikasiOTP, 300);
+}
+
+function handleOTPKeydown(e, index) {
+    if (e.key === 'Backspace' && !document.getElementById(`otp-${index}`).value && index > 1) {
+        document.getElementById(`otp-${index - 1}`).focus();
+    }
+    if (e.key === 'ArrowLeft' && index > 1) {
+        document.getElementById(`otp-${index - 1}`).focus();
+    }
+    if (e.key === 'ArrowRight' && index < 6) {
+        document.getElementById(`otp-${index + 1}`).focus();
+    }
+}
+
+function startOTPTimer() {
+    clearInterval(otpTimerInterval);
+    otpSeconds = 120;
+    updateTimerDisplay();
+
+    const btnResend = document.getElementById('btnResend');
+    btnResend.disabled = true;
+    btnResend.className = 'text-xs font-bold text-gray-300 cursor-not-allowed transition-colors';
+
+    otpTimerInterval = setInterval(() => {
+        otpSeconds--;
+        updateTimerDisplay();
+        if (otpSeconds <= 0) {
+            clearInterval(otpTimerInterval);
+            btnResend.disabled  = false;
+            btnResend.className = 'text-xs font-bold text-[#1B2FAA] hover:text-[#1E3ACC] cursor-pointer transition-colors';
+            document.getElementById('otpTimer').textContent = '00:00';
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const m = String(Math.floor(otpSeconds / 60)).padStart(2, '0');
+    const s = String(otpSeconds % 60).padStart(2, '0');
+    document.getElementById('otpTimer').textContent = `${m}:${s}`;
+}
+
+function resendOTP() {
+    // Reset OTP inputs
+    [1,2,3,4,5,6].forEach(i => document.getElementById(`otp-${i}`).value = '');
+    document.getElementById('otp-1').focus();
+    document.getElementById('otpError').classList.add('hidden');
+    startOTPTimer();
+    showToast('Kode OTP baru telah dikirim!', 'success');
+}
+
+function verifikasiOTP() {
+    const otpValue = [1,2,3,4,5,6].map(i => document.getElementById(`otp-${i}`).value).join('');
+    const otpError = document.getElementById('otpError');
+    const btn = document.getElementById('btnVerifikasi');
+
+    if (otpValue.length < 6) {
+        showToast('Masukkan 6 digit kode verifikasi!', 'error');
+        return;
+    }
+
+    // Loading state
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memverifikasi...';
+    btn.disabled  = true;
+
+    // Simulate API
+    fetch('/api/forgot-password/verifikasi-otp', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: userEmail, otp: otpValue })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            clearInterval(otpTimerInterval);
+            otpError.classList.add('hidden');
+            showToast('Verifikasi berhasil!', 'success');
+            goToStep(3);
+        } else {
+            otpError.classList.remove('hidden');
+            shakeOTP();
+        }
+    })
+    .catch(() => {
+        // Demo fallback: OTP = 123456
+        if (otpValue === DUMMY_OTP) {
+            clearInterval(otpTimerInterval);
+            otpError.classList.add('hidden');
+            showToast('Verifikasi berhasil!', 'success');
+            goToStep(3);
+        } else {
+            otpError.classList.remove('hidden');
+            shakeOTP();
+        }
+    })
+    .finally(() => {
+        btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Verifikasi Kode';
+        btn.disabled  = false;
+    });
+}
+
+function shakeOTP() {
+    const inputs = [1,2,3,4,5,6].map(i => document.getElementById(`otp-${i}`));
+    inputs.forEach(inp => {
+        inp.classList.add('border-red-400', 'bg-red-50');
+        setTimeout(() => inp.classList.remove('border-red-400', 'bg-red-50'), 600);
+    });
+}
+
+// ── STEP 3: Password Strength & Reset ─────────────────
+function checkStrength(password) {
+    const hasLength = password.length >= 8;
+    const hasUpper  = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+    // Update requirements
+    updateReq('req-length', hasLength);
+    updateReq('req-upper',  hasUpper);
+    updateReq('req-number', hasNumber);
+
+    // Strength score
+    const score = [hasLength, hasUpper, hasNumber, hasSymbol].filter(Boolean).length;
+
+    // Update bars
+    const bars  = ['bar1','bar2','bar3','bar4'];
+    const fills = ['bg-red-400','bg-orange-400','bg-yellow-400','bg-green-500'];
+    bars.forEach((id, i) => {
+        const bar = document.getElementById(id);
+        bar.style.width = i < score ? '100%' : '0%';
+    });
+
+    // Label
+    const labels = { 0:'', 1:'Sangat Lemah', 2:'Lemah', 3:'Cukup Kuat', 4:'Kuat' };
+    const colors  = { 0:'text-gray-400', 1:'text-red-500', 2:'text-orange-500', 3:'text-yellow-600', 4:'text-green-600' };
+    const lbl = document.getElementById('strengthLabel');
+    lbl.textContent = labels[score];
+    lbl.className   = `text-[11px] ${colors[score]}`;
+}
+
+function updateReq(id, met) {
+    const el   = document.getElementById(id);
+    const icon = el.querySelector('i');
+    const text = el.querySelector('span');
+    if (met) {
+        icon.className  = 'fa-solid fa-circle-check text-[10px] text-green-500';
+        text.className  = 'text-[11px] text-green-600 font-medium';
+    } else {
+        icon.className  = 'fa-solid fa-circle text-[8px] text-gray-300';
+        text.className  = 'text-[11px] text-gray-400';
+    }
+}
+
+function checkMatch() {
+    const pass    = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const msg     = document.getElementById('matchMsg');
+    const wrapper = document.getElementById('confirmWrapper');
+
+    if (!confirm) { msg.classList.add('hidden'); return; }
+
+    if (pass === confirm) {
+        msg.textContent = '✓ Password cocok';
+        msg.className   = 'text-[11px] text-green-600 font-medium';
+        msg.classList.remove('hidden');
+        wrapper.classList.replace('border-gray-200', 'border-green-400');
+    } else {
+        msg.textContent = '✗ Password tidak cocok';
+        msg.className   = 'text-[11px] text-red-500';
+        msg.classList.remove('hidden');
+        wrapper.classList.replace('border-green-400', 'border-gray-200');
+    }
+}
+
+function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    input.type  = input.type === 'password' ? 'text' : 'password';
+    btn.querySelector('i').className =
+        input.type === 'password' ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+}
+
+function resetPassword() {
+    const pass    = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const btn     = document.getElementById('btnReset');
+
+    if (pass.length < 8)   { showToast('Password minimal 8 karakter!', 'error'); return; }
+    if (pass !== confirm)  { showToast('Konfirmasi password tidak cocok!', 'error'); return; }
+    if (!/[A-Z]/.test(pass))  { showToast('Password harus mengandung huruf kapital!', 'error'); return; }
+    if (!/[0-9]/.test(pass))  { showToast('Password harus mengandung angka!', 'error'); return; }
+
+    // Loading state
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+    btn.disabled  = true;
+
+    fetch('/api/forgot-password/reset', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: userEmail, password_baru: pass })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showSuccessStep();
+    })
+    .catch(() => {
+        // Demo fallback
+        showSuccessStep();
+    })
+    .finally(() => {
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Password Baru';
+        btn.disabled  = false;
+    });
+}
+
+function showSuccessStep() {
+    // Hide step indicators & progress on success
+    document.getElementById('progressBar').style.width = '100%';
+    document.getElementById('progressBar').classList.add('bg-green-500');
+    document.getElementById('progressBar').classList.remove('bg-[#1B2FAA]');
+    goToStep(4);
+    startRedirectCountdown();
+}
+
+function startRedirectCountdown() {
+    let count = 5;
+    const el  = document.getElementById('redirectCountdown');
+    const interval = setInterval(() => {
+        count--;
+        el.textContent = count;
+        if (count <= 0) {
+            clearInterval(interval);
+            window.location.href = '/login';
+        }
+    }, 1000);
+}
+
+// ── Toast ──────────────────────────────────────────────
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const msg   = document.getElementById('toast-message');
+    const icon  = document.getElementById('toast-icon');
+    const cfg = {
+        success: { border: '#10B981', cls: 'fa-circle-check text-green-500' },
+        error:   { border: '#EF4444', cls: 'fa-circle-xmark text-red-500' },
+        info:    { border: '#1B2FAA', cls: 'fa-circle-info text-blue-600' },
+    };
+    const c = cfg[type] || cfg.success;
+    toast.style.borderLeftColor = c.border;
+    icon.className = `fa-solid ${c.cls} text-base`;
+    msg.textContent = message;
+    toast.classList.remove('hide');
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hide');
+    }, 3500);
+}
+
+// ── Focus OTP ke input pertama saat step 2 aktif ──────
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new MutationObserver(() => {
+        const step2 = document.getElementById('step-2');
+        if (!step2.classList.contains('hidden')) {
+            setTimeout(() => document.getElementById('otp-1').focus(), 100);
+        }
+    });
+    observer.observe(document.getElementById('step-2'), { attributes: true });
+});
+</script>
+</body>
+</html>

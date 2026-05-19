@@ -71,7 +71,13 @@
                         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                             <i data-lucide="shopping-bag" class="w-5 h-5 text-terralogBlue"></i> Pesanan Anda
                         </h2>
-                        <span class="text-sm font-bold text-terralogBlue bg-blue-50 px-3 py-1 rounded-full" x-text="`${items.length} Item`"></span>
+                        <div class="flex items-center gap-3">
+                            <button x-show="items.length > 0" @click="clearCart()" class="text-sm font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-full transition flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i> Kosongkan
+                            </button>
+                            
+                            <span class="text-sm font-bold text-terralogBlue bg-blue-50 px-3 py-1 rounded-full" x-text="`${items.length} Item`"></span>
+                        </div>
                     </div>
 
                     <div x-show="items.length === 0" class="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -258,7 +264,7 @@
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1 })
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty + 1, note: item.note })
                 })
                 await this.loadCart()
             },
@@ -272,7 +278,7 @@
                 await fetch('/customer/api/cart/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1 })
+                    body: JSON.stringify({ item_id: item.id, qty: item.qty - 1, note: item.note })
                 })
                 await this.loadCart()
             },
@@ -281,6 +287,36 @@
                 const item = this.items[index]
                 await fetch(`/customer/api/cart/remove/${item.id}`, { method: 'DELETE' })
                 await this.loadCart()
+            },
+
+            async clearCart() {
+                if (confirm('Apakah Anda yakin ingin menghapus seluruh pesanan dari keranjang?')) {
+                    try {
+                        const response = await fetch('/customer/api/cart/clear', { 
+                            method: 'DELETE' 
+                        });
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            await this.loadCart();
+                            // Merender ulang ikon Lucide jika tampilan kosong muncul
+                            setTimeout(() => {
+                                if (typeof lucide !== 'undefined') lucide.createIcons();
+                            }, 50);
+                        } else {
+                            if (typeof showToast !== 'undefined') {
+                                showToast(result.message, 'error');
+                            } else {
+                                alert(result.message);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        if (typeof showToast !== 'undefined') {
+                            showToast('Gagal menghapus keranjang', 'error');
+                        }
+                    }
+                }
             },
 
             async updateNote(index, value) {
