@@ -38,6 +38,10 @@
                         </div>
                     </div>
                 </template>
+                <div class="mt-4 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-2 border border-red-100">
+                    <i data-lucide="clock" class="w-5 h-5 shrink-0"></i>
+                    <p>Harap segera melakukan pembayaran. Pesanan yang belum dibayar dalam waktu lebih dari 5 menit akan dibatalkan secara otomatis oleh sistem.</p>
+                </div>
 
                 <template x-if="order.payment_status === 'paid'">
                     <div class="bg-white border border-slate-100 rounded-[24px] p-8 shadow-sm">
