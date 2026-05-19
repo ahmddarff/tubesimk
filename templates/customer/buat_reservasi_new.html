@@ -31,32 +31,26 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-3">
-                        <p class="text-sm font-semibold text-slate-600">Meja Reservasi <span class="text-red-500">*</span></p>
-                        <button type="button" @click="addMeja()" class="text-xs font-bold text-terralogBlue hover:text-blue-800 flex items-center gap-1 transition-colors">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tambah Meja
-                        </button>
+                        <p class="text-sm font-semibold text-slate-600">Pilih Meja Reservasi (Bisa lebih dari 1) <span class="text-red-500">*</span></p>
                     </div>
                     
-                    <div class="space-y-3">
-                        <template x-for="(m, index) in mejas" :key="index">
-                            <div class="flex items-center gap-3">
-                                <select x-model="m.id" class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-terralogBlue bg-white cursor-pointer">
-                                    <option value="">Pilih Meja</option>
-                                    <template x-for="tbl in tablesData" :key="tbl.id">
-                                        <option :value="tbl.id" 
-                                                :disabled="isTableSelected(tbl.id, index)" 
-                                                x-text="`Meja ${tbl.table_number} (Kapasitas: ${tbl.capacity} Orang)`">
-                                        </option>
-                                    </template>
-                                </select>
-                                <button type="button" x-show="mejas.length > 1" @click="removeMeja(index)" 
-                                        class="p-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl transition-colors">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-48 overflow-y-auto p-1">
+                        {% for table in tables %}
+                        <label class="relative flex items-center justify-center p-3 border rounded-xl cursor-pointer transition-all bg-white"
+                            :class="mejaIds.includes('{{ table.id }}') ? 'border-terralogBlue ring-1 ring-terralogBlue bg-blue-50/50' : 'border-slate-200 hover:border-blue-200'">
+                            <input type="checkbox" value="{{ table.id }}" x-model="mejaIds" class="hidden">
+                            <div class="text-center flex flex-col">
+                                <span class="text-sm font-bold" :class="mejaIds.includes('{{ table.id }}') ? 'text-terralogBlue' : 'text-slate-700'">{{ table.table_number }}</span>
+                                <span class="text-[10px] text-slate-500 font-medium">Kapasitas: {{ table.capacity }}</span>
                             </div>
-                        </template>
+                            <div x-show="mejaIds.includes('{{ table.id }}')" class="absolute -top-2 -right-2 bg-terralogBlue text-white rounded-full p-0.5 shadow-sm">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                            </div>
+                        </label>
+                        {% endfor %}
                     </div>
                 </div>
+                
             </div>
         </div>
 
@@ -166,7 +160,7 @@
 <script>
     function buatReservasiApp() {
         return {
-            mejas: [{ id: '' }],
+            mejaIds: [], // Menggunakan array sederhana, bukan array of object
             tanggal: '',
             jamMulai: '',
             jamSelesai: '',
@@ -176,15 +170,10 @@
             
             showCapacityWarning: false,
             capacityConfirmed: false,
-
-            // Tambahkan variabel minDate
             minDate: '',
-
-            // Mengambil data tabel yang telah diinjeksi
             tablesData: [],
 
             init() {
-                // Mendapatkan tanggal hari ini sesuai zona waktu lokal pengguna
                 const today = new Date();
                 const yyyy = today.getFullYear();
                 const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -196,23 +185,6 @@
                 } catch (e) {
                     console.error("Gagal mengurai data meja:", e);
                 }
-            },
-
-            addMeja() {
-                this.mejas.push({ id: '' });
-                
-                // Memanggil ulang render ikon setelah elemen DOM baru selesai dimuat
-                setTimeout(() => {
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                }, 50);
-            },
-            removeMeja(index) {
-                this.mejas.splice(index, 1);
-            },
-            isTableSelected(tableId, currentIndex) {
-                return this.mejas.some((m, idx) => m.id === tableId && idx !== currentIndex);
             },
 
             calculateDuration() {
@@ -228,11 +200,9 @@
 
             calculateTotalCapacity() {
                 let total = 0;
-                this.mejas.forEach(m => {
-                    if (m.id) {
-                        const table = this.tablesData.find(t => t.id == m.id);
-                        if (table) total += table.capacity;
-                    }
+                this.mejaIds.forEach(id => {
+                    const table = this.tablesData.find(t => t.id == id);
+                    if (table) total += table.capacity;
                 });
                 return total;
             },
@@ -243,19 +213,16 @@
                     return;
                 }
 
-                const selectedTables = this.mejas.filter(m => m.id !== '');
-                if (selectedTables.length === 0) {
+                if (this.mejaIds.length === 0) {
                     showToast('Mohon pilih setidaknya satu meja!', 'error');
                     return;
                 }
 
-                // VALIDASI BARU: Jam tidak boleh sama
                 if (this.jamMulai === this.jamSelesai) {
                     showToast('Jam mulai dan jam selesai tidak boleh sama!', 'error');
                     return;
                 }
 
-                // VALIDASI BARU: Jam selesai tidak boleh mundur (lebih awal dari jam mulai)
                 if (this.jamSelesai < this.jamMulai) {
                     showToast('Jam selesai tidak boleh lebih awal dari jam mulai!', 'error');
                     return;
@@ -280,7 +247,7 @@
                 this.showCapacityWarning = false;
                 
                 const reservasiData = {
-                    meja_ids: this.mejas.map(m => m.id).filter(id => id !== ''),
+                    meja_ids: this.mejaIds, // Kirimkan array ID meja langsung
                     tanggal: this.tanggal,
                     waktu: this.jamMulai,
                     durasi: durasi,
@@ -299,12 +266,13 @@
                     if (result.success) {
                         window.location.href = '/customer/buat-reservasi'; 
                     } else {
-                        showToast(result.message || 'Terjadi kesalahan saat membuat reservasi.');
+                        if (typeof showToast !== 'undefined') showToast(result.message || 'Terjadi kesalahan saat membuat reservasi.', 'error');
+                        else alert(result.message);
                     }
                 })
                 .catch(err => {
                     console.error('Error:', err);
-                    showToast('Terjadi kesalahan koneksi ke server.');
+                    if (typeof showToast !== 'undefined') showToast('Terjadi kesalahan koneksi ke server.', 'error');
                 });
             }
         }
