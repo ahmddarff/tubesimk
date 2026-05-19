@@ -80,6 +80,7 @@ print(app.url_map)
 # ==========================================
 @app.route('/')
 def home():
+    # return redirect(url_for('customer.beranda'))
     return redirect(url_for('auth.login'))
 
 if __name__ == '__main__':
