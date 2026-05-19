@@ -1,4 +1,5 @@
-import os, random, string
+import os
+from utils import role_required
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -254,6 +255,7 @@ def calculate_menu_stats(menu):
 # Halaman List Reservasi Aktif & Riwayat
 @customer_bp.route('/buat-reservasi')
 @login_required
+@role_required('customer')
 def buat_reservasi():
     user_reservations = Reservation.query.options(
         joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
@@ -272,6 +274,7 @@ def buat_reservasi():
 # Halaman Form Reservasi Baru (Mengirim daftar meja dari DB)
 @customer_bp.route('/reservasi/new')
 @login_required
+@role_required('customer')
 def reservasi_new():
     # Mengambil semua data meja yang berstatus tersedia
     tables = Table.query.filter_by(is_available=True).all()
@@ -283,6 +286,7 @@ def reservasi_new():
 # API Endpoint POST: Menerima data JSON dari Submit Alpine.js
 @customer_bp.route('/buat-reservasi/submit', methods=['POST'])
 @login_required
+@role_required('customer')
 def submit_buat_reservasi():
     try:
         data = request.json
@@ -367,6 +371,7 @@ def submit_buat_reservasi():
 # Halaman Detail Reservasi Spesifik
 @customer_bp.route('/reservasi/<int:reservation_id>')
 @login_required
+@role_required('customer')
 def reservasi_detail(reservation_id):
     reservation = Reservation.query.options(
         joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
@@ -384,6 +389,7 @@ def reservasi_detail(reservation_id):
 # API Endpoint POST: Membatalkan Reservasi (dengan alasan) dari Alpine.js
 @customer_bp.route('/reservasi/<int:reservation_id>/cancel', methods=['POST'])
 @login_required
+@role_required('customer')
 def cancel_reservation(reservation_id):
     # Ambil data reservasi
     reservation = Reservation.query.get_or_404(reservation_id)
@@ -418,6 +424,7 @@ def cancel_reservation(reservation_id):
 # Halaman Riwayat Reservasi
 @customer_bp.route('/reservasi/history')
 @login_required
+@role_required('customer')
 def reservasi_history():
     history_reservations = Reservation.query.options(
         joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
@@ -438,6 +445,7 @@ def reservasi_history():
 # API Endpoint POST: Menambahkan Item ke Keranjang (dari Alpine.js)
 @customer_bp.route('/api/cart/add', methods=['POST'])
 @login_required
+@role_required('customer')
 def add_to_cart():
     data = request.get_json()
     menu_id = data.get('menu_id')
@@ -499,6 +507,7 @@ def add_to_cart():
 # API Endpoint GET: Mengambil Data Keranjang Aktif beserta item-itemnya (untuk Alpine.js)
 @customer_bp.route('/api/cart')
 @login_required
+@role_required('customer')
 def get_cart():
     order = get_active_cart(current_user.id, load_relations=True)
 
@@ -533,6 +542,7 @@ def get_cart():
 # API Endpoint POST: Update Quantity Item di Keranjang (dari Alpine.js)
 @customer_bp.route('/api/cart/update', methods=['POST'])
 @login_required
+@role_required('customer')
 def update_cart():
     data = request.get_json()
     item_id = data.get('item_id')
@@ -564,6 +574,7 @@ def update_cart():
 # API Endpoint DELETE: Menghapus Item dari Keranjang (dari Alpine.js)
 @customer_bp.route('/api/cart/remove/<int:item_id>', methods=['DELETE'])
 @login_required
+@role_required('customer')
 def remove_cart_item(item_id):
 
     item = OrderItem.query.get_or_404(item_id)
@@ -591,6 +602,7 @@ def remove_cart_item(item_id):
 # Halaman Daftar Pesanan Aktif & Riwayat Pesanan
 @customer_bp.route('/pesanan-saya')
 @login_required
+@role_required('customer')
 def pesanan_saya():
     # Mengambil semua pesanan milik user beserta relasi items dan review
     user_orders = Order.query.options(
@@ -633,6 +645,7 @@ def pesanan_saya():
 # Halaman Detail Pesanan Aktif & Riwayat Pesanan
 @customer_bp.route('/pesanan-saya/history')
 @login_required
+@role_required('customer')
 def pesanan_history():
     # Mengambil semua pesanan beserta relasi menu dan ulasan
     user_orders = Order.query.options(
@@ -658,6 +671,7 @@ def pesanan_history():
 # Halaman Checkout: Menampilkan detail keranjang beserta opsi checkout
 @customer_bp.route('/checkout')
 @login_required
+@role_required('customer')
 def checkout():
     order = get_active_cart(current_user.id, load_relations=True)
 
@@ -680,6 +694,7 @@ def checkout():
 # Fitur "Pesan Lagi": Menyalin item dari pesanan lama ke keranjang aktif
 @customer_bp.route('/pesan-lagi/<int:order_id>')
 @login_required
+@role_required('customer')
 def pesan_lagi(order_id):
     old_order = Order.query.options(
         joinedload(Order.items)
@@ -735,6 +750,7 @@ def pesan_lagi(order_id):
 # API Endpoint POST: Submit Pesanan dari Checkout (dari Alpine.js)
 @customer_bp.route('/submit-order', methods=['POST'])
 @login_required
+@role_required('customer')
 def submit_order():
     data = request.get_json()
     order = get_active_cart(current_user.id)
@@ -773,6 +789,7 @@ def submit_order():
 # API Endpoint POST: Update Catatan untuk Item di Keranjang (dari Alpine.js)
 @customer_bp.route('/api/cart/note', methods=['POST'])
 @login_required
+@role_required('customer')
 def update_cart_note():
     data = request.get_json()
     item_id = data.get('item_id')
@@ -794,6 +811,7 @@ def update_cart_note():
 # Halaman Detail Pesanan: Menampilkan detail pesanan beserta item, status, dan ulasan jika sudah disajikan
 @customer_bp.route('/pesanan/<int:order_id>')
 @login_required
+@role_required('customer')
 def pesanan_detail(order_id):
 # Mengambil data order beserta relasi items, menu, dan review secara eksplisit
     order = Order.query.options(
@@ -854,6 +872,7 @@ def pesanan_detail(order_id):
 # Halaman Pembayaran Non-Tunai: Menampilkan detail pesanan dan instruksi pembayaran untuk metode non-tunai
 @customer_bp.route('/pembayaran-nontunai/<int:order_id>')
 @login_required
+@role_required('customer')
 def pembayaran_nontunai(order_id):
     # Ambil data order
     order = Order.query.filter_by(id=order_id).first_or_404()
@@ -879,6 +898,7 @@ def pembayaran_nontunai(order_id):
 # API Endpoint POST: Submit Ulasan untuk Pesanan yang Sudah Disajikan (dari Alpine.js)
 @customer_bp.route('/api/submit-reviews', methods=['POST'])
 @login_required
+@role_required('customer')
 def submit_reviews():
     data = request.get_json()
     order_id = data.get('order_id')
@@ -920,6 +940,7 @@ def submit_reviews():
 # API Endpoint DELETE: Menghapus Semua Item dari Keranjang (dari Alpine.js)
 @customer_bp.route('/api/cart/clear', methods=['DELETE'])
 @login_required
+@role_required('customer')
 def clear_cart():
     order = get_active_cart(current_user.id)
 
@@ -948,6 +969,7 @@ def clear_cart():
 # Halaman Pengaturan Profil: Menampilkan form untuk mengubah data profil dan foto pengguna
 @customer_bp.route('/pengaturan', methods=['GET', 'POST'])
 @login_required
+@role_required('customer')
 def pengaturan():
     if request.method == 'POST':
         current_user.name = request.form.get('name')
@@ -996,6 +1018,7 @@ def pengaturan():
 # API Endpoint POST: Update Kata Sandi Pengguna (dari Alpine.js)
 @customer_bp.route('/api/update-password', methods=['POST'])
 @login_required
+@role_required('customer')
 def update_password():
     data = request.json
     if not check_password_hash(current_user.password, data.get("password_lama")):
