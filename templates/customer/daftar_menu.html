@@ -196,10 +196,14 @@
                                 </h3>
                                 
                                 <div class="flex items-center gap-2 mb-4 text-xs">
+                                    {% if product.rating_avg and product.rating_avg > 0 %}
                                     <div class="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-md font-bold">
                                         <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
-                                        <span>{{ product.rating_avg|default(0.0) }}</span>
+                                        <span>{{ product.rating_avg }}</span>
                                     </div>
+                                    {% else %}
+                                    <span class="text-gray-400 font-medium bg-gray-100 px-2 py-0.5 rounded-md">Belum ada penilaian</span>
+                                    {% endif %}
                                     <span class="text-gray-300">|</span>
                                     <span class="text-gray-500 font-medium">
                                         {{ product.terjual|default(0) }} Terjual
