@@ -767,14 +767,27 @@ def submit_order():
 
     # Logika pengisian meja berdasarkan tipe pesanan
     if order_type == 'dine_in':
-        table_id = data.get('table_id')
-        if table_id:
-            table = Table.query.get(table_id)
-            if table:
-                order.table_id = table.id
+        table_ids = data.get('table_ids', [])
+        
+        if table_ids:
+            # Tetap simpan ID meja pertama ke kolom table_id sebagai backward-compatibility
+            order.table_id = int(table_ids[0])
+            
+            # Merakit nama meja yang dipilih untuk snapshot
+            selected_tables = Table.query.filter(Table.id.in_(table_ids)).all()
+            table_names = [t.table_number for t in selected_tables]
+            
+            # Simpan seluruh nama meja (dipisah koma) ke kolom snapshot
+            order.table_number_snapshot = ", ".join(table_names)
+            
+            # Ubah status ketersediaan meja menjadi tidak tersedia (Opsional tapi disarankan)
+            for t in selected_tables:
+                t.is_available = False
+                
     else:
         # Jika take away, pastikan kolom meja dikosongkan
         order.table_id = None
+        order.table_number_snapshot = None
 
     order.payment_method = data.get('payment_method')
     order.order_status = 'pending'
@@ -837,7 +850,7 @@ def pesanan_detail(order_id):
         'payment_status': order.payment_status,
         'order_status': order.order_status,
         'order_type': order.order_type,
-        'no_meja': Table.query.get(order.table_id).table_number if order.table_id else '-',
+        'no_meja': order.table_number_snapshot if order.table_number_snapshot else ('-' if order.order_type == 'take_away' else 'Meja tidak valid'),
         'total_amount': order.total_amount,
         'items': [{
             'id': item.id,
