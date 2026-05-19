@@ -470,6 +470,7 @@ document.addEventListener('alpine:init', () => {
                 order_type: this.orderType === 'dine-in' ? 'dine_in' : 'take_away',
                 payment_method: this.paymentMethod,
                 total_amount: this.subtotal,
+                received_amount: this.receivedAmount,
                 cart: this.cart,
                 checkin_reservation_id: this.checkinResId
             };

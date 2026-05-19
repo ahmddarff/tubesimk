@@ -231,7 +231,7 @@ document.addEventListener('alpine:init', () => {
                 total: trx.total,
                 isPaid: true, // Data riwayat diasumsikan sudah lunas semua
                 paymentMethod: trx.metode,
-                receivedAmount: trx.total // Asumsi pembayaran pas
+                receivedAmount: trx.uang_diterima || trx.total
             };
 
             showToast('Menyiapkan struk cetak...', 'success');

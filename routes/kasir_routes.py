@@ -318,6 +318,7 @@ def pesanan_aktif():
             'total': order.total_amount,
             'lunas': True if order.payment_status == 'paid' else False,
             'metode': metode_bayar, # <--- TAMBAHAN BARU
+            'uang_diterima': order.received_amount,
             'items': items_list
         })
 
@@ -433,10 +434,11 @@ def riwayat_transaksi():
             'kasir': nama_kasir,
             'pelanggan': nama_pelanggan,
             'metode': metode_bayar,
-            'total': order.total_amount,
             'tipe': tipe_map.get(order.order_type, 'DINE IN'),
             'meja': order.table_number_snapshot or '-',
             'status_pembayaran': order.payment_status, 
+            'total': order.total_amount,
+            'uang_diterima': order.received_amount,
             'alasan_batal': order.cancellation_reason or '', 
             'items': items_list,
             'sumber': 'APLIKASI' if order.user_id else 'KASIR'
@@ -540,6 +542,9 @@ def submit_order():
         else:
             pay_status = 'unpaid'
 
+        received_amount_raw = data.get('received_amount')
+        safe_received_amount = int(received_amount_raw) if received_amount_raw and str(received_amount_raw).isdigit() else data.get('total_amount', 0)
+
         # ==========================================
         # REVISI: LOGIKA MULTI-MEJA (Master Table + Snapshot)
         # ==========================================
@@ -575,6 +580,7 @@ def submit_order():
             payment_status=pay_status,
             order_status='pending',
             total_amount=data.get('total_amount', 0),
+            received_amount=safe_received_amount if pay_status == 'paid' else None,
             cashier_id=current_user.id,
         )
         
@@ -779,6 +785,7 @@ def pay_order():
     data = request.json
     order_number = data.get('order_number')
     payment_method = data.get('payment_method')
+    received_amount = data.get('received_amount')
     
     if not order_number or not payment_method:
         return jsonify({"success": False, "message": "Data pembayaran tidak lengkap!"})
@@ -794,6 +801,7 @@ def pay_order():
         # Proses pelunasan dan catat metodenya
         order.payment_status = 'paid'
         order.payment_method = payment_method.upper() if payment_method.upper() in ['CASH', 'QRIS'] else 'CASH'
+        order.received_amount = int(received_amount) if received_amount and str(received_amount).isdigit() else order.total_amount
 
         order.cashier_id = current_user.id  # catat kasir yg menerima pembayaran utk histori
         

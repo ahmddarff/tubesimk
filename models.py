@@ -143,6 +143,7 @@ class Order(db.Model):
     payment_status  = db.Column(db.Enum('unpaid', 'paid', 'cancelled', name='payment_status'), default='unpaid')
     cancellation_reason = db.Column(db.Text, nullable=True)
     total_amount    = db.Column(db.Integer, nullable=False, default=0)
+    received_amount = db.Column(db.Integer, nullable=True) # ✅ TAMBAHAN: Catat uang tunai fisik
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

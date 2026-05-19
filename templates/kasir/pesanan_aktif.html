@@ -204,7 +204,7 @@ document.addEventListener('alpine:init', () => {
                 total: this.selectedOrder.total,
                 isPaid: this.selectedOrder.lunas, // Dinamis: TRUE jika lunas, FALSE jika belum
                 paymentMethod: this.selectedOrder.metode || 'CASH',
-                receivedAmount: this.selectedOrder.total
+                receivedAmount: this.selectedOrder.uang_diterima || this.selectedOrder.total
             };
 
             showToast('Menyiapkan struk cetak...', 'success');
@@ -243,7 +243,8 @@ document.addEventListener('alpine:init', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     order_number: this.selectedOrder.id,
-                    payment_method: this.paymentMethod
+                    payment_method: this.paymentMethod,
+                    received_amount: this.receivedAmount
                 })
             })
             .then(res => res.json())
@@ -254,6 +255,7 @@ document.addEventListener('alpine:init', () => {
                     // Update tampilan data lokal menjadi lunas agar siap dicetak!
                     this.selectedOrder.lunas = true;
                     this.selectedOrder.metode = this.paymentMethod;
+                    this.selectedOrder.uang_diterima = parseInt(this.receivedAmount);
                 } else {
                     showToast('Gagal memproses pembayaran: ' + data.message, 'error');
                 }
