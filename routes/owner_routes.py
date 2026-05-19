@@ -494,24 +494,26 @@ def hapus_meja(id):
 @owner_bp.route('/api/tambah-staff', methods=['POST'])
 @login_required
 def tambah_staff():
-    # ✅ SEKARANG DINAMIS: Membuat baris baru di tabel users
     data = request.json
     nama = data.get("nama")
     username = data.get("username") or nama.lower().replace(" ", "")
-    password = data.get("password") or "123456" # Default password
+    password = data.get("password") or "123456" 
+    jabatan = data.get("jabatan", "kasir").lower() # ✅ Ambil pilihan jabatan dari Frontend
     
     if User.query.filter_by(username=username).first():
         return jsonify({"success": False, "message": "Username staff sudah terdaftar!"})
         
     new_staff = User(
-        name=nama, username=username,
+        name=nama, 
+        username=username,
         password=generate_password_hash(password),
-        role='kasir', is_active=True
+        role=jabatan, # ✅ Simpan sesuai pilihan dropdown
+        is_active=True
     )
     try:
         db.session.add(new_staff)
         db.session.commit()
-        return jsonify({"success": True, "message": f"Staff kasir '{nama}' berhasil didaftarkan!"})
+        return jsonify({"success": True, "message": f"Staff '{nama}' berhasil didaftarkan sebagai {jabatan.capitalize()}!"})
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)})
@@ -529,20 +531,26 @@ def toggle_kasir_status(kasir_id):
         return jsonify({"success": True, "message": "Status keaktifan staf diperbarui!"})
     return jsonify({"success": False, "message": "Staff tidak ditemukan."})
 
-@owner_bp.route('/api/edit-kasir/<int:kasir_id>', methods=['POST'])
+@owner_bp.route('/api/edit-staff/<int:id>', methods=['POST'])
 @login_required
-def edit_kasir(kasir_id):
-    # ✅ SEKARANG DINAMIS: Update profil akun kasir di database
+def edit_staff(id):
+    staff = User.query.get_or_404(id)
     data = request.json
-    user = db.session.get(User, kasir_id)
-    if user:
-        user.name = data.get("nama", user.name)
-        if "status" in data:
-            status_val = data.get("status")
-            user.is_active = (status_val == 'online') if status_val in ['online', 'offline'] else bool(status_val)
+    
+    nama_baru = data.get("nama")
+    jabatan_baru = data.get("jabatan", "kasir").lower()
+    is_active_status = data.get("isActive", True) # Menangkap status boolean checkbox
+    
+    staff.name = nama_baru
+    staff.role = jabatan_baru
+    staff.is_active = is_active_status # Mengupdate kolom keaktifan di database
+    
+    try:
         db.session.commit()
-        return jsonify({"success": True, "message": "Profil staf kasir berhasil diperbarui!"})
-    return jsonify({"success": False, "message": "Staff tidak ditemukan."})
+        return jsonify({"success": True, "message": f"Profil {nama_baru} berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Gagal menyimpan perubahan ke database."})
 
 # ── 6. Laporan APIS ───────────────────────────────────────────────────────────
 @owner_bp.route('/api/export-excel', methods=['POST'])
