@@ -110,3 +110,34 @@ def logout():
     session.pop('_flashes', None)
     
     return redirect(url_for('auth.login'))
+
+@auth_bp.route('/forgot-password')
+def forgot_password():
+    return render_template('forgot_pass.html')
+
+@auth_bp.route('/api/forgot-password/kirim-otp', methods=['POST'])
+def kirim_otp():
+    data  = request.json
+    email = data.get('email', '')
+    # Di sini normalnya kirim email sungguhan via SMTP
+    # Untuk sekarang simulasi saja
+    print(f"[OTP] Kode 123456 dikirim ke {email}")
+    return jsonify({"success": True, "message": f"OTP dikirim ke {email}"})
+
+@auth_bp.route('/api/forgot-password/verifikasi-otp', methods=['POST'])
+def verifikasi_otp():
+    data = request.json
+    otp  = data.get('otp', '')
+    # Simulasi: OTP valid = 123456
+    if otp == '123456':
+        return jsonify({"success": True})
+    return jsonify({"success": False, "message": "OTP salah"})
+
+@auth_bp.route('/api/forgot-password/reset', methods=['POST'])
+def reset_password_api():
+    data  = request.json
+    email = data.get('email')
+    pw    = data.get('password_baru')
+    # Di sini normalnya update password di database
+    print(f"[RESET] Password baru untuk {email} telah disimpan")
+    return jsonify({"success": True, "message": "Password berhasil diperbarui!"})
