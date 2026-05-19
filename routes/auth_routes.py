@@ -113,7 +113,7 @@ def logout():
 
 @auth_bp.route('/forgot-password')
 def forgot_password():
-    return render_template('forgot_pass.html')
+    return render_template('forgot-pass.html')
 
 @auth_bp.route('/api/forgot-password/kirim-otp', methods=['POST'])
 def kirim_otp():
