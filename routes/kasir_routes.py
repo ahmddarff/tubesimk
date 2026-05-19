@@ -529,6 +529,29 @@ def submit_order():
     
     if not cart:
         return jsonify({"success": False, "message": "Keranjang kosong!"})
+    
+    # ✅ BARIKADE 0: CEK STATUS OPERASIONAL KAFE SAAT INI (REAL-TIME WIB)
+    waktu_sekarang = to_wib(datetime.now(timezone.utc))
+    jam_sekarang = waktu_sekarang.time()
+    
+    hari_indo = {0: 'Senin', 1: 'Selasa', 2: 'Rabu', 3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'}
+    nama_hari = hari_indo[waktu_sekarang.weekday()]
+
+    # 1. Cek apakah Owner mematikan operasional kafe secara manual (Tutup Darurat)
+    cafe = CafeSetting.query.first()
+    if cafe and not cafe.is_open:
+        return jsonify({"success": False, "message": "Gagal! Kafe saat ini sedang ditutup secara manual oleh Owner."})
+
+    # 2. Cek Jadwal Harian
+    jadwal = OperationalHour.query.filter_by(day_of_week=nama_hari).first()
+    if not jadwal or not jadwal.is_open:
+        return jsonify({"success": False, "message": f"Transaksi ditolak. Kafe libur/tutup pada hari {nama_hari}."})
+        
+    if jam_sekarang < jadwal.open_time or jam_sekarang > jadwal.close_time:
+        return jsonify({
+            "success": False, 
+            "message": f"Transaksi ditolak. Saat ini di luar jam operasional {nama_hari} ({jadwal.open_time.strftime('%H:%M')} - {jadwal.close_time.strftime('%H:%M')} WIB)."
+        })
 
     try:
         order_number = generate_order_number()
