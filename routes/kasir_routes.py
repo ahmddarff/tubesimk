@@ -920,7 +920,7 @@ def add_reservation():
         new_end = new_start + timedelta(minutes=duration)
         
         # ── BARIKADE 1: CEK APAKAH WAKTU SUDAH TERLEWAT ──
-        if new_start < datetime.now(datetime.timezone.utc):
+        if new_start < datetime.now():
             return jsonify({"success": False, "message": "Gagal! Tidak dapat membuat reservasi untuk waktu yang sudah terlewat."})
         
         # Tarik Pengaturan Kafe dari Database
