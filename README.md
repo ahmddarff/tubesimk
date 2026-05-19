@@ -25,6 +25,7 @@ pip install sqlalchemy-utils
 pip install Flask-SQLAlchemy pymysql
 pip install flask_login
 pip install openpyxl
+pip install tzdata
 ```
 
 ### 3. Copy File Environment

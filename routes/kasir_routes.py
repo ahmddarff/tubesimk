@@ -3,7 +3,7 @@ from utils import *
 from datetime import date, datetime, timedelta, timezone
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Category, Menu, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable
+from models import Category, Menu, OperationalHour, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -917,6 +917,25 @@ def add_reservation():
         
         new_start = datetime.combine(res_date, res_time)
         new_end = new_start + timedelta(minutes=duration)
+
+        # ✅ BARIKADE 0: CEK JAM OPERASIONAL KAFE
+        hari_indo = {0: 'Senin', 1: 'Selasa', 2: 'Rabu', 3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'}
+        nama_hari = hari_indo[res_date.weekday()] # Dapatkan nama hari dari tanggal
+        
+        jadwal = OperationalHour.query.filter_by(day_of_week=nama_hari).first()
+        
+        if not jadwal:
+            return jsonify({"success": False, "message": f"Jadwal operasional untuk hari {nama_hari} belum diatur oleh Owner."})
+            
+        if not jadwal.is_open:
+            return jsonify({"success": False, "message": f"Maaf, kafe TUTUP pada hari {nama_hari}."})
+            
+        # Cek apakah jam mulai kurang dari jam buka, ATAU jam selesai melebihi jam tutup
+        if res_time < jadwal.open_time or new_end.time() > jadwal.close_time:
+            return jsonify({
+                "success": False, 
+                "message": f"Waktu reservasi di luar jam operasional {nama_hari} ({jadwal.open_time.strftime('%H:%M')} - {jadwal.close_time.strftime('%H:%M')})."
+            })
         
         # ── BARIKADE 1: CEK APAKAH WAKTU SUDAH TERLEWAT ──
         if new_start < datetime.now():
@@ -1021,6 +1040,20 @@ def update_reservation():
         if new_status != 'cancelled':
             new_start = datetime.combine(res_date, res_time)
             new_end = new_start + timedelta(minutes=duration)
+
+            # ✅ TEMPELKAN BARIKADE 0 DI SINI JUGA
+            hari_indo = {0: 'Senin', 1: 'Selasa', 2: 'Rabu', 3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'}
+            nama_hari = hari_indo[res_date.weekday()]
+            jadwal = OperationalHour.query.filter_by(day_of_week=nama_hari).first()
+            
+            if not jadwal or not jadwal.is_open:
+                return jsonify({"success": False, "message": f"Maaf, kafe TUTUP pada hari {nama_hari}."})
+                
+            if res_time < jadwal.open_time or new_end.time() > jadwal.close_time:
+                return jsonify({
+                    "success": False, 
+                    "message": f"Waktu reservasi di luar jam operasional {nama_hari} ({jadwal.open_time.strftime('%H:%M')} - {jadwal.close_time.strftime('%H:%M')})."
+                })
             
             cafe_setting = CafeSetting.query.first()
             clearance_mins = cafe_setting.table_clearance_time if cafe_setting else 15
