@@ -6,6 +6,8 @@
 <div x-data="staffManager" x-cloak>
 
     {% include 'owner/includes/modal_tambah_staff.html' %}
+    {% include 'owner/includes/modal_edit_staff.html' %}
+
     <div class="grid grid-cols-3 gap-5 mb-6">
         <div class="bg-white border-2 border-terralogBlue/20 rounded-2xl p-5 shadow-sm">
             <p class="text-sm font-semibold text-gray-500 mb-2">Total Staff Aktif</p>
@@ -77,7 +79,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openEditProfil(k.id, k.nama, 'Kasir')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
+                                <button @click="openModalEdit(k, 'kasir')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
                             </td>
                         </tr>
                     </template>
@@ -98,7 +100,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openEditProfil(c.id, c.nama, 'Koki')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
+                                <button @click="openModalEdit(c, 'koki')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
                             </td>
                         </tr>
                     </template>
@@ -116,40 +118,7 @@
     </div>
 </div>
 
-<div id="modalEditProfil" class="modal-overlay hidden fixed inset-0 bg-black/45 backdrop-blur-sm z-[1000] items-center justify-center">
-    <div class="modal-box bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900" id="editProfilTitle">Edit Profil Staff</h2>
-            <button onclick="closeModal('modalEditProfil')" class="text-gray-400 hover:text-red-500 transition-colors">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-        </div>
-        <div class="p-6 space-y-4">
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-400 uppercase">Nama Lengkap</label>
-                <input type="text" id="editNamaLengkap" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-terralogBlue outline-none text-sm font-medium transition-all">
-            </div>
-            <div class="space-y-1">
-                <label class="text-xs font-bold text-gray-400 uppercase">Jabatan</label>
-                <select id="editJabatan" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-terralogBlue outline-none text-sm font-medium transition-all">
-                    <option value="Kasir">Kasir</option>
-                    <option value="Koki">Koki</option>
-                </select>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <span class="text-sm font-bold text-gray-600">Status Aktif</span>
-                <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
-                    <input type="checkbox" id="editStatus">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
-        </div>
-        <div class="p-6 border-t border-gray-100 flex gap-3">
-            <button class="flex-1 py-3 bg-terralogBlue text-white rounded-xl font-bold text-sm hover:bg-blue-900 transition-all">Simpan Perubahan</button>
-            <button onclick="closeModal('modalEditProfil')" class="px-6 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all">Batal</button>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -192,6 +161,44 @@ document.addEventListener('alpine:init', () => {
                     showToast(data.message, 'success');
                     // Muat ulang halaman agar staff baru muncul di tabel
                     setTimeout(() => location.reload(), 1000); 
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (err) {
+                showToast('Gagal menghubungi server.', 'error');
+            }
+        },
+
+        showModalEdit: false,
+        formEdit: { id: null, nama: '', jabatan: '', isActive: true },
+
+        // Fungsi untuk membuka modal & memasukkan data baris yang diklik secara dinamis
+        openModalEdit(staffObj, role) {
+            this.formEdit = {
+                id: staffObj.id,
+                nama: staffObj.nama,
+                jabatan: role,
+                isActive: staffObj.status === 'online'
+            };
+            this.showModalEdit = true;
+        },
+
+        // Fungsi untuk mengirim data perubahan ke backend Flask
+        async updateStaff() {
+            if (!this.formEdit.nama) {
+                return showToast('Nama lengkap tidak boleh kosong!', 'error');
+            }
+            try {
+                const res = await fetch(`/owner/api/edit-staff/${this.formEdit.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.formEdit)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.showModalEdit = false;
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000); // Reload untuk sinkronisasi tampilan database
                 } else {
                     showToast(data.message, 'error');
                 }
