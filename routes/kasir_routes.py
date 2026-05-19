@@ -1124,13 +1124,14 @@ def auto_cleanup_expired_orders():
 # INTERNAL HELPER: LAZY CLEANUP RESERVASI KEDALUWARSA (NO-SHOW)
 # ==========================================
 def auto_cleanup_expired_reservations():
-    # Ambil tanggal hari ini
-    hari_ini = date.today()
+    # ✅ REVISI TERBAIK: Memanfaatkan to_wib() dari utils agar satu pimpinan!
+    # datetime.now(timezone.utc) menghasilkan waktu UTC aware saat ini, lalu dikonversi ke WIB
+    hari_ini_wib = to_wib(datetime.now(timezone.utc)).date()
     
     # Cari reservasi yang tanggalnya sudah lewat (kemarin atau sebelumnya)
     # dan statusnya masih menggantung (belum selesai / belum batal)
     expired_res = Reservation.query.filter(
-        Reservation.reservation_date < hari_ini,
+        Reservation.reservation_date < hari_ini_wib,
         Reservation.status.in_(['pending', 'confirmed'])
     ).all()
     
