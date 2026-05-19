@@ -157,6 +157,10 @@
     ]
 </script>
 
+<script id="data-ophours" type="application/json">
+    {{ op_hours | tojson | safe }}
+</script>
+
 <script>
     function buatReservasiApp() {
         return {
@@ -172,6 +176,7 @@
             capacityConfirmed: false,
             minDate: '',
             tablesData: [],
+            opHoursData: [],
 
             init() {
                 const today = new Date();
@@ -182,6 +187,7 @@
                 
                 try {
                     this.tablesData = JSON.parse(document.getElementById('data-tables').textContent);
+                    this.opHoursData = JSON.parse(document.getElementById('data-ophours').textContent);
                 } catch (e) {
                     console.error("Gagal mengurai data meja:", e);
                 }
@@ -216,6 +222,28 @@
                 if (this.mejaIds.length === 0) {
                     showToast('Mohon pilih setidaknya satu meja!', 'error');
                     return;
+                }
+
+                if (this.tanggal) {
+                    const dateObj = new Date(this.tanggal);
+                    const days = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
+                    const dayName = days[dateObj.getDay()];
+                    const todayOp = this.opHoursData[dayName];
+                    
+                    if (todayOp) {
+                        if (!todayOp.is_open) {
+                            showToast(`Maaf, kafe tutup pada hari ${dayName.charAt(0).toUpperCase() + dayName.slice(1)}.`, 'error');
+                            return;
+                        }
+                        if (this.jamMulai < todayOp.open_time || this.jamMulai > todayOp.close_time) {
+                            showToast(`Jam mulai harus dalam batas jam operasional kafe (${todayOp.open_time} - ${todayOp.close_time})`, 'error');
+                            return;
+                        }
+                        if (this.jamSelesai > todayOp.close_time) {
+                            showToast(`Jam selesai tidak boleh melebihi batas jam tutup (${todayOp.close_time})`, 'error');
+                            return;
+                        }
+                    }
                 }
 
                 if (this.jamMulai === this.jamSelesai) {

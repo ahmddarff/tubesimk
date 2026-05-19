@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
 from utils import format_tanggal_lokal, format_waktu_lokal
-from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review
+from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review, OperationalHour
 from extensions import db
 
 customer_bp = Blueprint('customer', __name__)
@@ -278,10 +278,23 @@ def buat_reservasi():
 def reservasi_new():
     # Mengambil semua data meja yang berstatus tersedia
     tables = Table.query.filter_by(is_available=True).all()
+
+    # TAMBAHAN: Mengambil data jam operasional dari database
+    op_hours = OperationalHour.query.all()
+    op_hours_dict = {}
+    for oh in op_hours:
+        # Menyimpan ke dictionary dengan nama hari (huruf kecil) sebagai key
+        op_hours_dict[oh.day_of_week.lower()] = {
+            'is_open': oh.is_open,
+            'open_time': oh.open_time.strftime('%H:%M') if oh.open_time else None,
+            'close_time': oh.close_time.strftime('%H:%M') if oh.close_time else None
+        }
+        
     return render_template('customer/buat_reservasi_new.html', 
                            segment='buat_reservasi', 
                            role='customer',
-                           tables=tables)
+                           tables=tables,
+                           op_hours=op_hours_dict)
 
 # API Endpoint POST: Menerima data JSON dari Submit Alpine.js
 @customer_bp.route('/buat-reservasi/submit', methods=['POST'])
@@ -309,6 +322,20 @@ def submit_buat_reservasi():
         # Parsing Date dan Time objek
         reservation_date = datetime.strptime(tanggal_str, '%Y-%m-%d').date()
         reservation_time = datetime.strptime(waktu_str, '%H:%M').time()
+
+        # === TAMBAHAN: VALIDASI JAM OPERASIONAL ===
+        hari_map = {0: 'senin', 1: 'selasa', 2: 'rabu', 3: 'kamis', 4: 'jumat', 5: 'sabtu', 6: 'minggu'}
+        nama_hari = hari_map[reservation_date.weekday()]
+        
+        op_hour = OperationalHour.query.filter(func.lower(OperationalHour.day_of_week) == nama_hari).first()
+        
+        # 1. Validasi jika kafe tutup di hari tersebut
+        if not op_hour or not op_hour.is_open:
+            return jsonify({"success": False, "message": f"Maaf, kafe tutup pada hari {nama_hari.capitalize()}."}), 400
+            
+        # 2. Validasi jika jam mulai reservasi di luar jam operasional
+        if reservation_time < op_hour.open_time or reservation_time > op_hour.close_time:
+            return jsonify({"success": False, "message": f"Jam reservasi di luar jam operasional ({op_hour.open_time.strftime('%H:%M')} - {op_hour.close_time.strftime('%H:%M')})."}), 400
 
         # Buat kode reservation_number dengan format RSV-YYYYMMDD-XXX
         today_str = datetime.today().strftime('%Y%m%d')
