@@ -398,7 +398,6 @@ def submit_buat_reservasi():
 # Halaman Detail Reservasi Spesifik
 @customer_bp.route('/reservasi/<int:reservation_id>')
 @login_required
-@role_required('customer')
 def reservasi_detail(reservation_id):
     reservation = Reservation.query.options(
         joinedload(Reservation.reserved_tables).joinedload(ReservationTable.table_ref)
@@ -407,6 +406,15 @@ def reservasi_detail(reservation_id):
     if reservation.user_id != current_user.id:
         flash('Anda tidak memiliki akses ke halaman ini!', 'danger')
         return redirect(url_for('customer.buat_reservasi'))
+
+    # TAMBAHAN: Mengimpor dan mengonversi waktu created_at ke format lokal WIB
+    from utils import format_tanggal_lokal, format_waktu_lokal
+    if reservation.created_at:
+        tanggal = format_tanggal_lokal(reservation.created_at)
+        waktu = format_waktu_lokal(reservation.created_at)
+        setattr(reservation, 'dibuat_pada_lokal', f"{tanggal}, {waktu}")
+    else:
+        setattr(reservation, 'dibuat_pada_lokal', '-')
 
     return render_template('customer/reservasi_detail.html', 
                            segment='buat_reservasi', 
