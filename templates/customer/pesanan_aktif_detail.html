@@ -38,10 +38,24 @@
                         </div>
                     </div>
                 </template>
-                <div class="mt-4 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-2 border border-red-100">
-                    <i data-lucide="clock" class="w-5 h-5 shrink-0"></i>
-                    <p>Harap segera melakukan pembayaran. Pesanan yang belum dibayar dalam waktu lebih dari 5 menit akan dibatalkan secara otomatis oleh sistem.</p>
-                </div>
+
+                <template x-if="order.payment_status === 'unpaid'">
+                    <div>
+                        <template x-if="paymentMethod === 'qris'">
+                            <div class="mt-4 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-2 border border-blue-100">
+                                <i data-lucide="info" class="w-5 h-5 shrink-0"></i>
+                                <p>Harap segera melakukan konfirmasi pembayaran setelah Anda melakukan transfer melalui QRIS. Pesanan yang belum dikonfirmasi dalam waktu lebih dari 5 menit akan dibatalkan secara otomatis oleh sistem.</p>
+                            </div>
+                        </template>
+
+                        <template x-if="paymentMethod !== 'qris'">
+                            <div class="mt-4 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold flex items-start gap-2 border border-red-100">
+                                <i data-lucide="clock" class="w-5 h-5 shrink-0"></i>
+                                <p>Harap segera melakukan pembayaran. Pesanan yang belum dibayar dalam waktu lebih dari 5 menit akan dibatalkan secara otomatis oleh sistem.</p>
+                            </div>
+                        </template>
+                    </div>
+                </template>
 
                 <template x-if="order.payment_status === 'paid'">
                     <div class="bg-white border border-slate-100 rounded-[24px] p-8 shadow-sm">

@@ -77,6 +77,10 @@
                     <button @click="addToCart()" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm" type="button">
                         Keranjang
                     </button>
+                {% else %}
+                    <button disabled class="flex-1 bg-gray-300 text-gray-500 cursor-not-allowed font-bold py-2 rounded-lg transition text-sm" type="button">
+                        Stok Habis
+                    </button>
                 {% endif %}
             </div>
         </div>
