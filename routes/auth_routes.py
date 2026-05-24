@@ -56,21 +56,28 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+
+        errors = {}
+
+        # Validasi 0: Minimal 8 karakter untuk kata sandi
+        if len(password) < 8:
+            errors['password'] = "Kata sandi harus terdiri dari minimal 8 karakter."
         
         # Validasi 1: Konfirmasi kata sandi
         if password != confirm_password:
-            flash("Konfirmasi kata sandi tidak cocok.", "warning")
-            return redirect(url_for('auth.register'))
+            errors['confirm_password'] = "Konfirmasi kata sandi tidak cocok."
             
         # Validasi 2: Cek apakah Username sudah ada
         if User.query.filter_by(username=username).first():
-            flash("Username sudah digunakan. Silakan pilih yang lain.", "warning")
-            return redirect(url_for('auth.register'))
+            errors['username'] = "Username sudah digunakan. Silakan pilih yang lain."
 
         # Validasi 3: Cek apakah Email sudah terdaftar
         if User.query.filter_by(email=email).first():
-            flash("Email sudah terdaftar. Silakan gunakan email lain atau langsung masuk.", "warning")
-            return redirect(url_for('auth.register'))
+            errors['email'] = "Email sudah terdaftar. Silakan gunakan email lain."
+
+        # Jika terdapat error, kembalikan ke halaman registrasi dengan pesan error inline
+        if errors:
+            return render_template('register.html', errors=errors, form_data=request.form)
 
         # Enkripsi kata sandi sebelum disimpan ke database
         hashed_password = generate_password_hash(password)

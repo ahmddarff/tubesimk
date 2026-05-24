@@ -37,7 +37,7 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 font-sans" x-data="{ showPassword: false, showConfirmPassword: false }">
+<body class="bg-gray-50 font-sans" x-data="{ showPassword: false, showConfirmPassword: false, password: '', confirmPassword: '', passwordTouched: false, confirmTouched: false, email: '', emailTouched: false }">
     <div class="min-h-screen flex">
         <!-- Left Side - Brand Section -->
         <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-terralogBlue to-blue-900 flex-col items-center justify-center p-8 relative overflow-hidden">
@@ -92,7 +92,7 @@
                 {% endwith %}
 
                 <!-- Register Form -->
-                <form action="/register" method="POST" class="space-y-5">
+                <form action="/register" method="POST" class="space-y-5 novalidate">
                     <!-- Username Field -->
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
@@ -107,6 +107,9 @@
                                 required
                             >
                         </div>
+                        {% if errors and errors.username %}
+                            <p class="text-red-500 text-xs mt-1.5 ml-1">{{ errors.username }}</p>
+                        {% endif %}
                     </div>
 
                     <!-- Full Name Field -->
@@ -134,11 +137,18 @@
                                 type="email" 
                                 id="email"
                                 name="email" 
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg focus:bg-white focus:border-terralogBlue focus:outline-none focus:ring-2 focus:ring-terralogBlue/20 transition"
+                                x-model="email"
+                                @blur="emailTouched = true"
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border rounded-lg focus:bg-white focus:outline-none focus:ring-2 transition"
+                                :class="(emailTouched && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || ('{{ errors.email if errors else '' }}') ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-terralogBlue focus:ring-terralogBlue/20'"
                                 placeholder="Masukkan email Anda"
                                 required
                             >
                         </div>
+                        <p x-show="emailTouched && email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)" x-cloak class="text-red-500 text-xs mt-1.5 ml-1">Mohon masukkan format email yang benar (contoh: nama@domain.com). </p>
+                        {% if errors and errors.email %}
+                            <p x-show="email.length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)" class="text-red-500 text-xs mt-1.5 ml-1">{{ errors.email }}</p>
+                        {% endif %}
                     </div>
 
                     <!-- Password Field -->
@@ -150,10 +160,12 @@
                                 :type="showPassword ? 'text' : 'password'" 
                                 id="password"
                                 name="password" 
-                                class="w-full pl-10 pr-12 py-2.5 bg-gray-100 border border-gray-300 rounded-lg focus:bg-white focus:border-terralogBlue focus:outline-none focus:ring-2 focus:ring-terralogBlue/20 transition"
-                                placeholder="Buat password yang kuat (min. 6 karakter)"
+                                x-model="password"
+                                @blur="passwordTouched = true"
+                                class="w-full pl-10 pr-12 py-2.5 bg-gray-100 border rounded-lg focus:bg-white focus:outline-none focus:ring-2 transition"
+                                :class="(passwordTouched && password.length > 0 && password.length < 8) || ('{{ errors.password if errors else '' }}') ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-terralogBlue focus:ring-terralogBlue/20'"
+                                placeholder="Buat password yang kuat (min. 8 karakter)"
                                 required
-                                minlength="6"
                             >
                             <button 
                                 type="button" 
@@ -164,6 +176,10 @@
                                 <i data-lucide="eye-off" class="w-5 h-5" x-show="showPassword"></i>
                             </button>
                         </div>
+                        <p x-show="passwordTouched && password.length > 0 && password.length < 8" x-cloak class="text-red-500 text-xs mt-1.5 ml-1">Kata sandi harus terdiri dari minimal 8 karakter.</p>
+                        {% if errors and errors.password %}
+                            <p x-show="password.length === 0" class="text-red-500 text-xs mt-1.5 ml-1">{{ errors.password }}</p>
+                        {% endif %}
                     </div>
 
                     <!-- Confirm Password Field -->
@@ -175,7 +191,10 @@
                                 :type="showConfirmPassword ? 'text' : 'password'" 
                                 id="confirm_password"
                                 name="confirm_password" 
-                                class="w-full pl-10 pr-12 py-2.5 bg-gray-100 border border-gray-300 rounded-lg focus:bg-white focus:border-terralogBlue focus:outline-none focus:ring-2 focus:ring-terralogBlue/20 transition"
+                                x-model="confirmPassword"
+                                @blur="confirmTouched = true"
+                                class="w-full pl-10 pr-12 py-2.5 bg-gray-100 border rounded-lg focus:bg-white focus:outline-none focus:ring-2 transition"
+                                :class="(confirmTouched && confirmPassword.length > 0 && confirmPassword !== password) || ('{{ errors.confirm_password if errors else '' }}') ? 'border-red-500 focus:ring-red-500/20' : 'border-gray-300 focus:border-terralogBlue focus:ring-terralogBlue/20'"
                                 placeholder="Ulangi password Anda"
                                 required
                             >
@@ -188,6 +207,10 @@
                                 <i data-lucide="eye-off" class="w-5 h-5" x-show="showConfirmPassword"></i>
                             </button>
                         </div>
+                        <p x-show="confirmTouched && confirmPassword.length > 0 && confirmPassword !== password" x-cloak class="text-red-500 text-xs mt-1.5 ml-1">Konfirmasi kata sandi tidak cocok.</p>
+                        {% if errors and errors.confirm_password %}
+                            <p x-show="confirmPassword.length === 0" class="text-red-500 text-xs mt-1.5 ml-1">{{ errors.confirm_password }}</p>
+                        {% endif %}
                     </div>
 
                     <!-- Submit Button -->
