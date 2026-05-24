@@ -1020,10 +1020,16 @@ def clear_cart():
 @role_required('customer')
 def pengaturan():
     if request.method == 'POST':
+        phone_input = request.form.get('phone')
+
+        # Validasi Nomor Telepon (Harus berupa angka saja jika diisi)
+        if phone_input and not phone_input.isdigit():
+            return jsonify({"success": False, "message": "Nomor telepon hanya boleh berisi angka!"})
+        
         current_user.name = request.form.get('name')
         current_user.username = request.form.get('username')
         current_user.email = request.form.get('email')
-        current_user.phone = request.form.get('phone')
+        current_user.phone = phone_input
 
         # Konsisten menggunakan 'photo'
         if 'photo' in request.files:

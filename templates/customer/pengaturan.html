@@ -68,7 +68,10 @@
                     </div>
                     <div>
                         <label class="block mb-1 text-sm font-semibold text-gray-800">No. Telepon</label>
-                        <input name="phone" type="text" value="{{ user.phone if user.phone else '' }}" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm">
+                        <input name="phone" type="text" value="{{ user.phone if user.phone else '' }}" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none transition text-sm shadow-sm"
+                               placeholder="Masukkan nomor telepon aktif">
                     </div>
                 </div>
 
