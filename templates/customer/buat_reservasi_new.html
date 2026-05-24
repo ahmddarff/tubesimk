@@ -132,17 +132,13 @@
             
             <h3 class="text-xl font-black text-slate-900 mb-2">Kapasitas Meja Kurang</h3>
             <p class="text-sm font-medium text-slate-500 mb-8 leading-relaxed">
-                Jumlah tamu yang Anda masukkan melebihi total kapasitas meja yang dipilih. Apakah Anda yakin tidak ingin menambah meja?
+                Jumlah tamu yang Anda masukkan melebihi total kapasitas meja yang dipilih. Silakan tambahkan meja lain atau kurangi jumlah tamu untuk melanjutkan dengan reservasi Anda.
             </p>
             
             <div class="flex gap-3">
                 <button type="button" @click="showCapacityWarning = false" 
-                        class="flex-1 py-3.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition">
-                    Batal, Tambah Meja
-                </button>
-                <button type="button" @click="capacityConfirmed = true; executeSubmit(calculateDuration())" 
-                        class="flex-1 py-3.5 bg-terralogBlue text-white rounded-xl font-bold text-sm hover:bg-blue-900 shadow-md transition">
-                    Ya, Lanjutkan
+                        class="flex-1 py-3.5 bg-terralogBlue text-white rounded-xl font-bold text-sm hover:bg-blue-900 transition">
+                     Tambah Meja
                 </button>
             </div>
         </div>
