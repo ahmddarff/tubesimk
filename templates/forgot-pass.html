@@ -435,7 +435,7 @@ function kirimOTP() {
     const emailError = document.getElementById('emailError');
     const btn = document.getElementById('btnKirimOTP');
 
-    // Validasi
+    // Validasi format email di frontend
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
         emailError.classList.remove('hidden');
@@ -443,12 +443,13 @@ function kirimOTP() {
         return;
     }
     emailError.classList.add('hidden');
+    document.getElementById('inputEmail').parentElement.classList.remove('border-red-300');
 
     // Loading state
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
     btn.disabled  = true;
 
-    // Simulate API call
+    // Panggil API Backend Flask
     fetch('/api/forgot-password/kirim-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -456,19 +457,23 @@ function kirimOTP() {
     })
     .then(r => r.json())
     .then(data => {
-        userEmail = email;
-        document.getElementById('displayEmail').textContent = maskEmail(email);
-        showToast(`Kode OTP dikirim ke ${maskEmail(email)}`, 'success');
-        goToStep(2);
-        startOTPTimer();
+        if (data.success) {
+            // JIKA EMAIL ADA & OTP BERHASIL DIKIRIM
+            userEmail = email;
+            document.getElementById('displayEmail').textContent = maskEmail(email);
+            showToast(data.message, 'success');
+            goToStep(2);
+            startOTPTimer();
+        } else {
+            // JIKA EMAIL TIDAK ADA DI DATABASE (Mencegah Pindah Halaman)
+            showToast(data.message, 'error');
+            document.getElementById('inputEmail').parentElement.classList.add('border-red-300');
+        }
     })
-    .catch(() => {
-        // Fallback untuk demo (tanpa backend aktif)
-        userEmail = email;
-        document.getElementById('displayEmail').textContent = maskEmail(email);
-        showToast(`Kode OTP dikirim ke ${maskEmail(email)}`, 'success');
-        goToStep(2);
-        startOTPTimer();
+    .catch((err) => {
+        // JIKA SERVER ERROR / KONEKSI TERPUTUS
+        console.error(err);
+        showToast('Terjadi kesalahan pada server. Silakan coba lagi.', 'error');
     })
     .finally(() => {
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Kode Verifikasi';
@@ -555,11 +560,9 @@ function verifikasiOTP() {
         return;
     }
 
-    // Loading state
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memverifikasi...';
     btn.disabled  = true;
 
-    // Simulate API
     fetch('/api/forgot-password/verifikasi-otp', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -570,24 +573,17 @@ function verifikasiOTP() {
         if (data.success) {
             clearInterval(otpTimerInterval);
             otpError.classList.add('hidden');
-            showToast('Verifikasi berhasil!', 'success');
+            showToast(data.message, 'success');
             goToStep(3);
         } else {
             otpError.classList.remove('hidden');
+            otpError.textContent = data.message || 'Kode verifikasi salah.';
             shakeOTP();
         }
     })
-    .catch(() => {
-        // Demo fallback: OTP = 123456
-        if (otpValue === DUMMY_OTP) {
-            clearInterval(otpTimerInterval);
-            otpError.classList.add('hidden');
-            showToast('Verifikasi berhasil!', 'success');
-            goToStep(3);
-        } else {
-            otpError.classList.remove('hidden');
-            shakeOTP();
-        }
+    .catch((err) => {
+        console.error(err);
+        showToast('Gagal terhubung ke server.', 'error');
     })
     .finally(() => {
         btn.innerHTML = '<i class="fa-solid fa-check-circle"></i> Verifikasi Kode';
@@ -685,7 +681,6 @@ function resetPassword() {
     if (!/[A-Z]/.test(pass))  { showToast('Password harus mengandung huruf kapital!', 'error'); return; }
     if (!/[0-9]/.test(pass))  { showToast('Password harus mengandung angka!', 'error'); return; }
 
-    // Loading state
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
     btn.disabled  = true;
 
@@ -696,11 +691,16 @@ function resetPassword() {
     })
     .then(r => r.json())
     .then(data => {
-        showSuccessStep();
+        if (data.success) {
+            showToast(data.message, 'success');
+            showSuccessStep();
+        } else {
+            showToast(data.message, 'error');
+        }
     })
-    .catch(() => {
-        // Demo fallback
-        showSuccessStep();
+    .catch((err) => {
+        console.error(err);
+        showToast('Gagal memperbarui password. Coba lagi.', 'error');
     })
     .finally(() => {
         btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Password Baru';

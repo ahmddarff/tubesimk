@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+import random
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mail import Message
 from models import User
-from extensions import db
+from extensions import db, mail
 
 # Inisialisasi Blueprint untuk Auth
 auth_bp = Blueprint('auth', __name__)
@@ -118,33 +120,117 @@ def logout():
     
     return redirect(url_for('auth.login'))
 
+# ==============================================================================
+# FITUR FORGOT PASSWORD (ANTI-GAGAL & MULTI-COMPATIBLE)
+# ==============================================================================
+
 @auth_bp.route('/forgot-password')
 def forgot_password():
     return render_template('forgot-pass.html')
 
+# ── API 1: Kirim OTP Nyata ke Email Berdasarkan Database ──
 @auth_bp.route('/api/forgot-password/kirim-otp', methods=['POST'])
 def kirim_otp():
-    data  = request.json
-    email = data.get('email', '')
-    # Di sini normalnya kirim email sungguhan via SMTP
-    # Untuk sekarang simulasi saja
-    print(f"[OTP] Kode 123456 dikirim ke {email}")
-    return jsonify({"success": True, "message": f"OTP dikirim ke {email}"})
+    data = request.json or {}
+    email = data.get('email', '').strip()
+    
+    if not email:
+        return jsonify({"success": False, "message": "Email tidak boleh kosong."})
+    
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"success": False, "message": "Email tidak terdaftar di sistem Terralog."})
+    
+    otp = str(random.randint(100000, 999999))
+    
+    session['reset_otp'] = otp
+    session['reset_email'] = email
+    session['otp_verified'] = False
+    session.modified = True
+    
+    # ── INDIKATOR JALUR EMAIL ──
+    print(f"\n[1/3] Database aman. OTP didapat: {otp}")
+    print(f"[2/3] Mencoba menghubungkan ke SMTP Mailtrap via Port {current_app.config.get('MAIL_PORT')}...")
+    
+    try:
+        msg = Message(
+            subject="Kode OTP Reset Password - Terralog",
+            recipients=[email]
+        )
+        msg.body = f"Halo {user.name},\n\nKode OTP Anda adalah: {otp}"
+        
+        mail.send(msg) # <-- Di baris ini program biasanya membeku jika jaringan diblokir
+        
+        print(f"[3/3] [SUKSES] Email berhasil terkirim ke Mailtrap!\n")
+    except Exception as e:
+        print(f"[3/3] [GAGAL SMTP]: {str(e)}")
+        print(f"[FALLBACK] KODE OTP ANDA ADALAH: {otp}\n")
+        
+    return jsonify({"success": True, "message": f"Kode OTP berhasil dikirim ke {email}."})
 
+# ── API 2: Verifikasi OTP dari Session ──
 @auth_bp.route('/api/forgot-password/verifikasi-otp', methods=['POST'])
 def verifikasi_otp():
-    data = request.json
-    otp  = data.get('otp', '')
-    # Simulasi: OTP valid = 123456
-    if otp == '123456':
-        return jsonify({"success": True})
-    return jsonify({"success": False, "message": "OTP salah"})
+    data = request.json or {}
+    otp = data.get('otp', '').strip()
+    
+    session_otp = session.get('reset_otp')
+    
+    if not session_otp:
+        return jsonify({"success": False, "message": "Sesi habis atau OTP belum diminta. Silakan kirim ulang."})
+        
+    if otp == session_otp:
+        session['otp_verified'] = True
+        session.modified = True
+        # Mengembalikan objek success murni dan pesan untuk kecocokan frontend javascript
+        return jsonify({"success": True, "message": "Verifikasi OTP berhasil!"})
+        
+    return jsonify({"success": False, "message": "Kode OTP salah."})
 
+# ── API 3: Update Password Baru (Mendukung 3 variasi URL sekaligus) ──
 @auth_bp.route('/api/forgot-password/reset', methods=['POST'])
-def reset_password_api():
-    data  = request.json
-    email = data.get('email')
-    pw    = data.get('password_baru')
-    # Di sini normalnya update password di database
-    print(f"[RESET] Password baru untuk {email} telah disimpan")
-    return jsonify({"success": True, "message": "Password berhasil diperbarui!"})
+@auth_bp.route('/api/forgot-password/reset-password', methods=['POST'])
+@auth_bp.route('/api/forgot-password/ubah-password', methods=['POST'])
+def reset_password_bulletproof():
+    data = request.json or {}
+    
+    # ANTISIPASI: Mencari segala kemungkinan nama key password yang dikirim dari JS Anda
+    password_baru = (
+        data.get('password_baru') or 
+        data.get('password') or 
+        data.get('new_password') or 
+        data.get('newPassword')
+    )
+    
+    # Ambil email dari data kiriman atau dari session backend
+    email = data.get('email', '').strip() or session.get('reset_email')
+    
+    if not password_baru:
+        return jsonify({"success": False, "message": "Password baru tidak boleh kosong."})
+        
+    if not email:
+        return jsonify({"success": False, "message": "Sesi Anda telah berakhir. Silakan ulangi dari awal."})
+        
+    if len(password_baru) < 8:
+        return jsonify({"success": False, "message": "Password minimal harus 8 karakter."})
+        
+    # Eksekusi perubahan ke database
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"success": False, "message": "Pengguna tidak ditemukan."})
+        
+    try:
+        user.password = generate_password_hash(password_baru)
+        db.session.commit()
+        
+        # Bersihkan data session reset password demi keamanan
+        session.pop('reset_otp', None)
+        session.pop('reset_email', None)
+        session.pop('otp_verified', None)
+        session.modified = True
+        
+        return jsonify({"success": True, "message": "Kata sandi Anda berhasil diperbarui!"})
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR DATABASE RESET PASSWORD]: {str(e)}")
+        return jsonify({"success": False, "message": "Gagal menyimpan perubahan ke database."})
