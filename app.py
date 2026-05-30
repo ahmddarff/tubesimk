@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, jsonify, request, redirect, url_for
-from extensions import db, login_manager
+from extensions import db, mail, login_manager
 from models import User
 from dotenv import load_dotenv
 from sqlalchemy.exc import OperationalError
@@ -9,6 +9,19 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'terralog-secret-key-1-2-3'
+# ─────────────────────────────────────────────────────────────────
+# KONFIGURASI FLASK-MAIL
+# ─────────────────────────────────────────────────────────────────
+app.config['MAIL_SERVER'] = 'sandbox.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = '685bd6d012bb51'
+app.config['MAIL_PASSWORD'] = '86334b8cc95585'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_DEFAULT_SENDER'] = ('Terralog Admin', 'noreply@terralog.com')
+
+mail.init_app(app)
 
 @app.errorhandler(OperationalError)
 def handle_db_error(e):
