@@ -118,7 +118,7 @@ def logout():
     # Menghapus semua notifikasi yang menyangkut dari sesi sebelumnya
     session.pop('_flashes', None)
     
-    return redirect('/')
+    return redirect(url_for('auth.login'))
 
 # ==============================================================================
 # FITUR FORGOT PASSWORD (ANTI-GAGAL & MULTI-COMPATIBLE)
