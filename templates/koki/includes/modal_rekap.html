@@ -1,0 +1,41 @@
+<div x-show="showModalRekap" 
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" 
+     x-transition.opacity 
+     x-cloak>
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]" 
+         @click.away="showModalRekap = false" 
+         x-transition.scale.origin.bottom>
+        
+        <div class="px-6 py-5 bg-terralogBlue flex justify-between items-center shrink-0">
+            <div>
+                <h2 class="text-xl font-bold text-white tracking-tight">Rekap Kebutuhan Masak</h2>
+            </div>
+            <button @click="showModalRekap = false" class="text-white/60 hover:text-white transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
+            <div class="flex flex-col gap-3">
+                <template x-for="rekap in rekapBahan" :key="rekap.nama">
+                    <div class="flex justify-between items-center px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-terralogGold transition-colors">
+                        <span class="font-extrabold text-gray-800 text-base" x-text="rekap.nama"></span>
+                        <span class="bg-terralogGold text-terralogBlue font-black px-4 py-1.5 rounded-xl shadow-sm text-sm" x-text="rekap.qty + ' Porsi'"></span>
+                    </div>
+                </template>
+                
+                <div x-show="rekapBahan.length === 0" class="text-center py-12 text-gray-400">
+                    <i class="fa-solid fa-mug-hot text-5xl mb-4 opacity-30"></i>
+                    <p class="text-base font-bold text-gray-500">Antrean sedang kosong.</p>
+                    <p class="text-xs mt-1">Tidak ada item yang perlu dibuat saat ini.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-6 py-4 bg-white border-t border-gray-100">
+            <button @click="showModalRekap = false" class="w-full py-3.5 bg-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-300 transition-colors cursor-pointer">
+                Tutup Rekap
+            </button>
+        </div>
+    </div>
+</div>

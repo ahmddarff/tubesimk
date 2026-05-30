@@ -1,5 +1,5 @@
 import os
-from utils import role_required
+from utils import *
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
@@ -36,6 +36,7 @@ def antrian():
             items_list.append({
                 "id": item.id,
                 "nama": item.menu.name if item.menu else "Menu Terhapus",
+                "tipe_kategori": item.menu.category.type if item.menu and item.menu.category else "food",
                 "qty": item.qty,
                 "catatan": item.notes or "",
                 "status": item.item_status
@@ -48,7 +49,7 @@ def antrian():
         formatted_orders.append({
             "id": o.id,
             "id_display": o.order_number,
-            "waktu_iso": o.created_at.isoformat() + 'Z', # ✅ BARU: Mengirim string ISO UTC mentah ke browser
+            "waktu_iso": o.created_at.isoformat() + 'Z',
             "meja": info_meja,
             "sumber": "Aplikasi" if o.user_id else "Kasir",
             "status": o.order_status,
@@ -156,64 +157,70 @@ def update_password():
         return jsonify({"success": False, "message": "Gagal menyimpan kata sandi baru."})
     
 # ── ANTREAN ORDER APIS ──────────────────────────────────────────────
-@koki_bp.route('/api/koki/update-kitchen-status', methods=['POST'])
+@koki_bp.route('/api/koki/update-item-status', methods=['POST'])
 @login_required
 @role_required('koki')
-def update_kitchen_status():
+def update_item_status():
     data = request.json
-    order_id = data.get('order_id')
     item_id = data.get('item_id')
-    new_status = data.get('status') # 'preparing' atau 'ready'
+    new_status = data.get('status')
     
-    # Ambil fungsi otomasi status bawaan sistem Terralog
-    from utils import auto_sync_order_status
+    if not item_id:
+        return jsonify({"success": False, "message": "ID Item wajib disertakan."}), 400
     
     try:
-        if item_id:
-            # A. PROSES PER ITEM (Koki klik tombol aksi granular per masakan)
-            item = db.session.get(OrderItem, int(item_id))
-            if not item:
-                return jsonify({"success": False, "message": "Item menu tidak ditemukan."}), 404
-            
-            item.item_status = new_status
-            
-            # 🔥 SINKRONISASI OTOMATIS: Panggil fungsi sakti dari utils.py
-            auto_sync_order_status(item.order)
-            db.session.commit()
-            
-            return jsonify({
-                "success": True,
-                "message": f"Status {item.menu.name if item.menu else 'item'} berhasil diperbarui!",
-                "new_order_status": item.order.order_status
-            })
-            
-        elif order_id:
-            # B. PROSES BULK SEMUA ITEM (Koki klik tombol Proses/Selesaikan Semua)
-            order = db.session.get(Order, int(order_id))
-            if not order:
-                return jsonify({"success": False, "message": "Pesanan tidak ditemukan."}), 404
-            
-            for item in order.items:
-                if new_status == 'preparing' and item.item_status == 'pending':
-                    item.item_status = 'preparing'
-                elif new_status == 'ready' and item.item_status in ['pending', 'preparing']:
-                    item.item_status = 'ready'
-            
-            # 🔥 SINKRONISASI OTOMATIS: Berlaku juga untuk perubahan borongan
-            auto_sync_order_status(order)
-            db.session.commit()
-            
-            return jsonify({
-                "success": True,
-                "message": f"Seluruh item pada {order.order_number} berhasil diperbarui!",
-                "new_order_status": order.order_status
-            })
+        item = db.session.get(OrderItem, int(item_id))
+        if not item:
+            return jsonify({"success": False, "message": "Item menu tidak ditemukan."}), 404
+        
+        item.item_status = new_status
+        
+        auto_sync_order_status(item.order)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Status {item.menu.name if item.menu else 'item'} berhasil diperbarui!",
+            "new_order_status": item.order.order_status
+        })
             
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
+    
+@koki_bp.route('/api/koki/update-kitchen-status-bulk', methods=['POST'])
+@login_required
+@role_required('koki')
+def update_kitchen_status_bulk():
+    data = request.json
+    item_ids = data.get('item_ids', [])
+    new_status = data.get('status')
+    
+    if not item_ids:
+        return jsonify({"success": False, "message": "Tidak ada item untuk diproses."})
         
-    return jsonify({"success": False, "message": "Request tidak valid."}), 400
+    # Tarik semua item yang id-nya ada di dalam daftar item_ids
+    items = OrderItem.query.filter(OrderItem.id.in_(item_ids)).all()
+    if not items:
+        return jsonify({"success": False, "message": "Item tidak ditemukan."})
+        
+    # Ambil data induk order dari item pertama
+    order = items[0].order
+    
+    # Update semua item yang terpilih
+    for item in items:
+        item.item_status = new_status
+        
+    # Panggil fungsi pintar buatanmu untuk sinkronisasi induknya (cukup 1x jalan!)
+    auto_sync_order_status(order)
+    
+    try:
+        db.session.commit()
+        # Kembalikan status induk terbaru ke frontend
+        return jsonify({"success": True, "new_order_status": order.order_status})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
 
 # ── STOCK MENU APIS ──────────────────────────────────────────────
 @koki_bp.route('/api/koki/update-order-status/<int:order_id>', methods=['POST'])

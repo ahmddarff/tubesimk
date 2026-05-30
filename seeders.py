@@ -149,11 +149,18 @@ def run_seeders():
         # ==========================================
         # 7. SEEDER KATEGORI MENU
         # ==========================================
-        daftar_kategori = ['Food', 'Snack', 'Coffee', 'Non Coffee']
-        for nama_kategori in daftar_kategori:
-            kategori_exist = Category.query.filter_by(name=nama_kategori).first()
+        daftar_kategori = [
+            {'nama': 'Food', 'type': 'food'},
+            {'nama': 'Snack', 'type': 'food'},
+            {'nama': 'Coffee', 'type': 'beverage'},
+            {'nama': 'Non Coffee', 'type': 'beverage'}
+        ]
+        
+        for kat in daftar_kategori:
+            kategori_exist = Category.query.filter_by(name=kat['nama']).first()
             if not kategori_exist:
-                db.session.add(Category(name=nama_kategori))
+                db.session.add(Category(name=kat['nama'], type=kat['type']))
+                
         db.session.commit()
 
         # ==========================================

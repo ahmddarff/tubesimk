@@ -117,8 +117,8 @@
                                         <i data-lucide="minus" class="w-3 h-3"></i>
                                     </button>
                                     
-                                    <input type="number" 
-                                        x-model.number="menu.stok" 
+                                    <input type="number"
+                                        x-model.lazy="menu.stok" 
                                         @change="updateStokAPI(menu)" 
                                         class="w-10 h-6 text-center text-xs font-black text-terralogBlue bg-transparent outline-none hide-arrows">
                                         
@@ -206,7 +206,14 @@
 </div>
 
 <script id="data-kategori" type="application/json">
-    [{% for kat in categories %}{ "id": {{ kat.id }}, "name": "{{ kat.name }}" }{% if not loop.last %},{% endif %}{% endfor %}]
+    [
+        {% for c in categories %}
+            {
+                "id": {{ c.id }},
+                "nama": "{{ c.name }}",
+                "tipe": "{{ c.type }}" }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
 </script>
 
 <script id="data-menu" type="application/json">
@@ -237,7 +244,11 @@ document.addEventListener('alpine:init', () => {
 
         // ✅ REVISI: showModalConfirm dan kawan-kawan dihapus!
         showModalKategori: false, showModalTambah: false, showModalEdit: false,
-        inputKategoriBaru: '', editingCategoryId: null, editCategoryName: '', 
+        inputKategoriBaru: '', 
+        inputTypeKategoriBaru: 'food',
+        editingCategoryId: null, editCategoryName: '', 
+        editCategoryType: 'food',
+
 
         formMenu: { nama: '', kategori: '', harga: '', deskripsi: '', hasStock: false, stok: '', imgPreview: null, file: null },
         editMenuForm: { id: null, nama: '', kategori: '', harga: '', deskripsi: '', hasStock: false, stok: '', status: true, imgPreview: null, file: null, originalImg: null },
@@ -275,7 +286,7 @@ document.addEventListener('alpine:init', () => {
         // --- CORE BACKEND CONNECTORS ---
         async tambahKategori() {
             if(!this.inputKategoriBaru.trim()) return showToast('Nama kategori tidak boleh kosong!', 'error');
-            const fd = new FormData(); fd.append('nama', this.inputKategoriBaru);
+            const fd = new FormData(); fd.append('nama', this.inputKategoriBaru); fd.append('type', this.inputTypeKategoriBaru);
             try {
                 const res = await fetch('/owner/api/tambah-kategori', {method: 'POST', body: fd});
                 const data = await res.json();
@@ -284,9 +295,15 @@ document.addEventListener('alpine:init', () => {
             } catch(e) { showToast('Gagal terhubung ke server', 'error'); }
         },
 
+        mulaiEditKategori(kat) {
+            this.editingCategoryId = kat.id;
+            this.editCategoryName = kat.name;
+            this.editCategoryType = kat.type; 
+        },
+
         async simpanEditKategori(id) {
             if(!this.editCategoryName.trim()) return showToast('Nama kategori tidak boleh kosong!', 'error');
-            const fd = new FormData(); fd.append('nama', this.editCategoryName);
+            const fd = new FormData(); fd.append('nama', this.editCategoryName); fd.append('type', this.editCategoryType);
             try {
                 const res = await fetch(`/owner/api/edit-kategori/${id}`, {method: 'POST', body: fd});
                 const data = await res.json();
@@ -441,7 +458,7 @@ document.addEventListener('alpine:init', () => {
 
         async updateStokAPI(menu) {
             // Cegah angka negatif atau kosong saat diketik manual
-            if (menu.stok < 0 || menu.stok === '' || isNaN(menu.stok)) {
+            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || menu.stok < 0) {
                 menu.stok = 0;
             }
 
@@ -453,10 +470,11 @@ document.addEventListener('alpine:init', () => {
                 });
                 const data = await res.json();
                 
-                // Opsional: Memunculkan toast senyap agar Owner tahu data tersimpan
-                // Kita tidak memanggil reload() agar Owner bisa edit stok banyak menu sekaligus dengan cepat!
                 if (!data.success) {
                     showToast(data.message, 'error');
+                } else {
+                    menu.status = (menu.stok > 0);
+                    showToast(`Stok ${menu.nama} berhasil diperbarui!`, 'success');
                 }
             } catch(e) {
                 showToast('Gagal mengubah stok ke server', 'error');

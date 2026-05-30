@@ -91,7 +91,7 @@
                                     </button>
                                     
                                     <input type="number" 
-                                        x-model.number="menu.stok" 
+                                        x-model.lazy="menu.stok" 
                                         @change="updateStokAPI(menu)" 
                                         class="w-10 h-6 text-center text-xs font-black text-terralogBlue bg-transparent outline-none hide-arrows">
                                         
@@ -224,7 +224,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async updateStokAPI(menu) {
-            if (menu.stok < 0 || menu.stok === '' || isNaN(menu.stok)) {
+            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || menu.stok < 0) {
                 menu.stok = 0;
             }
 
@@ -239,8 +239,8 @@ document.addEventListener('alpine:init', () => {
                 if (!data.success) {
                     showToast(data.message, 'error');
                 } else {
-                    if (menu.stok === 0) menu.status = false;
-                    else if (menu.stok > 0) menu.status = true;
+                    menu.status = (menu.stok > 0);
+                    showToast(`Stok ${menu.nama} berhasil diperbarui!`, 'success');
                 }
             } catch(e) {
                 showToast('Gagal mengubah stok ke server', 'error');

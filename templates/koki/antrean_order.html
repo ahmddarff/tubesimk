@@ -15,12 +15,12 @@
 
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Papan Antrean Dapur</h1>
-            <p class="text-sm text-gray-500 font-medium mt-0.5">Pantau pesanan dan atur alur masak</p>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Papan Antrean Dapur</h1>
+            <p class="text-gray-500 mt-1 text-sm">Pantau pesanan dan atur alur masak secara real-time</p>
         </div>
         
         <button @click="showModalRekap = true" 
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-terralogGold text-terralogBlue text-sm font-bold hover:bg-yellow-400 hover:shadow-lg transition-all active:scale-95 border-2 border-yellow-500/20">
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-terralogBlue bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 hover:border-blue-900 hover:shadow-lg transition-all active:scale-95 cursor-pointer">
             <i class="fa-solid fa-clipboard-list"></i> Lihat Rekap Masak
         </button>
     </div>
@@ -44,6 +44,24 @@
         </div>
     </div>
 
+    <div class="flex flex-wrap gap-2 mb-6 bg-white p-1.5 rounded-xl border border-gray-200 w-max shadow-sm">
+        <button @click="activeFilter = 'semua'" 
+                :class="activeFilter === 'semua' ? 'bg-terralogBlue text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'"
+                class="px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-border-all text-sm"></i> Semua
+        </button>
+        <button @click="activeFilter = 'barista'" 
+                :class="activeFilter === 'barista' ? 'bg-terralogBlue text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'"
+                class="px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-mug-hot text-sm"></i> Barista (Minuman)
+        </button>
+        <button @click="activeFilter = 'dapur'" 
+                :class="activeFilter === 'dapur' ? 'bg-terralogBlue text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'"
+                class="px-5 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-utensils text-sm"></i> Dapur (Makanan)
+        </button>
+    </div>
+
     <div class="grid grid-cols-3 gap-4">
 
         <div class="bg-[#FCEAE8] rounded-2xl p-4">
@@ -62,7 +80,7 @@
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
                         <div class="flex flex-col gap-2.5 mb-4">
-                            <template x-for="item in order.items" :key="item.id">
+                            <template x-for="item in filteredItems(order)" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-gray-800 leading-tight" x-text="item.qty + 'x ' + item.nama"></span>
@@ -107,7 +125,7 @@
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
                         <div class="flex flex-col gap-2.5 mb-4">
-                            <template x-for="item in order.items" :key="item.id">
+                            <template x-for="item in filteredItems(order)" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold transition-all leading-tight" :class="item.status === 'ready' ? 'text-gray-400 line-through' : 'text-gray-800'" x-text="item.qty + 'x ' + item.nama"></span>
@@ -171,7 +189,7 @@
                         <p class="text-xs text-gray-500 mb-4" x-text="order.meja"></p>
                         
                         <div class="flex flex-col gap-2.5 mb-4">
-                            <template x-for="item in order.items" :key="item.id">
+                            <template x-for="item in filteredItems(order)" :key="item.id">
                                 <div class="flex items-start justify-between gap-2">
                                     <div class="flex flex-col">
                                         <span class="text-sm font-bold text-gray-400 line-through leading-tight" x-text="item.qty + 'x ' + item.nama"></span>
@@ -198,53 +216,7 @@
 
     </div>
 
-    <div x-show="showModalRekap" 
-         class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4" 
-         x-transition.opacity 
-         x-cloak>
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]" 
-             @click.away="showModalRekap = false" 
-             x-transition.scale.origin.bottom>
-            
-            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#FCEAE8]">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center">
-                        <i class="fa-solid fa-fire text-lg"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-black text-red-600 text-lg leading-none">Rekap Kebutuhan Masak</h3>
-                        <p class="text-xs font-bold text-red-400 mt-1">Total porsi antrean dapur saat ini</p>
-                    </div>
-                </div>
-                <button @click="showModalRekap = false" class="text-red-400 hover:text-red-600 hover:bg-red-100 p-2 rounded-xl transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
-                <div class="flex flex-col gap-3">
-                    <template x-for="rekap in rekapBahan" :key="rekap.nama">
-                        <div class="flex justify-between items-center px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-terralogGold transition-colors">
-                            <span class="font-extrabold text-gray-800 text-base" x-text="rekap.nama"></span>
-                            <span class="bg-terralogGold text-terralogBlue font-black px-4 py-1.5 rounded-xl shadow-sm text-sm" x-text="rekap.qty + ' Porsi'"></span>
-                        </div>
-                    </template>
-                    
-                    <div x-show="rekapBahan.length === 0" class="text-center py-12 text-gray-400">
-                        <i class="fa-solid fa-mug-hot text-5xl mb-4 opacity-30"></i>
-                        <p class="text-base font-bold text-gray-500">Dapur sedang santai.</p>
-                        <p class="text-xs mt-1">Tidak ada item yang perlu dimasak saat ini.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="px-6 py-4 bg-white border-t border-gray-100">
-                <button @click="showModalRekap = false" class="w-full py-3.5 bg-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-300 transition-colors">
-                    Tutup Rekap
-                </button>
-            </div>
-        </div>
-    </div>
+    {% include 'koki/includes/modal_rekap.html' %}
 </div>
 {% endblock %}
 
@@ -258,7 +230,20 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('kanbanKoki', () => ({
         orders: JSON.parse(document.getElementById('orders-data').textContent || '[]'),
         now: new Date(),
-        showModalRekap: false, // ✅ State Modal Rekap
+        showModalRekap: false,
+
+        activeFilter: 'semua', // Pilihan: 'semua', 'barista', 'dapur'
+
+        filteredItems(order) {
+            if (this.activeFilter === 'semua') return order.items;
+            if (this.activeFilter === 'barista') return order.items.filter(i => i.tipe_kategori === 'beverage');
+            if (this.activeFilter === 'dapur') return order.items.filter(i => i.tipe_kategori === 'food');
+            return order.items;
+        },
+
+        hasVisibleItems(order) {
+            return this.filteredItems(order).length > 0;
+        },
 
         init() {
             setInterval(() => {
@@ -273,8 +258,9 @@ document.addEventListener('alpine:init', () => {
             let rekap = {};
             this.orders.forEach(order => {
                 if (['pending', 'preparing'].includes(order.status)) {
-                    order.items.forEach(item => {
-                        // Hanya merekap item yang murni belum selesai (mengabaikan yang status individualnya ready)
+                    this.filteredItems(order).forEach(item => {
+                        
+                        // Hanya merekap item yang murni belum selesai
                         if (['pending', 'preparing'].includes(item.status)) {
                             if (!rekap[item.nama]) rekap[item.nama] = 0;
                             rekap[item.nama] += item.qty;
@@ -284,8 +270,8 @@ document.addEventListener('alpine:init', () => {
             });
             // Mengubah objek menjadi array lalu mengurutkannya dari porsi terbanyak ke terkecil
             return Object.entries(rekap)
-                         .map(([nama, qty]) => ({nama, qty}))
-                         .sort((a, b) => b.qty - a.qty);
+                        .map(([nama, qty]) => ({nama, qty}))
+                        .sort((a, b) => b.qty - a.qty);
         },
 
         get countPending() { return this.orders.filter(o => o.status === 'pending').length; },
@@ -293,7 +279,7 @@ document.addEventListener('alpine:init', () => {
         get countReady() { return this.orders.filter(o => o.status === 'ready').length; },
 
         getOrdersByStatus(status) {
-            return this.orders.filter(o => o.status === status);
+            return this.orders.filter(o => o.status === status && this.hasVisibleItems(o));
         },
 
         getElapsedMins(isoString) {
@@ -324,7 +310,7 @@ document.addEventListener('alpine:init', () => {
 
         async startItem(order, item) {
             try {
-                const res = await fetch('/koki/api/koki/update-kitchen-status', {
+                const res = await fetch('/koki/api/koki/update-item-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ item_id: item.id, status: 'preparing' })
@@ -348,43 +334,66 @@ document.addEventListener('alpine:init', () => {
             const order = this.orders.find(o => o.id === orderId);
             if (!order) return;
 
+            // Hanya ambil item di tab saat ini yang statusnya pending
+            const itemsToProcess = this.filteredItems(order).filter(i => i.status === 'pending');
+            if (itemsToProcess.length === 0) return;
+
+            // Kumpulkan ID-nya saja menjadi array: [1, 2, 5]
+            const itemIds = itemsToProcess.map(i => i.id);
+
             try {
-                const res = await fetch('/koki/api/koki/update-kitchen-status', {
+                // Tembak 1x API massal
+                const res = await fetch('/koki/api/koki/update-kitchen-status-bulk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ order_id: orderId, status: 'preparing' })
+                    body: JSON.stringify({ item_ids: itemIds, status: 'preparing' })
                 });
                 const data = await res.json();
                 
                 if (data.success) {
-                    order.status = 'preparing';
-                    order.items.forEach(i => { if (i.status === 'pending') i.status = 'preparing'; });
-                    showToast(`${order.id_display} seluruh item diproses! 🔥`);
+                    // Update tampilan UI
+                    itemsToProcess.forEach(i => i.status = 'preparing');
+                    order.status = data.new_order_status; // Induknya ngikut hasil dari backend!
+                    
+                    showToast(`${itemsToProcess.length} item pada ${order.id_display} diproses! 🔥`, 'success');
                     this.syncSidebarBadge();
-                } else { showToast(data.message, 'error'); }
+                } else {
+                    showToast(data.message, 'error');
+                }
             } catch(e) { showToast('Gagal memproses pesanan', 'error'); }
         },
 
-        async finishItem(order, item) {
+        async selesaikanOrder(orderId) {
+            const order = this.orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            // Hanya ambil item di tab saat ini yang sedang dimasak
+            const itemsToFinish = this.filteredItems(order).filter(i => i.status === 'preparing');
+            if (itemsToFinish.length === 0) return;
+
+            // Kumpulkan ID-nya saja menjadi array
+            const itemIds = itemsToFinish.map(i => i.id);
+
             try {
-                const res = await fetch('/koki/api/koki/update-kitchen-status', {
+                // Tembak 1x API massal
+                const res = await fetch('/koki/api/koki/update-kitchen-status-bulk', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ item_id: item.id, status: 'ready' })
+                    body: JSON.stringify({ item_ids: itemIds, status: 'ready' })
                 });
                 const data = await res.json();
                 
                 if (data.success) {
-                    item.status = 'ready';
-                    if (data.new_order_status !== order.status) {
-                        order.status = data.new_order_status;
-                        showToast(`${order.id_display} siap disajikan! ✅`);
-                        this.syncSidebarBadge();
-                    } else {
-                        showToast(`Item ${item.nama} selesai dimasak.`);
-                    }
-                } else { showToast(data.message, 'error'); }
-            } catch(e) { showToast('Gagal menyelesaikan item', 'error'); }
+                    // Update tampilan UI
+                    itemsToFinish.forEach(i => i.status = 'ready');
+                    order.status = data.new_order_status; // Induknya ngikut hasil dari backend!
+                    
+                    showToast(`${itemsToFinish.length} item pada ${order.id_display} selesai! ✅`, 'success');
+                    this.syncSidebarBadge();
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch(e) { showToast('Gagal menyelesaikan pesanan', 'error'); }
         },
 
         async selesaikanOrder(orderId) {
@@ -392,7 +401,7 @@ document.addEventListener('alpine:init', () => {
             if (!order) return;
 
             try {
-                const res = await fetch('/koki/api/koki/update-kitchen-status', {
+                const res = await fetch('/koki/api/koki/update-item-status', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order_id: orderId, status: 'ready' })

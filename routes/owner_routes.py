@@ -254,6 +254,7 @@ def pengaturan():
 @role_required('owner')
 def tambah_kategori():
     nama = request.form.get('nama')
+    tipe = request.form.get('type', 'food')
     if not nama:
         return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
     
@@ -261,7 +262,7 @@ def tambah_kategori():
         return jsonify({"success": False, "message": "Kategori tersebut sudah ada."})
     
     try:
-        db.session.add(Category(name=nama))
+        db.session.add(Category(name=nama, type=tipe))
         db.session.commit()
         return jsonify({"success": True, "message": "Kategori baru berhasil ditambahkan!"})
     except Exception as e:
@@ -277,6 +278,8 @@ def edit_kategori(id):
         return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
     
     nama_baru = request.form.get('nama')
+    tipe_baru = request.form.get('type')
+
     if not nama_baru:
         return jsonify({"success": False, "message": "Nama kategori tidak boleh kosong."})
         
@@ -285,6 +288,8 @@ def edit_kategori(id):
         
     try:
         cat.name = nama_baru
+        if tipe_baru:
+            cat.type = tipe_baru
         db.session.commit()
         return jsonify({"success": True, "message": "Nama kategori berhasil diubah!"})
     except Exception as e:
@@ -415,6 +420,12 @@ def update_stok_cepat(menu_id):
             return jsonify({"success": False, "message": "Menu tidak ditemukan."})
             
         menu.stock = int(data.get('stok'))
+        
+        if menu.stock == 0:
+            menu.is_available = False
+        elif menu.stock > 0:
+            menu.is_available = True
+
         db.session.commit()
         return jsonify({"success": True, "message": "Stok diperbarui!"})
     except Exception as e:
