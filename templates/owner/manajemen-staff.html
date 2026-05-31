@@ -8,6 +8,18 @@
     {% include 'owner/includes/modal_tambah_staff.html' %}
     {% include 'owner/includes/modal_edit_staff.html' %}
 
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+        <div>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Manajemen Staff</h1>
+            <p class="text-gray-500 mt-1 text-sm">Kelola data kasir, koki, dan pantau performa kinerja mereka</p>
+        </div>
+        <button @click="openModalTambahStaff()"
+                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-95">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+            Tambah Staff Baru
+        </button>
+    </div>
+
     <div class="grid grid-cols-3 gap-5 mb-6">
         <div class="bg-white border-2 border-terralogBlue/20 rounded-2xl p-5 shadow-sm">
             <p class="text-sm font-semibold text-gray-500 mb-2">Total Staff Aktif</p>
@@ -26,17 +38,34 @@
         </div>
     </div>
 
-    <div class="flex gap-2 mb-6 p-1 bg-gray-100 rounded-2xl w-fit">
+    <div class="flex gap-2 p-1 bg-gray-100 rounded-2xl w-fit mb-4">
         <button @click="activeTab = 'kasir'" 
                 :class="activeTab === 'kasir' ? 'bg-white text-terralogBlue shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                class="px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2">
+                class="px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2">
             <i class="fa-solid fa-cash-register"></i> Kasir
         </button>
         <button @click="activeTab = 'koki'" 
                 :class="activeTab === 'koki' ? 'bg-white text-terralogBlue shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                class="px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center gap-2">
+                class="px-8 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2">
             <i class="fa-solid fa-fire-burner"></i> Koki
         </button>
+    </div>
+
+    <div class="flex flex-wrap gap-3 mb-6">
+        <div class="relative flex-1 min-w-[250px] max-w-sm">
+            <i data-lucide="search" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <input type="text" x-model="searchQuery" placeholder="Cari nama staff..." 
+                   class="w-full pl-10 pr-4 py-2.5 bg-white border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue placeholder-terralogBlue/40 focus:border-terralogBlue shadow-sm outline-none transition">
+        </div>
+        <div class="w-40 relative">
+            <i data-lucide="filter" class="absolute left-3.5 top-3.5 w-4 h-4 text-terralogBlue"></i>
+            <select x-model="filterStatus" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
+                <option value="SEMUA">Semua Status</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+            </select>
+            <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
+        </div>
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
@@ -65,7 +94,7 @@
             </thead>
             <tbody>
                 <template x-if="activeTab === 'kasir'">
-                    <template x-for="k in kasirList" :key="k.id">
+                    <template x-for="k in filteredKasir" :key="k.id">
                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="k.nama"></td>
                             <td class="px-6 py-4 text-center text-gray-600" x-text="k.total_transaksi + ' Pesanan'"></td>
@@ -88,9 +117,17 @@
                         </tr>
                     </template>
                 </template>
+                <template x-if="activeTab === 'kasir' && filteredKasir.length === 0">
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-400 font-bold">
+                            <i data-lucide="search-x" class="w-10 h-10 mx-auto mb-3 opacity-50"></i>
+                            Staf kasir tidak ditemukan.
+                        </td>
+                    </tr>
+                </template>
 
                 <template x-if="activeTab === 'koki'">
-                    <template x-for="c in kokiList" :key="c.id">
+                    <template x-for="c in filteredKoki" :key="c.id">
                         <tr class="border-b border-gray-50 hover:bg-orange-50/30 transition-colors">
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="c.nama"></td>
                             <td class="px-6 py-4 text-center text-gray-600" x-text="c.total_pesanan + ' Menu'"></td>
@@ -113,16 +150,16 @@
                         </tr>
                     </template>
                 </template>
+                <template x-if="activeTab === 'koki' && filteredKoki.length === 0">
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-400 font-bold">
+                            <i data-lucide="search-x" class="w-10 h-10 mx-auto mb-3 opacity-50"></i>
+                            Staf koki tidak ditemukan.
+                        </td>
+                    </tr>
+                </template>
             </tbody>
         </table>
-    </div>
-
-    <div class="flex justify-end">
-        <button @click="openModalTambahStaff()"
-                class="flex items-center gap-2 px-6 py-3 rounded-xl bg-terralogBlue text-white text-sm font-bold hover:bg-blue-900 transition-all shadow-md active:scale-95">
-            <i class="fa-solid fa-user-plus"></i>
-            Tambah Staff Baru
-        </button>
     </div>
 </div>
 
@@ -148,6 +185,42 @@ document.addEventListener('alpine:init', () => {
 
         showModalTambah: false,
         formTambah: { nama: '', username: '', jabatan: 'kasir', password: '' },
+
+        // Parsing data dari script JSON
+        kasirList: JSON.parse(document.getElementById('data-kasir').textContent),
+        kokiList: JSON.parse(document.getElementById('data-koki').textContent),
+
+        // ✅ TAMBAHAN STATE BARU
+        searchQuery: '',
+        filterStatus: 'SEMUA',
+
+        // ✅ LOGIKA FILTER OTOMATIS (KASIR)
+        get filteredKasir() {
+            let result = this.kasirList.filter(k => {
+                const matchSearch = this.searchQuery === '' || k.nama.toLowerCase().includes(this.searchQuery.toLowerCase());
+                let matchStatus = true;
+                if (this.filterStatus === 'online') matchStatus = k.status === 'online';
+                if (this.filterStatus === 'offline') matchStatus = k.status === 'offline';
+                return matchSearch && matchStatus;
+            });
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50); // Re-render icon
+            return result;
+        },
+
+        // ✅ LOGIKA FILTER OTOMATIS (KOKI)
+        get filteredKoki() {
+            let result = this.kokiList.filter(c => {
+                const matchSearch = this.searchQuery === '' || c.nama.toLowerCase().includes(this.searchQuery.toLowerCase());
+                let matchStatus = true;
+                if (this.filterStatus === 'online') matchStatus = c.status === 'online';
+                if (this.filterStatus === 'offline') matchStatus = c.status === 'offline';
+                return matchSearch && matchStatus;
+            });
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50); // Re-render icon
+            return result;
+        },
+
+        showModalTambah: false,
 
         init() {
             this.$watch('activeTab', () => {
