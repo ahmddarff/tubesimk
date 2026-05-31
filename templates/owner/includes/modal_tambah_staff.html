@@ -1,9 +1,20 @@
-<div x-show="showModalTambah" class="fixed inset-0 z-[100] flex items-center justify-center p-4" style="display: none;" x-cloak>
-    <div x-transition.opacity class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showModalTambah = false"></div>
+<div x-show="showModalTambah" 
+     x-cloak
+     class="fixed inset-0 z-[100] flex items-center justify-center p-4" 
+     style="display: none;">
     
-    <div x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" 
-         class="w-full max-w-lg bg-white rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+    <!-- Latar Belakang Gelap dengan Animasi Fade -->
+    <div x-transition.opacity 
+         class="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+         @click="showModalTambah = false"></div>
+    
+    <!-- Kontainer Modal Utama dengan Animasi Pop-up -->
+    <div x-transition:enter="transition ease-out duration-300" 
+         x-transition:enter-start="opacity-0 scale-95" 
+         x-transition:enter-end="opacity-100 scale-100" 
+         class="w-full max-w-md bg-white rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col">
         
+        <!-- Header Modal (Biru Seragam) -->
         <div class="px-6 py-5 bg-terralogBlue flex justify-between items-center shrink-0">
             <h2 class="text-xl font-bold text-white tracking-tight">Tambah Staff Baru</h2>
             <button @click="showModalTambah = false" class="text-white/60 hover:text-white transition-colors cursor-pointer">
@@ -11,35 +22,36 @@
             </button>
         </div>
 
-        <div class="px-6 py-5 space-y-4 overflow-y-auto custom-scrollbar bg-white">
+        <!-- Body Form -->
+        <div class="p-6 space-y-4">
             <div>
                 <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Nama Lengkap</label>
-                <input type="text" x-model="formTambah.nama" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Contoh: Budi Santoso">
+                <input type="text" x-model="formTambah.nama" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold transition-all" placeholder="Contoh: Budi Santoso">
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Username</label>
-                    <input type="text" x-model="formTambah.username" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Contoh: budi123">
-                </div>
-                <div>
-                    <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Jabatan</label>
-                    <select x-model="formTambah.jabatan" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold appearance-none cursor-pointer">
-                        <option value="kasir">Kasir</option>
-                        <option value="koki">Koki</option>
-                    </select>
-                </div>
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Username</label>
+                <input type="text" x-model="formTambah.username" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold transition-all" placeholder="Contoh: budi123">
+            </div>
+
+            <div>
+                <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Jabatan</label>
+                <select x-model="formTambah.jabatan" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold transition-all cursor-pointer">
+                    <option value="kasir">Kasir</option>
+                    <option value="koki">Koki</option>
+                </select>
             </div>
 
             <div>
                 <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Password Akses</label>
-                <input type="password" x-model="formTambah.password" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold" placeholder="Minimal 6 Karakter">
+                <input type="text" x-model="formTambah.password" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-terralogBlue outline-none text-sm font-bold transition-all" placeholder="Minimal 6 Karakter">
             </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end gap-3 shrink-0">
-            <button @click="showModalTambah = false" class="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition shadow-sm cursor-pointer">Batal</button>
-            <button @click="simpanStaff()" class="px-8 py-2.5 bg-terralogBlue text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-900 transition active:scale-95 cursor-pointer">Simpan Staff</button>
+        <!-- Footer Tombol -->
+        <div class="px-6 py-5 border-t border-gray-50 bg-gray-50/50 flex justify-end gap-3 shrink-0">
+            <button @click="showModalTambah = false" class="px-6 py-3 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition shadow-sm cursor-pointer">Batal</button>
+            <button @click="simpanStaff()" class="px-8 py-3 bg-terralogBlue text-white rounded-xl text-sm font-bold shadow-md hover:bg-blue-900 transition active:scale-95 cursor-pointer">Simpan</button>
         </div>
     </div>
 </div>

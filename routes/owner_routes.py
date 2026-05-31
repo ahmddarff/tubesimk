@@ -119,7 +119,7 @@ def manajemen_meja():
     tables = Table.query.order_by(Table.table_number).all()
     return render_template('owner/manajemen-meja.html', tables=tables)
 
-@owner_bp.route('/manajemen-kasir')
+@owner_bp.route('/manajemen-staff')
 @login_required
 @role_required('owner')
 def manajemen_kasir():
@@ -139,17 +139,39 @@ def manajemen_kasir():
             "total_penjualan": total_sales
         })
         
-    # 2. Ambil Data Koki
+    # 2. Ambil Data Koki (SEKARANG DINAMIS)
     koki_users = User.query.filter_by(role='koki').all()
     koki_list = []
     for c in koki_users:
-        # Placeholder metrik Koki (karena koki_id belum berelasi langsung dengan OrderItem di model saat ini)
+        # Tarik semua menu yang dikerjakan koki ini dan berstatus selesai (ready/served)
+        finished_items = OrderItem.query.filter_by(koki_id=c.id).filter(
+            OrderItem.item_status.in_(['ready', 'served'])
+        ).all()
+        
+        total_pesanan = len(finished_items)
+        total_durasi_menit = 0
+        valid_items_count = 0
+        
+        for item in finished_items:
+            # Pastikan kedua timestamp (mulai dan selesai) ada untuk menghindari eror
+            if item.prepared_at and item.ready_at:
+                durasi_detik = (item.ready_at - item.prepared_at).total_seconds()
+                total_durasi_menit += (durasi_detik / 60.0)
+                valid_items_count += 1
+                
+        # Hitung rata-rata jika ada pesanan yang valid
+        if valid_items_count > 0:
+            avg_speed_menit = round(total_durasi_menit / valid_items_count)
+            avg_speed_str = f"{avg_speed_menit} Menit"
+        else:
+            avg_speed_str = "-"
+
         koki_list.append({
             "id": c.id,
             "nama": c.name,
             "username": c.username,
-            "total_pesanan": 0,  
-            "avg_speed": "-",    
+            "total_pesanan": total_pesanan,  
+            "avg_speed": avg_speed_str,    
             "status": "online" if c.is_active else "offline"
         })
 
@@ -158,7 +180,7 @@ def manajemen_kasir():
     koki_online = sum(1 for c in koki_list if c['status'] == 'online')
     total_staff = len(kasir_list) + len(koki_list)
 
-    return render_template('owner/manajemen-kasir.html',
+    return render_template('owner/manajemen-staff.html',
         kasir_list=kasir_list,
         koki_list=koki_list,
         kasir_online=kasir_online,
@@ -571,10 +593,14 @@ def edit_staff(id):
     nama_baru = data.get("nama")
     jabatan_baru = data.get("jabatan", "kasir").lower()
     is_active_status = data.get("isActive", True) # Menangkap status boolean checkbox
+    password_baru = data.get("password")
     
     staff.name = nama_baru
     staff.role = jabatan_baru
     staff.is_active = is_active_status # Mengupdate kolom keaktifan di database
+
+    if password_baru and password_baru.strip() != "":
+        staff.password = generate_password_hash(password_baru)
     
     try:
         db.session.commit()

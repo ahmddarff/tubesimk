@@ -23,6 +23,8 @@ class User(db.Model, UserMixin):
 
     # Relasi ke transaksi & reservasi
     reservations = db.relationship('Reservation', backref='user', lazy=True)
+    # Relasi ke item order untuk pencatatan statistik koki 
+    cooked_items = db.relationship('OrderItem', backref='koki', lazy=True, foreign_keys='OrderItem.koki_id')
 
 class CafeSetting(db.Model):
     __tablename__ = 'cafe_settings'
@@ -173,7 +175,10 @@ class OrderItem(db.Model):
     price_at_order  = db.Column(db.Integer, nullable=False) # Snapshot harga dari menu
     notes           = db.Column(db.String(255), nullable=True)
     item_status     = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='item_status'), default='pending')
-    
+    koki_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    prepared_at     = db.Column(db.DateTime, nullable=True)
+    ready_at        = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -394,27 +394,6 @@ document.addEventListener('alpine:init', () => {
                     showToast(data.message, 'error');
                 }
             } catch(e) { showToast('Gagal menyelesaikan pesanan', 'error'); }
-        },
-
-        async selesaikanOrder(orderId) {
-            const order = this.orders.find(o => o.id === orderId);
-            if (!order) return;
-
-            try {
-                const res = await fetch('/koki/api/koki/update-item-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ order_id: orderId, status: 'ready' })
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    order.status = 'ready';
-                    order.items.forEach(i => i.status = 'ready');
-                    showToast(`${order.id_display} siap disajikan! ✅`);
-                    this.syncSidebarBadge();
-                } else { showToast(data.message, 'error'); }
-            } catch(e) { showToast('Gagal menyelesaikan pesanan', 'error'); }
         }
     }));
 });

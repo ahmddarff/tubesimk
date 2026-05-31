@@ -49,14 +49,14 @@
                         <th class="px-6 py-4 text-center font-bold text-gray-800">Total Transaksi</th>
                     </template>
                     <template x-if="activeTab === 'koki'">
-                        <th class="px-6 py-4 text-center font-bold text-gray-800">Pesanan Selesai</th>
+                        <th class="px-6 py-4 text-center font-bold text-gray-800">Menu Dimasak</th>
                     </template>
 
                     <template x-if="activeTab === 'kasir'">
                         <th class="px-6 py-4 text-center font-bold text-gray-800">Total Penjualan</th>
                     </template>
                     <template x-if="activeTab === 'koki'">
-                        <th class="px-6 py-4 text-center font-bold text-gray-800">Rata-rata Durasi</th>
+                        <th class="px-6 py-4 text-center font-bold text-gray-800">Rata-rata Durasi Masak</th>
                     </template>
 
                     <th class="px-6 py-4 text-center font-bold text-gray-800">Status</th>
@@ -79,7 +79,11 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openModalEdit(k, 'kasir')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
+                                <button @click="openModalEdit(k, 'kasir')" 
+                                        class="p-2 text-blue-600 bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-lg transition-colors shadow-sm cursor-pointer" 
+                                        title="Edit Profil Kasir">
+                                    <i data-lucide="edit-3" class="w-4 h-4 mx-auto"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
@@ -90,7 +94,7 @@
                         <tr class="border-b border-gray-50 hover:bg-orange-50/30 transition-colors">
                             <td class="px-6 py-4 font-bold text-gray-800" x-text="c.nama"></td>
                             <td class="px-6 py-4 text-center text-gray-600" x-text="c.total_pesanan + ' Menu'"></td>
-                            <td class="px-6 py-4 text-center font-bold text-orange-600" x-text="c.avg_speed"></td>
+                            <td class="px-6 py-4 text-center font-bold text-terralogBlue" x-text="c.avg_speed"></td>
                             <td class="px-6 py-4">
                                 <div class="flex justify-center">
                                     <label class="toggle-switch relative inline-block w-[46px] h-6 cursor-pointer">
@@ -100,7 +104,11 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button @click="openModalEdit(c, 'koki')" class="text-terralogBlue font-bold hover:underline text-xs">Edit Profil</button>
+                                <button @click="openModalEdit(c, 'koki')" 
+                                        class="p-2 text-blue-600 bg-blue-50 hover:bg-terralogBlue hover:text-white rounded-lg transition-colors shadow-sm cursor-pointer" 
+                                        title="Edit Profil Koki">
+                                    <i data-lucide="edit-3" class="w-4 h-4 mx-auto"></i>
+                                </button>
                             </td>
                         </tr>
                     </template>
@@ -118,31 +126,42 @@
     </div>
 </div>
 
+<script id="data-kasir" type="application/json">
+    {{ kasir_list | tojson | safe }}
+</script>
+
+<script id="data-koki" type="application/json">
+    {{ koki_list | tojson | safe }}
+</script>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Daftarkan komponen Alpine.js secara terpisah
 document.addEventListener('alpine:init', () => {
     Alpine.data('staffManager', () => ({
         activeTab: 'kasir',
-        // Data di-inject dari Flask/Jinja dengan aman di sini
-        kasirList: {{ kasir_list | tojson }},
-        kokiList: {{ koki_list | tojson }},
+        
+        // Parsing data dari script JSON (Bebas error linter VS Code!)
+        kasirList: JSON.parse(document.getElementById('data-kasir').textContent),
+        kokiList: JSON.parse(document.getElementById('data-koki').textContent),
 
-        // ✅ 1. State untuk Modal Tambah Staff
         showModalTambah: false,
         formTambah: { nama: '', username: '', jabatan: 'kasir', password: '' },
 
-        // ✅ 2. Fungsi Buka Modal
+        init() {
+            this.$watch('activeTab', () => {
+                setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+            });
+            setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+        },
+        
         openModalTambahStaff() {
             this.formTambah = { nama: '', username: '', jabatan: 'kasir', password: '' };
             this.showModalTambah = true;
             setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
         },
 
-        // ✅ 3. Fungsi Kirim Data ke API
         async simpanStaff() {
             if (!this.formTambah.nama || !this.formTambah.username || !this.formTambah.password) {
                 return showToast('Semua kolom wajib diisi!', 'error');
@@ -159,7 +178,6 @@ document.addEventListener('alpine:init', () => {
                 if (data.success) {
                     this.showModalTambah = false;
                     showToast(data.message, 'success');
-                    // Muat ulang halaman agar staff baru muncul di tabel
                     setTimeout(() => location.reload(), 1000); 
                 } else {
                     showToast(data.message, 'error');
@@ -170,20 +188,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         showModalEdit: false,
-        formEdit: { id: null, nama: '', jabatan: '', isActive: true },
+        formEdit: { id: null, nama: '', jabatan: '', isActive: true, password: '' },
 
-        // Fungsi untuk membuka modal & memasukkan data baris yang diklik secara dinamis
         openModalEdit(staffObj, role) {
             this.formEdit = {
                 id: staffObj.id,
                 nama: staffObj.nama,
                 jabatan: role,
-                isActive: staffObj.status === 'online'
+                isActive: staffObj.status === 'online',
+                password: ''
             };
             this.showModalEdit = true;
         },
 
-        // Fungsi untuk mengirim data perubahan ke backend Flask
         async updateStaff() {
             if (!this.formEdit.nama) {
                 return showToast('Nama lengkap tidak boleh kosong!', 'error');
@@ -198,7 +215,7 @@ document.addEventListener('alpine:init', () => {
                 if (data.success) {
                     this.showModalEdit = false;
                     showToast(data.message, 'success');
-                    setTimeout(() => location.reload(), 1000); // Reload untuk sinkronisasi tampilan database
+                    setTimeout(() => location.reload(), 1000);
                 } else {
                     showToast(data.message, 'error');
                 }
@@ -207,7 +224,6 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        // Fungsi untuk memanggil API toggle status
         toggleStatus(id, event) {
             let isOnline = event.target.checked;
             
@@ -219,25 +235,17 @@ document.addEventListener('alpine:init', () => {
             .then(res => res.json())
             .then(data => {
                 if(!data.success) {
-                    alert(data.message);
-                    event.target.checked = !isOnline; // Kembalikan posisi toggle jika DB gagal update
+                    showToast(data.message, 'error');
+                    event.target.checked = !isOnline; 
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert("Terjadi kesalahan jaringan.");
+                showToast("Terjadi kesalahan jaringan.", 'error');
                 event.target.checked = !isOnline;
             });
         }
     }));
 });
-
-// Fungsi untuk buka modal edit profil
-function openEditProfil(id, nama, jabatan) {
-    document.getElementById('editNamaLengkap').value = nama;
-    document.getElementById('editJabatan').value = jabatan;
-    document.getElementById('editProfilTitle').textContent = `Edit Profil: ${nama}`;
-    openModal('modalEditProfil');
-}
 </script>
 {% endblock %}

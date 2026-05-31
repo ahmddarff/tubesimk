@@ -18,9 +18,9 @@
         <div class="p-6 overflow-y-auto bg-gray-50 flex-1">
             <div class="flex flex-col gap-3">
                 <template x-for="rekap in rekapBahan" :key="rekap.nama">
-                    <div class="flex justify-between items-center px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-terralogGold transition-colors">
+                    <div class="flex justify-between items-center px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-terralogBlue/30 transition-colors">
                         <span class="font-extrabold text-gray-800 text-base" x-text="rekap.nama"></span>
-                        <span class="bg-terralogGold text-terralogBlue font-black px-4 py-1.5 rounded-xl shadow-sm text-sm" x-text="rekap.qty + ' Porsi'"></span>
+                        <span class="bg-blue-50 text-terralogBlue font-black px-4 py-1.5 rounded-xl shadow-sm text-sm" x-text="rekap.qty + ' Porsi'"></span>
                     </div>
                 </template>
                 
@@ -32,8 +32,8 @@
             </div>
         </div>
         
-        <div class="px-6 py-4 bg-white border-t border-gray-100">
-            <button @click="showModalRekap = false" class="w-full py-3.5 bg-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-300 transition-colors cursor-pointer">
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex justify-end shrink-0">
+            <button @click="showModalRekap = false" class="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition shadow-sm cursor-pointer">
                 Tutup Rekap
             </button>
         </div>

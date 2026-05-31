@@ -216,6 +216,10 @@ def run_seeders():
         customers_db = User.query.filter_by(role='customer').all()
         kasir_user = User.query.filter_by(role='kasir').first()
         kasir_id = kasir_user.id if kasir_user else None
+
+        # Mengambil ID Koki untuk simulasi pengerjaan pesanan
+        koki_user = User.query.filter_by(role='koki').first()
+        koki_id = koki_user.id if koki_user else None
         
         menu_ayam = Menu.query.filter_by(name="Ayam Geprek").first()
         menu_kentang = Menu.query.filter_by(name="Kentang Goreng").first()
@@ -243,8 +247,8 @@ def run_seeders():
                 "total_amount": 50000,
                 "created_at": now_utc - timedelta(hours=2),
                 "items": [
-                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served"},
-                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served"}
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Pedas manis", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(hours=2) + timedelta(minutes=2), "ready_at": now_utc - timedelta(hours=2) + timedelta(minutes=14)},
+                    {"menu_id": menu_kentang.id if menu_kentang else fallback_id, "qty": 2, "price": 15000, "notes": "Saus pisah", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(hours=2) + timedelta(minutes=3), "ready_at": now_utc - timedelta(hours=2) + timedelta(minutes=10)}
                 ]
             },
             # ── [URUTAN 2] 45 Menit Lalu: Makanan Matang Siap Saji di Meja Counter
@@ -262,8 +266,8 @@ def run_seeders():
                 "total_amount": 29000,
                 "created_at": now_utc - timedelta(minutes=45),
                 "items": [
-                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "ready"},
-                    {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "served"}
+                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Kuah dikit", "status": "ready", "koki_id": koki_id, "prepared_at": now_utc - timedelta(minutes=43), "ready_at": now_utc - timedelta(minutes=35)},
+                    {"menu_id": menu_avocado.id if menu_avocado else fallback_id, "qty": 1, "price": 17000, "notes": "No sugar", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(minutes=42), "ready_at": now_utc - timedelta(minutes=38)}
                 ]
             },
             # ── [URUTAN 3] 30 Menit Lalu: Kasus Pembatalan Iseng Meja 8
@@ -286,7 +290,6 @@ def run_seeders():
                 ]
             },
             # ── [URUTAN 4] 15 Menit Lalu: Mandiri App (Lunas Paid) - Sedang Dimasak Campuran
-            # (Lolos Anti-Fiktif Dapur, mereplikasi bug tombol 'Start/Finish' per item yang kita perbaiki)
             {
                 "order_number": "ORD-20260514-008",
                 "user_id": customers_db[1].id if len(customers_db) > 1 else 2,
@@ -301,12 +304,11 @@ def run_seeders():
                 "total_amount": 32000,
                 "created_at": now_utc - timedelta(minutes=15),
                 "items": [
-                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Pakai cabe potong", "status": "preparing"},
+                    {"menu_id": menu_indomie.id if menu_indomie else fallback_id, "qty": 1, "price": 12000, "notes": "Pakai cabe potong", "status": "preparing", "koki_id": koki_id, "prepared_at": now_utc - timedelta(minutes=13)},
                     {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Sambal dipisah", "status": "pending"}
                 ]
             },
             # ── [URUTAN 5] 7 Menit Lalu: Kasir Manual (Dine In + Unpaid) - Antrean Baru Pending
-            # ✅ FIX REVISI ATURAN BAKU: Karena UNPAID, status diubah menjadi PENDING murni per item & order!
             {
                 "order_number": "ORD-20260514-003",
                 "user_id": None, 
@@ -315,13 +317,13 @@ def run_seeders():
                 "table_id": meja_db.get("04"),
                 "table_number_snapshot": "04",
                 "order_type": "dine_in",
-                "order_status": "pending",  # Sesuai aturan baku: Unpaid Dine In = Pending
+                "order_status": "pending", 
                 "payment_method": "cash",
                 "payment_status": "unpaid",
                 "total_amount": 45000,
-                "created_at": now_utc - timedelta(minutes=7), # Ditata runtut mengikuti FIFO dapur
+                "created_at": now_utc - timedelta(minutes=7),
                 "items": [
-                    {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus banyak", "status": "pending"} # Item juga pending
+                    {"menu_id": menu_dimsum.id if menu_dimsum else fallback_id, "qty": 3, "price": 15000, "notes": "Saus banyak", "status": "pending"}
                 ]
             },
             # ── [URUTAN 6] 4 Menit Lalu: Kasir Manual - Take Away - Unpaid - Antrean Baru Pending
@@ -370,7 +372,7 @@ def run_seeders():
                 "payment_method": "qris", "payment_status": "paid", "total_amount": 20000,
                 "created_at": now_utc - timedelta(days=1),
                 "items": [
-                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Sambal dipisah", "status": "served"}
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Sambal dipisah", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(days=1) + timedelta(minutes=2), "ready_at": now_utc - timedelta(days=1) + timedelta(minutes=15)}
                 ]
             },
             {
@@ -381,7 +383,7 @@ def run_seeders():
                 "payment_method": "cash", "payment_status": "paid", "total_amount": 40000,
                 "created_at": now_utc - timedelta(days=2),
                 "items": [
-                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 2, "price": 20000, "notes": "Satu pedas, satu sedang", "status": "served"}
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 2, "price": 20000, "notes": "Satu pedas, satu sedang", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(days=2) + timedelta(minutes=3), "ready_at": now_utc - timedelta(days=2) + timedelta(minutes=18)}
                 ]
             },
             {
@@ -392,7 +394,7 @@ def run_seeders():
                 "payment_method": "qris", "payment_status": "paid", "total_amount": 20000,
                 "created_at": now_utc - timedelta(days=3),
                 "items": [
-                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Dada mentok", "status": "served"}
+                    {"menu_id": menu_ayam.id if menu_ayam else fallback_id, "qty": 1, "price": 20000, "notes": "Dada mentok", "status": "served", "koki_id": koki_id, "prepared_at": now_utc - timedelta(days=3) + timedelta(minutes=1), "ready_at": now_utc - timedelta(days=3) + timedelta(minutes=12)}
                 ]
             }
         ]
@@ -413,11 +415,12 @@ def run_seeders():
                 for item in data["items"]:
                     item_baru = OrderItem(
                         order_id=pesanan_baru.id, menu_id=item["menu_id"], qty=item["qty"],
-                        price_at_order=item["price"], notes=item["notes"], item_status=item["status"]
+                        price_at_order=item["price"], notes=item["notes"], item_status=item["status"],
+                        koki_id=item.get("koki_id"), prepared_at=item.get("prepared_at"), ready_at=item.get("ready_at")
                     )
                     db.session.add(item_baru)
                 db.session.commit()
-        print("✅ Berhasil: Data Order & Detail Item dengan kombinasi FIFO kronologis ditambahkan!")
+        print("✅ Berhasil: Data Order & Detail Item dengan metrik Koki ditambahkan!")
 
         # ==========================================
         # 11. SEEDER RESERVASI

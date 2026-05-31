@@ -175,12 +175,24 @@ def update_item_status():
         
         item.item_status = new_status
         
+        if new_status == 'preparing':
+            if not item.koki_id:  # Hanya isi jika belum ada yang klaim
+                item.koki_id = current_user.id
+            if not item.prepared_at:
+                item.prepared_at = datetime.utcnow()
+                
+        elif new_status == 'ready':
+            if not item.koki_id:  # Jaga-jaga kalau koki langsung klik Finish tanpa klik Start
+                item.koki_id = current_user.id
+            if not item.ready_at:
+                item.ready_at = datetime.utcnow()
+        
         auto_sync_order_status(item.order)
         db.session.commit()
         
         return jsonify({
             "success": True,
-            "message": f"Status {item.menu.name if item.menu else 'item'} berhasil diperbarui!",
+            "message": f"Status {item.menu.name if item.menu else 'item'} diperbarui!",
             "new_order_status": item.order.order_status
         })
             
@@ -199,24 +211,31 @@ def update_kitchen_status_bulk():
     if not item_ids:
         return jsonify({"success": False, "message": "Tidak ada item untuk diproses."})
         
-    # Tarik semua item yang id-nya ada di dalam daftar item_ids
     items = OrderItem.query.filter(OrderItem.id.in_(item_ids)).all()
     if not items:
         return jsonify({"success": False, "message": "Item tidak ditemukan."})
         
-    # Ambil data induk order dari item pertama
     order = items[0].order
     
-    # Update semua item yang terpilih
     for item in items:
         item.item_status = new_status
         
-    # Panggil fungsi pintar buatanmu untuk sinkronisasi induknya (cukup 1x jalan!)
+        if new_status == 'preparing':
+            if not item.koki_id:
+                item.koki_id = current_user.id
+            if not item.prepared_at:
+                item.prepared_at = datetime.utcnow()
+                
+        elif new_status == 'ready':
+            if not item.koki_id:
+                item.koki_id = current_user.id
+            if not item.ready_at:
+                item.ready_at = datetime.utcnow()
+        
     auto_sync_order_status(order)
     
     try:
         db.session.commit()
-        # Kembalikan status induk terbaru ke frontend
         return jsonify({"success": True, "new_order_status": order.order_status})
     except Exception as e:
         db.session.rollback()
