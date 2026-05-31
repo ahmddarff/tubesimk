@@ -17,44 +17,39 @@ owner_bp = Blueprint('owner', __name__)
 @login_required
 @role_required('owner')
 def dashboard():
-    # Hitung Stat Utama dari Database (Menggunakan total_amount sesuai murni DB paid)
-    total_penjualan_val = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid').scalar() or 0
-    total_order_val = Order.query.filter(Order.payment_status == 'paid').count()
-    
-    total_penjualan_formatted = f"Rp {total_penjualan_val:,}".replace(",", ".")
+    hari_ini = datetime.utcnow().date()
+    kemarin = hari_ini - timedelta(days=1)
 
-    # Ambil Menu Terlaris dinamis dari OrderItem (Join Menu dan Order)
+    penjualan_hari_ini = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid', func.date(Order.created_at) == hari_ini).scalar() or 0
+    penjualan_kemarin = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid', func.date(Order.created_at) == kemarin).scalar() or 0
+    tren_penjualan = ((penjualan_hari_ini - penjualan_kemarin) / penjualan_kemarin * 100) if penjualan_kemarin > 0 else (100 if penjualan_hari_ini > 0 else 0)
+
+    order_hari_ini = Order.query.filter(Order.payment_status == 'paid', func.date(Order.created_at) == hari_ini).count()
+    order_kemarin = Order.query.filter(Order.payment_status == 'paid', func.date(Order.created_at) == kemarin).count()
+    tren_order = ((order_hari_ini - order_kemarin) / order_kemarin * 100) if order_kemarin > 0 else (100 if order_hari_ini > 0 else 0)
+
     menu_terlaris_query = db.session.query(Menu.name, func.sum(OrderItem.qty).label('total_qty'))\
-        .join(OrderItem, OrderItem.menu_id == Menu.id)\
-        .join(Order, OrderItem.order_id == Order.id)\
-        .filter(Order.payment_status == 'paid')\
-        .group_by(Menu.name)\
-        .order_by(func.sum(OrderItem.qty).desc()).first()
+        .join(OrderItem, OrderItem.menu_id == Menu.id).join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid', func.date(Order.created_at) == hari_ini)\
+        .group_by(Menu.name).order_by(func.sum(OrderItem.qty).desc()).first()
         
-    menu_terlaris_name = menu_terlaris_query[0] if menu_terlaris_query else "-"
+    menu_terlaris_name = menu_terlaris_query[0] if menu_terlaris_query else "Belum Ada"
     menu_terlaris_qty = menu_terlaris_query[1] if menu_terlaris_query else 0
 
-    # Data untuk Donut Chart (Kategori Terlaris - Join ke Category)
+    tujuh_hari_lalu = hari_ini - timedelta(days=6)
+
     category_data = db.session.query(Category.name, func.sum(OrderItem.qty))\
-        .join(Menu, Menu.category_id == Category.id)\
-        .join(OrderItem, OrderItem.menu_id == Menu.id)\
-        .join(Order, OrderItem.order_id == Order.id)\
-        .filter(Order.payment_status == 'paid')\
+        .join(Menu, Menu.category_id == Category.id).join(OrderItem, OrderItem.menu_id == Menu.id).join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid', Order.created_at >= tujuh_hari_lalu)\
         .group_by(Category.name).all()
-    
     chart_categories = [item[0] for item in category_data]
     chart_category_qtys = [int(item[1]) for item in category_data]
 
-    # Data untuk Line Chart (Pendapatan 7 Hari Terakhir)
-    hari_ini = datetime.utcnow().date()
-    tujuh_hari_lalu = hari_ini - timedelta(days=6)
-    
     pendapatan_harian = db.session.query(
         func.date(Order.created_at).label('tanggal'),
         func.sum(Order.total_amount).label('total')
     ).filter(Order.payment_status == 'paid', Order.created_at >= tujuh_hari_lalu)\
-     .group_by(func.date(Order.created_at))\
-     .order_by(func.date(Order.created_at)).all()
+     .group_by(func.date(Order.created_at)).order_by(func.date(Order.created_at)).all()
      
     line_labels = [p.tanggal.strftime('%a') for p in pendapatan_harian] 
     line_values = [int(p.total) for p in pendapatan_harian]
@@ -63,35 +58,80 @@ def dashboard():
         line_labels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
         line_values = [0, 0, 0, 0, 0, 0, 0]
 
-    # Data Staff Overview (Dinamis dari tabel User dan Order)
-    staff_query = db.session.query(
-        User,
-        func.count(Order.id).label('total_transaksi')
-    ).outerjoin(Order, Order.cashier_id == User.id)\
-     .filter(User.role.in_(['kasir', 'koki']))\
-     .group_by(User.id).all()
-
-    dinamis_staff_data = []
-    for user, total_transaksi in staff_query:
-        dinamis_staff_data.append({
-            "nama": user.name,
-            "shift": "Pagi" if user.id % 2 != 0 else "Sore", # Logika pembagian shift sementara
-            "status": "online" if user.is_active else "offline",
-            "total_transaksi": total_transaksi
-        })
-
     return render_template(
         'owner/dashboard.html',
-        total_penjualan=total_penjualan_formatted,
-        total_order=total_order_val,
+        total_penjualan=f"Rp {penjualan_hari_ini:,}".replace(",", "."),
+        tren_penjualan=round(abs(tren_penjualan), 1),
+        is_penjualan_naik=(tren_penjualan >= 0),
+        total_order=order_hari_ini,
+        tren_order=round(abs(tren_order), 1),
+        is_order_naik=(tren_order >= 0),
         menu_terlaris=menu_terlaris_name,
         menu_terlaris_qty=menu_terlaris_qty,
-        staff=dinamis_staff_data, 
         line_labels=line_labels,
         line_values=line_values,
         chart_categories=chart_categories,
         chart_category_qtys=chart_category_qtys
     )
+
+@owner_bp.route('/api/dashboard/filter', methods=['POST'])
+@login_required
+@role_required('owner')
+def api_dashboard_filter():
+    data = request.json
+    rentang = data.get('rentang')
+    
+    # Hitung waktu (Logika WIB-UTC yang sudah kita buat)
+    sekarang_wib = datetime.utcnow() + timedelta(hours=7)
+    hari_ini_wib = sekarang_wib.date()
+    
+    if rentang == 'Bulan Ini':
+        start_date_wib = hari_ini_wib.replace(day=1)
+        prev_end_wib = start_date_wib - timedelta(days=1)
+        prev_start_wib = prev_end_wib.replace(day=1)
+    elif rentang == '7 Hari Terakhir':
+        start_date_wib = hari_ini_wib - timedelta(days=6)
+        prev_start_wib = start_date_wib - timedelta(days=7)
+        prev_end_wib = start_date_wib - timedelta(days=1)
+    else:
+        start_date_wib = hari_ini_wib
+        prev_start_wib = hari_ini_wib - timedelta(days=1)
+        prev_end_wib = prev_start_wib
+
+    start_utc = datetime.combine(start_date_wib, datetime.min.time()) - timedelta(hours=7)
+    end_utc = datetime.combine(hari_ini_wib, datetime.max.time()) - timedelta(hours=7)
+    prev_start_utc = datetime.combine(prev_start_wib, datetime.min.time()) - timedelta(hours=7)
+    prev_end_utc = datetime.combine(prev_end_wib, datetime.max.time()) - timedelta(hours=7)
+
+    # 1. Penjualan
+    curr_penjualan = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid', Order.created_at >= start_utc, Order.created_at <= end_utc).scalar() or 0
+    prev_penjualan = db.session.query(func.sum(Order.total_amount)).filter(Order.payment_status == 'paid', Order.created_at >= prev_start_utc, Order.created_at <= prev_end_utc).scalar() or 0
+    tren_penjualan = ((curr_penjualan - prev_penjualan) / prev_penjualan * 100) if prev_penjualan > 0 else (100 if curr_penjualan > 0 else 0)
+
+    # 2. Order
+    curr_order = Order.query.filter(Order.payment_status == 'paid', Order.created_at >= start_utc, Order.created_at <= end_utc).count()
+    prev_order = Order.query.filter(Order.payment_status == 'paid', Order.created_at >= prev_start_utc, Order.created_at <= prev_end_utc).count()
+    tren_order = ((curr_order - prev_order) / prev_order * 100) if prev_order > 0 else (100 if curr_order > 0 else 0)
+
+    # 3. Menu Terlaris
+    menu_q = db.session.query(Menu.name, func.sum(OrderItem.qty).label('qty'))\
+        .join(OrderItem, OrderItem.menu_id == Menu.id).join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid', Order.created_at >= start_utc, Order.created_at <= end_utc)\
+        .group_by(Menu.name).order_by(func.sum(OrderItem.qty).desc()).first()
+
+    # 4. Kategori
+    cat_data = db.session.query(Category.name, func.sum(OrderItem.qty))\
+        .join(Menu, Menu.category_id == Category.id).join(OrderItem, OrderItem.menu_id == Menu.id).join(Order, OrderItem.order_id == Order.id)\
+        .filter(Order.payment_status == 'paid', Order.created_at >= start_utc, Order.created_at <= end_utc)\
+        .group_by(Category.name).all()
+
+    return jsonify({
+        "sukses": True,
+        "penjualan": {"total": f"Rp {curr_penjualan:,}".replace(",", "."), "tren": round(abs(tren_penjualan), 1), "naik": tren_penjualan >= 0},
+        "order": {"total": curr_order, "tren": round(abs(tren_order), 1), "naik": tren_order >= 0},
+        "menu": {"nama": menu_q[0] if menu_q else "Belum Ada", "qty": int(menu_q[1]) if menu_q else 0},
+        "kategori": {"labels": [i[0] for i in cat_data], "values": [int(i[1]) for i in cat_data]}
+    })
 
 # ── 2. CORE MANAGEMENT PAGES (DINAMIS DB) ────────────────────────────────────
 @owner_bp.route('/manajemen-menu')

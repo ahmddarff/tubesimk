@@ -321,7 +321,11 @@ document.addEventListener('alpine:init', () => {
                             ticks: {
                                 color: '#9CA3AF',
                                 font: { family: 'Inter', size: 11, weight: 'bold' },
-                                callback: v => v === 0 ? '0' : 'Rp ' + (v / 1000).toLocaleString('id-ID') + 'k'
+                                callback: v => {
+                                    if (v === 0) return '0';
+                                    if (v >= 1000000) return 'Rp ' + (v/1000000).toLocaleString('id-ID', {maximumFractionDigits: 1}) + 'jt';
+                                    return 'Rp ' + (v/1000).toLocaleString('id-ID') + 'k';
+                                }
                             },
                             grid: { color: 'rgba(0,0,0,0.05)', borderDash: [5, 5] }
                         },

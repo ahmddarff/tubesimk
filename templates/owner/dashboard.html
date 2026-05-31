@@ -3,224 +3,335 @@
 {% block breadcrumb %}Dashboard{% endblock %}
 
 {% block content %}
+<div x-data="dashboardController()" x-cloak>
 
-<!-- Stat Cards -->
-<div class="grid grid-cols-3 gap-5 mb-5">
+    <!-- Injeksi Data Backend -->
+    <div id="server-data" class="hidden"
+         data-penjualan-total="{{ total_penjualan }}"
+         data-penjualan-tren="{{ tren_penjualan }}"
+         data-penjualan-naik="{{ 'true' if is_penjualan_naik else 'false' }}"
+         data-order-total="{{ total_order }}"
+         data-order-tren="{{ tren_order }}"
+         data-order-naik="{{ 'true' if is_order_naik else 'false' }}"
+         data-menu-nama="{{ menu_terlaris }}"
+         data-menu-qty="{{ menu_terlaris_qty }}">
+    </div>
+    
+    <script id="chart-data-line-labels" type="application/json">{{ line_labels | tojson | safe }}</script>
+    <script id="chart-data-line-values" type="application/json">{{ line_values | tojson | safe }}</script>
+    <script id="chart-data-donut-labels" type="application/json">{{ chart_categories | tojson | safe }}</script>
+    <script id="chart-data-donut-values" type="application/json">{{ chart_category_qtys | tojson | safe }}</script>
 
-    <!-- Total Penjualan -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="flex justify-between items-center mb-3">
-            <span class="text-sm font-semibold text-gray-500">Total Penjualan</span>
-            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
-                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </span>
+    <!-- HEADER & GLOBAL FILTER -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-extrabold text-terralogBlue tracking-tight">Dashboard Overview</h1>
+            <p class="text-gray-500 mt-1 text-sm">Ringkasan performa bisnis dan operasional kafe Anda</p>
         </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-lg flex-shrink-0">
-                <i class="fa-solid fa-chart-line"></i>
+        
+        <div class="relative" x-data="{ openFilter: false }">
+            <button @click="openFilter = !openFilter" @click.outside="openFilter = false" 
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white border-2 border-blue-100 text-terralogBlue text-sm font-bold hover:bg-blue-50 hover:border-terralogBlue transition-all shadow-sm outline-none">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span x-text="globalFilter"></span>
+                <i data-lucide="chevron-down" class="w-4 h-4 ml-1 transition-transform" :class="openFilter ? 'rotate-180' : ''"></i>
+            </button>
+
+            <div x-show="openFilter" x-transition.opacity.duration.200ms class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50" style="display: none;">
+                <button @click="applyGlobalFilter('Hari ini'); openFilter = false" class="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-terralogBlue transition-colors">Hari ini</button>
+                <button @click="applyGlobalFilter('7 Hari Terakhir'); openFilter = false" class="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-terralogBlue transition-colors border-t border-gray-50">7 Hari Terakhir</button>
+                <button @click="applyGlobalFilter('Bulan Ini'); openFilter = false" class="w-full text-left px-4 py-3 text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-terralogBlue transition-colors border-t border-gray-50">Bulan Ini</button>
             </div>
-            <span class="text-2xl font-extrabold text-gray-900 leading-tight">{{ total_penjualan }}</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
-            </span>
-            <span class="text-xs text-gray-400">vs kemarin</span>
         </div>
     </div>
 
-    <!-- Total Order -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="flex justify-between items-center mb-3">
-            <span class="text-sm font-semibold text-gray-500">Total Order</span>
-            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
-                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </span>
-        </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500 text-lg flex-shrink-0">
-                <i class="fa-solid fa-receipt"></i>
+    <!-- Baris 1: Kartu Statistik -->
+    <div class="grid grid-cols-3 gap-5 mb-5">
+        
+        <!-- Total Penjualan -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-semibold text-gray-500">Total Penjualan</span>
+                <!-- Label statis mengikuti Global Filter -->
+                <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg" x-text="globalFilter"></span>
             </div>
-            <span class="text-2xl font-extrabold text-gray-900 leading-tight">{{ total_order }}</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i> 12%
-            </span>
-            <span class="text-xs text-gray-400">vs kemarin</span>
-        </div>
-    </div>
-
-    <!-- Menu Terlaris -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-        <div class="flex justify-between items-center mb-3">
-            <span class="text-sm font-semibold text-gray-500">Menu Terlaris</span>
-            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
-                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </span>
-        </div>
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-11 h-11 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-lg flex-shrink-0">
-                <i class="fa-solid fa-utensils"></i>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-terralogBlue text-lg flex-shrink-0"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                <span class="text-2xl font-extrabold text-gray-900 leading-tight" x-text="penjualanTotal"></span>
             </div>
-            <span class="text-xl font-extrabold text-gray-900 leading-tight">{{ menu_terlaris }}</span>
+            <div class="flex items-center gap-1.5">
+                <span :class="penjualanNaik ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'" class="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span x-show="penjualanNaik"><i data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                    <span x-show="!penjualanNaik"><i data-lucide="arrow-down" class="w-3 h-3"></i></span>
+                    <span x-text="penjualanTren + '%'"></span>
+                </span>
+                <span class="text-xs text-gray-400">dari sebelumnya</span>
+            </div>
         </div>
-        <div class="flex items-center gap-1.5">
-            <span class="bg-green-50 text-green-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <i class="fa-solid fa-arrow-up text-[10px]"></i>
-            </span>
-            <span class="text-xs text-gray-400">Terjual <strong class="text-gray-700">{{ menu_terlaris_qty }} cup</strong></span>
+
+        <!-- Total Order -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-semibold text-gray-500">Total Order</span>
+                <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg" x-text="globalFilter"></span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center text-terralogOrange text-lg flex-shrink-0"><i data-lucide="receipt" class="w-6 h-6"></i></div>
+                <span class="text-2xl font-extrabold text-gray-900 leading-tight" x-text="orderTotal"></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span :class="orderNaik ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'" class="text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span x-show="orderNaik"><i data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                    <span x-show="!orderNaik"><i data-lucide="arrow-down" class="w-3 h-3"></i></span>
+                    <span x-text="orderTren + '%'"></span>
+                </span>
+                <span class="text-xs text-gray-400">dari sebelumnya</span>
+            </div>
+        </div>
+
+        <!-- Menu Terlaris -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-semibold text-gray-500">Menu Terlaris</span>
+                <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg" x-text="globalFilter"></span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 text-lg flex-shrink-0"><i data-lucide="utensils" class="w-6 h-6"></i></div>
+                <span class="text-xl font-extrabold text-gray-900 leading-tight" x-text="menuNama"></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="bg-emerald-50 text-emerald-600 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><i data-lucide="arrow-up" class="w-3 h-3"></i></span>
+                <span class="text-xs text-gray-400">Terjual <strong class="text-gray-700" x-text="menuQty + ' porsi'"></strong></span>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Charts Row -->
-<div class="grid gap-5 mb-5 w-full max-w-full min-w-0" style="grid-template-columns: 1fr 280px;">
+    <!-- Baris 2: Charts -->
+    <div class="grid gap-5 mb-6 w-full max-w-full min-w-0" style="grid-template-columns: 1fr 320px;">
+        
+        <div class="bg-white rounded-2xl p-6 shadow-sm min-w-0 w-full flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-bold text-terralogBlue">Analitik Penjualan Mingguan</h3>
+                <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg">7 Hari Terakhir</span>
+            </div>
+            <div class="relative w-full flex-1" style="min-height: 340px;">
+                <canvas x-ref="salesChart"></canvas>
+            </div>
+        </div>
 
-    <!-- Line Chart -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm min-w-0 w-full overflow-hidden">
-        <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Analitik Penjualan Mingguan</h3>
-        <div class="relative w-full block" style="height: 200px; max-height: 200px;">
-            <canvas id="salesChart"></canvas>
+        <div class="bg-white rounded-2xl p-6 shadow-sm flex flex-col min-w-0 w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-bold text-terralogBlue">Kategori Terlaris</h3>
+                <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg" x-text="globalFilter"></span>
+            </div>
+            
+            <div class="relative w-full block mx-auto flex-1 mt-2" style="min-height: 240px;">
+                <canvas x-ref="categoryChart"></canvas>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 mt-6 overflow-hidden">
+                <template x-if="chartData">
+                    <template x-for="(cat, index) in chartData.donutLabels" :key="index">
+                        <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full inline-block flex-shrink-0" :style="`background-color: ${['#0522A4', '#E99817', '#10B981', '#F7E190'][index % 4]}`"></span> 
+                            <span x-text="cat"></span>
+                        </span>
+                    </template>
+                </template>
+            </div>
         </div>
     </div>
 
-    <!-- Donut Chart -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm flex flex-col min-w-0 w-full overflow-hidden">
-        <h3 class="text-sm font-bold text-[#1B2FAA] mb-4">Kategori Terlaris</h3>
-        <div class="relative w-full block mx-auto flex-shrink-0" style="height: 150px; max-height: 150px;">
-            <canvas id="categoryChart"></canvas>
-        </div>
-        <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3 overflow-hidden">
-            {% set colors = ['#6C63FF', '#FF6B8A', '#4DD9C0', '#FFBE50'] %}
-            {% for cat in chart_categories %}
-            <span class="flex items-center gap-1.5 text-xs text-gray-500 font-medium whitespace-nowrap">
-                <span class="w-2 h-2 rounded-full inline-block flex-shrink-0" style="background-color: {{ colors[loop.index0 % colors|length] }};"></span> {{ cat }}
-            </span>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-
-<!-- Bottom Row -->
-<div class="grid gap-5 items-start" style="grid-template-columns: 1fr 280px;">
-
-    <!-- Staff Table -->
-    <div class="bg-white rounded-2xl p-5 shadow-sm">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-sm font-bold text-[#1B2FAA]">Staff Overview</h3>
-            <span class="text-xs text-gray-400 flex items-center gap-1 cursor-pointer hover:bg-gray-50 px-2 py-0.5 rounded-full">
-                Hari ini <i class="fa-solid fa-chevron-down text-[10px]"></i>
-            </span>
-        </div>
-        <table class="w-full text-sm border-collapse">
-            <thead>
-                <tr class="bg-gray-50">
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Nama Kasir</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Shift</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Status</th>
-                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 border-b border-gray-100">Total Transaksi</th>
-                </tr>
-            </thead>
-            <tbody id="staffTableBody">
-                {% for s in staff %}
-                <tr class="hover:bg-blue-50/30 transition-colors {% if not loop.last %}border-b border-gray-100{% endif %}">
-                    <td class="px-3 py-3 text-gray-800">{{ s.nama }}</td>
-                    <td class="px-3 py-3 text-gray-600">{{ s.shift }}</td>
-                    <td class="px-3 py-3">
-                        {% if s.status == 'online' %}
-                            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-green-500">
-                                <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Online
-                            </span>
-                        {% else %}
-                            <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400">
-                                <span class="w-2 h-2 rounded-full bg-gray-300 inline-block"></span> Offline
-                            </span>
-                        {% endif %}
-                    </td>
-                    <td class="px-3 py-3 text-gray-600">{{ s.total_transaksi }} Pesanan</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="flex flex-col gap-3">
-        <a href="/owner/manajemen-menu"
-                class="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
-            <i class="fa-solid fa-circle-plus text-base"></i>
-            Tambah Menu Baru
-        </a>
-        <a href="/owner/manajemen-staff"
-                class="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl border-2 border-[#1B2FAA] text-[#1B2FAA] text-sm font-bold hover:bg-[#1B2FAA] hover:text-white hover:-translate-y-0.5 hover:shadow-lg transition-all">
-            <i class="fa-solid fa-circle-plus text-base"></i>
-            Tambah Staff Baru
-        </a>
-    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Line Chart
-new Chart(document.getElementById('salesChart').getContext('2d'), {
-    type: 'line',
-    data: {
-        labels: {{ line_labels|tojson }},
-        datasets: [{
-            data: {{ line_values|tojson }},
-            borderColor: '#F5A623',
-            backgroundColor: 'rgba(245,166,35,0.08)',
-            borderWidth: 2.5,
-            pointBackgroundColor: '#F5A623',
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            tension: 0.3,
-            fill: true
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-        y: {
-            beginAtZero: true,
-            ticks: {
-                color: '#9CA3AF',
-                font: { family: 'Plus Jakarta Sans', size: 11 },
-                callback: v => v === 0 ? '0' : 'Rp ' + (v/1000).toLocaleString('id-ID') + 'k'
-            },
-            grid: { color: 'rgba(0,0,0,0.05)' }
-        },
-            x: {
-                ticks: { color: '#9CA3AF', font: { family: 'Plus Jakarta Sans', size: 11 } },
-                grid: { display: false }
-            }
-        }
-    }
-});
+document.addEventListener('alpine:init', () => {
+    Alpine.data('dashboardController', () => ({
+        globalFilter: 'Hari ini',
 
-// Donut Chart
-new Chart(document.getElementById('categoryChart').getContext('2d'), {
-    type: 'doughnut',
-    data: {
-        labels: {{ chart_categories|tojson }},
-        datasets: [{
-            data: {{ chart_category_qtys|tojson }},
-            backgroundColor: ['#6C63FF', '#FF6B8A', '#4DD9C0', '#FFBE50'],
-            borderWidth: 0,
-            hoverOffset: 6
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: false,
-        cutout: '55%',
-        plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} item` } }
+        penjualanTotal: 'Rp 0',
+        penjualanTren: 0,
+        penjualanNaik: true,
+        orderTotal: 0,
+        orderTren: 0,
+        orderNaik: true,
+        menuNama: '-',
+        menuQty: 0,
+        
+        chartData: null,
+
+        init() {
+            const serverData = document.getElementById('server-data').dataset;
+            this.penjualanTotal = serverData.penjualanTotal;
+            this.penjualanTren = parseFloat(serverData.penjualanTren);
+            this.penjualanNaik = serverData.penjualanNaik === 'true';
+            
+            this.orderTotal = serverData.orderTotal;
+            this.orderTren = parseFloat(serverData.orderTren);
+            this.orderNaik = serverData.orderNaik === 'true';
+            
+            this.menuNama = serverData.menuNama;
+            this.menuQty = parseInt(serverData.menuQty);
+
+            this.chartData = {
+                lineLabels: JSON.parse(document.getElementById('chart-data-line-labels').textContent || '[]'),
+                lineValues: JSON.parse(document.getElementById('chart-data-line-values').textContent || '[]'),
+                donutLabels: JSON.parse(document.getElementById('chart-data-donut-labels').textContent || '[]'),
+                donutValues: JSON.parse(document.getElementById('chart-data-donut-values').textContent || '[]')
+            };
+
+            this.$nextTick(() => {
+                this.renderSalesChart();
+                this.renderCategoryChart();
+                lucide.createIcons(); 
+            });
+        },
+
+        // Logika Global Filter: Tarik data berbarengan secara paralel
+        async applyGlobalFilter(rentangWaktu) {
+            this.globalFilter = rentangWaktu;
+            
+            try {
+                const res = await fetch('/owner/api/dashboard/filter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rentang: rentangWaktu })
+                });
+                const data = await res.json();
+                
+                if (data.sukses) {
+                    // Update semua data sekaligus
+                    this.penjualanTotal = data.penjualan.total;
+                    this.penjualanTren = data.penjualan.tren;
+                    this.penjualanNaik = data.penjualan.naik;
+                    
+                    this.orderTotal = data.order.total;
+                    this.orderTren = data.order.tren;
+                    this.orderNaik = data.order.naik;
+                    
+                    this.menuNama = data.menu.nama;
+                    this.menuQty = data.menu.qty;
+                    
+                    this.chartData.donutLabels = data.kategori.labels;
+                    this.chartData.donutValues = data.kategori.values;
+                    
+                    // Render ulang chart
+                    const chartInstance = Chart.getChart(this.$refs.categoryChart);
+                    if (chartInstance) chartInstance.destroy();
+                    this.renderCategoryChart();
+                }
+            } catch (err) {
+                console.error("Gagal update data:", err);
+            }
+        },
+
+        async fetchData(tipe, rentangWaktu) {
+            try {
+                const res = await fetch('/owner/api/dashboard/filter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tipe: tipe, rentang: rentangWaktu })
+                });
+                const data = await res.json();
+                
+                if (data.sukses) {
+                    if (tipe === 'penjualan') {
+                        this.penjualanTotal = data.total;
+                        this.penjualanTren = data.tren;
+                        this.penjualanNaik = data.naik;
+                    } 
+                    else if (tipe === 'order') {
+                        this.orderTotal = data.total;
+                        this.orderTren = data.tren;
+                        this.orderNaik = data.naik;
+                    }
+                    else if (tipe === 'menu') {
+                        this.menuNama = data.nama;
+                        this.menuQty = data.qty;
+                    }
+                    else if (tipe === 'kategori') {
+                        this.chartData.donutLabels = data.labels;
+                        this.chartData.donutValues = data.values;
+                        const chartInstance = Chart.getChart(this.$refs.categoryChart);
+                        if (chartInstance) chartInstance.destroy();
+                        this.renderCategoryChart();
+                    }
+                }
+            } catch (err) {
+                console.error("Gagal mengambil data filter:", tipe, err);
+            }
+        },
+
+        renderSalesChart() {
+            const ctx = this.$refs.salesChart.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: this.chartData.lineLabels,
+                    datasets: [{
+                        data: this.chartData.lineValues,
+                        borderColor: '#0522A4',
+                        backgroundColor: 'rgba(5, 34, 164, 0.08)',
+                        borderWidth: 2.5,
+                        pointBackgroundColor: '#0522A4',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#9CA3AF',
+                                font: { family: 'Inter', size: 11 }, 
+                                callback: v => {
+                                    if (v === 0) return '0';
+                                    if (v >= 1000000) return 'Rp ' + (v/1000000).toLocaleString('id-ID', {maximumFractionDigits: 1}) + 'jt';
+                                    return 'Rp ' + (v/1000).toLocaleString('id-ID') + 'k';
+                                }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#9CA3AF', font: { family: 'Inter', size: 11 } }, 
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        },
+
+        renderCategoryChart() {
+            const ctx = this.$refs.categoryChart.getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: this.chartData.donutLabels,
+                    datasets: [{
+                        data: this.chartData.donutValues,
+                        backgroundColor: ['#0522A4', '#E99817', '#10B981', '#F7E190'], 
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    cutout: '55%',
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} item` } }
+                    }
+                }
+            });
         }
-    }
+    }));
 });
 </script>
 {% endblock %}
