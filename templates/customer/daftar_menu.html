@@ -163,29 +163,35 @@
                             {% endif %}
                             
                             {% if product.is_available %}
-                            <template x-if="!isItemAdded('{{ product.name }}')">
-                                <button @click.stop="addToCart('{{ product.id }}')"
-                                        class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
-                                    +
-                                </button>
-                            </template>
-                            <template x-if="isItemAdded('{{ product.name }}')">
-                                <div class="absolute top-4 right-4 flex gap-2 items-center bg-terralogGold rounded-full px-2 py-2 shadow-lg" @click.stop>
-                                    <button @click.stop="decrementQty('{{ product.name }}')" 
-                                            class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
-                                        −
-                                    </button>
-                                    <span class="w-6 text-center font-bold text-white text-sm" x-text="getItemQty('{{ product.name }}')"></span>
-                                    <button @click.stop="incrementQty('{{ product.name }}')" 
-                                            class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
+                                {% if session.get('user_id') %} <template x-if="!isItemAdded('{{ product.name }}')">
+                                        <button @click.stop="addToCart('{{ product.id }}')"
+                                                class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
+                                            +
+                                        </button>
+                                    </template>
+                                    <template x-if="isItemAdded('{{ product.name }}')">
+                                        <div class="absolute top-4 right-4 flex gap-2 items-center bg-terralogGold rounded-full px-2 py-2 shadow-lg" @click.stop>
+                                            <button @click.stop="decrementQty('{{ product.name }}')" 
+                                                    class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
+                                                −
+                                            </button>
+                                            <span class="w-6 text-center font-bold text-white text-sm" x-text="getItemQty('{{ product.name }}')"></span>
+                                            <button @click.stop="incrementQty('{{ product.name }}')" 
+                                                    class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white hover:bg-yellow-600 transition">
+                                                +
+                                            </button>
+                                        </div>
+                                    </template>
+                                {% else %}
+                                    <button @click.stop="showLoginToast()"
+                                            class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
                                         +
                                     </button>
-                                </div>
-                            </template>
+                                {% endif %}
                             {% else %}
-                            <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                                <span class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold text-lg shadow-lg">HABIS</span>
-                            </div>
+                                <div class="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
+                                    <span class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold text-lg shadow-lg">HABIS</span>
+                                </div>
                             {% endif %}
                         </div>
 
@@ -262,5 +268,13 @@
             lucide.createIcons();
         }
     });
+
+    function showLoginToast() {
+        if (typeof showToast === 'function') {
+            showToast('Silakan login terlebih dahulu untuk memesan menu.', 'error');
+        } else {
+            alert('Silakan login terlebih dahulu untuk memesan menu.');
+        }
+    }
 </script>
 {% endblock %}
