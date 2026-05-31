@@ -163,7 +163,8 @@
                             {% endif %}
                             
                             {% if product.is_available %}
-                                {% if session.get('user_id') %} <template x-if="!isItemAdded('{{ product.name }}')">
+                                {% if current_user.is_authenticated %}
+                                    <template x-if="!isItemAdded('{{ product.name }}')">
                                         <button @click.stop="addToCart('{{ product.id }}')"
                                                 class="absolute top-4 right-4 w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/90 text-terralogBlue hover:bg-white">
                                             +

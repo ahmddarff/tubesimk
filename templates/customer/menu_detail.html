@@ -74,7 +74,7 @@
 
                 <!-- Add to Cart Button -->
                 {% if menu.is_available %}
-                    {% if current_user.is_authenticated or session.get('user_id') %}
+                    {% if current_user.is_authenticated %}
                         <button @click="addToCart()" class="flex-1 bg-terralogGold hover:bg-yellow-500 text-white font-bold py-2 rounded-lg transition text-sm" type="button">
                             Keranjang
                         </button>
