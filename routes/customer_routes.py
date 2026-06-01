@@ -7,7 +7,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func
-from utils import format_tanggal_lokal, format_waktu_lokal
 from models import User, Menu, Category, Order, OrderItem, Table, Reservation, ReservationTable, Review, OperationalHour
 from extensions import db
 
