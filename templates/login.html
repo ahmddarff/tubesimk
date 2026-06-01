@@ -7,6 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
@@ -20,22 +23,16 @@
         .toast.show { animation: toastIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
         .toast.hide { animation: toastOut 0.3s ease forwards; }
     </style>
-    
     <script>
         tailwind.config = {
-          theme: {
-            extend: {
-              fontFamily: { sans: ['Inter', 'sans-serif'], logo: ['Poppins', 'sans-serif'], },
-              colors: { terralogBlue: '#0522A4', terralogOrange: '#E99817', terralogPeach: '#F7E190', }
-            }
-          }
+          theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], logo: ['Poppins', 'sans-serif'] }, colors: { terralogBlue: '#0522A4', terralogOrange: '#E99817', terralogPeach: '#F7E190' } } }
         }
     </script>
 </head>
-<body class="bg-gray-50 font-sans" x-data="{ showPassword: false }">
+<body class="bg-gray-50 font-sans" x-data="loginController()">
 
     <div id="toast" class="toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[3000] opacity-0 -translate-y-20 pointer-events-none transition-all">
-        <div id="toast-icon-container"></div>
+        <i id="toast-icon" class="fa-solid text-base"></i>
         <span id="toast-message">Berhasil!</span>
     </div>
 
@@ -56,9 +53,7 @@
                     <p class="text-white/80 text-sm tracking-widest font-medium">COFFEE & EATERY</p>
                 </div>
                 <img src="/static/images/gambar.png" alt="Coffee Shop Illustration" class="w-full rounded-2xl shadow-2xl mb-8 drop-shadow-lg">
-                <p class="text-white/80 text-base leading-relaxed">
-                    Nikmati pengalaman kopi premium dengan layanan terbaik kami. Tempat sempurna untuk bertemu dan berbagi cerita.
-                </p>
+                <p class="text-white/80 text-base leading-relaxed">Nikmati pengalaman kopi premium dengan layanan terbaik kami. Tempat sempurna untuk bertemu dan berbagi cerita.</p>
             </div>
         </div>
 
@@ -72,14 +67,14 @@
                 <h1 class="text-3xl font-bold text-terralogBlue mb-2">Masuk</h1>
                 <p class="text-gray-600 mb-8">Masuk dengan akun yang telah terdaftar</p>
 
-                <form action="/login" method="POST" class="space-y-5">
+                <form action="/login" method="POST" class="space-y-5" x-ref="form" @submit.prevent="submitForm" novalidate>
                     <div>
                         <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
                         <div class="relative">
                             <i data-lucide="user" class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"></i>
-                            <input type="text" id="username" name="username" 
+                            <input type="text" id="username" name="username" x-model="username"
                                 class="w-full pl-10 pr-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg focus:bg-white focus:border-terralogBlue focus:outline-none focus:ring-2 focus:ring-terralogBlue/20 transition"
-                                placeholder="Masukkan username Anda" required>
+                                placeholder="Masukkan username Anda">
                         </div>
                     </div>
 
@@ -87,10 +82,10 @@
                         <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
                         <div class="relative">
                             <i data-lucide="lock" class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"></i>
-                            <input :type="showPassword ? 'text' : 'password'" id="password" name="password" 
+                            <input :type="showPassword ? 'text' : 'password'" id="password" name="password" x-model="password"
                                 class="w-full pl-10 pr-12 py-2.5 bg-gray-100 border border-gray-300 rounded-lg focus:bg-white focus:border-terralogBlue focus:outline-none focus:ring-2 focus:ring-terralogBlue/20 transition"
-                                placeholder="Masukkan password Anda" required>
-                            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-3 text-gray-500 hover:text-terralogBlue transition">
+                                placeholder="Masukkan password Anda">
+                            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-3 text-gray-500 hover:text-terralogBlue transition outline-none">
                                 <i data-lucide="eye" class="w-5 h-5" x-show="!showPassword"></i>
                                 <i data-lucide="eye-off" class="w-5 h-5" x-show="showPassword"></i>
                             </button>
@@ -98,9 +93,7 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <a href="{{ url_for('auth.forgot_password') }}" class="text-sm font-medium text-terralogBlue hover:text-blue-700 transition">
-                            Lupa Password?
-                        </a>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="text-sm font-medium text-terralogBlue hover:text-blue-700 transition">Lupa Password?</a>
                     </div>
 
                     <button type="submit" class="w-full py-2.5 px-4 bg-gradient-to-r from-terralogBlue to-blue-800 text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]">
@@ -120,31 +113,43 @@
     </div>
 
     <script>
+        // ✅ Script Toast disamakan 100% dengan layout.html
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            const msg = document.getElementById('toast-message');
-            const iconContainer = document.getElementById('toast-icon-container');
+            const msg   = document.getElementById('toast-message');
+            const icon  = document.getElementById('toast-icon');
 
             msg.textContent = message;
             toast.className = 'toast fixed top-5 left-1/2 -translate-x-1/2 bg-white rounded-xl px-5 py-3 flex items-center gap-3 text-sm font-semibold shadow-xl border-l-4 z-[3000] opacity-0 -translate-y-20 pointer-events-none transition-all';
             
             if (type === 'success') {
-                toast.classList.add('border-green-500', 'text-green-800');
-                iconContainer.innerHTML = '<i data-lucide="check-circle-2" class="w-5 h-5 text-green-500"></i>';
+                toast.classList.add('border-green-500');
+                icon.className = 'fa-solid fa-circle-check text-green-500 text-base';
             } else if (type === 'error') {
-                toast.classList.add('border-red-500', 'text-red-800');
-                iconContainer.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>';
+                toast.classList.add('border-red-500');
+                icon.className = 'fa-solid fa-circle-xmark text-red-500 text-base';
             }
 
-            lucide.createIcons(); // Render ulang ikon
             toast.classList.remove('hide');
             toast.classList.add('show');
-            
-            setTimeout(() => { 
-                toast.classList.remove('show'); 
-                toast.classList.add('hide'); 
-            }, 3500);
+            setTimeout(() => { toast.classList.remove('show'); toast.classList.add('hide'); }, 3500);
         }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('loginController', () => ({
+                showPassword: false,
+                username: '',
+                password: '',
+                
+                submitForm() {
+                    if (!this.username.trim() || !this.password.trim()) {
+                        showToast('Harap isi Username dan Password Anda!', 'error');
+                        return;
+                    }
+                    this.$refs.form.submit();
+                }
+            }));
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
