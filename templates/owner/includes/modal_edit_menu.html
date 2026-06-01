@@ -44,7 +44,7 @@
                     <label class="block mb-2 text-xs font-bold text-gray-500 uppercase">Kategori</label>
                     <select x-model="editMenuForm.kategori" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm font-bold appearance-none cursor-pointer">
                         <template x-for="kat in categories" :key="kat.id">
-                            <option :value="kat.name" x-text="kat.name"></option>
+                            <option :value="kat.nama" x-text="kat.nama"></option>
                         </template>
                     </select>
                 </div>

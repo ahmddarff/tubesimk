@@ -1,5 +1,5 @@
 import os
-from utils import role_required
+from utils import *
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -211,14 +211,6 @@ def get_active_cart(user_id, load_relations=False):
         Order.payment_method.is_(None) # Hanya ambil jika belum ada metode pembayaran
     ).first()
 
-# Fungsi untuk menghasilkan nomor pesanan unik dengan format ORD-YYYYMMDD-XXX
-def generate_order_number():
-    """Menghasilkan nomor pesanan dengan format ORD-YYYYMMDD-XXX."""
-    from datetime import datetime
-    date_str = datetime.now().strftime('%Y%m%d')
-    today_orders_count = Order.query.filter(Order.order_number.like(f"ORD-{date_str}-%")).count()
-    return f"ORD-{date_str}-{(today_orders_count + 1):03d}"
-
 # Fungsi untuk menghitung ulang total harga keranjang setelah update item
 def recalculate_total(order):
     """Menghitung ulang dan memperbarui total harga keranjang."""
@@ -337,25 +329,7 @@ def submit_buat_reservasi():
         if reservation_time < op_hour.open_time or reservation_time > op_hour.close_time:
             return jsonify({"success": False, "message": f"Jam reservasi di luar jam operasional ({op_hour.open_time.strftime('%H:%M')} - {op_hour.close_time.strftime('%H:%M')})."}), 400
 
-        # Buat kode reservation_number dengan format RSV-YYYYMMDD-XXX
-        today_str = datetime.today().strftime('%Y%m%d')
-        prefix = f"RSV-{today_str}-"
-        
-        # Mencari reservasi terakhir yang dibuat pada hari ini
-        last_reservation = Reservation.query.filter(
-            Reservation.reservation_number.like(f"{prefix}%")
-        ).order_by(Reservation.id.desc()).first()
-        
-        if last_reservation:
-            # Mengambil 3 digit terakhir dan menambahkannya dengan 1
-            last_seq = int(last_reservation.reservation_number.split('-')[-1])
-            new_seq = last_seq + 1
-        else:
-            # Jika belum ada reservasi hari ini, mulai dari 1
-            new_seq = 1
-            
-        # Memformat nomor urut agar selalu 3 digit (contoh: 001, 002)
-        reservation_number = f"{prefix}{new_seq:03d}"
+        reservation_number = generate_reservation_number()
 
         # 1. Simpan data induk ke tabel 'reservations'
         new_reservation = Reservation(

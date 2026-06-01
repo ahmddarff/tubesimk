@@ -50,7 +50,7 @@
             <select x-model="selectedCategory" @change="currentPage = 1" class="w-full pl-10 pr-10 py-2.5 border-2 border-blue-100 rounded-xl text-sm font-bold text-terralogBlue focus:outline-none focus:border-terralogBlue bg-white hover:bg-blue-50 shadow-sm transition-colors cursor-pointer appearance-none">
                 <option value="Semua">Semua Kategori</option>
                 <template x-for="kat in categories" :key="kat.id">
-                    <option :value="kat.name" x-text="kat.name"></option>
+                    <option :value="kat.nama" x-text="kat.nama"></option>
                 </template>
             </select>
             <i data-lucide="chevron-down" class="absolute right-3.5 top-3.5 w-4 h-4 text-terralogBlue pointer-events-none"></i>
@@ -362,7 +362,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         openModalTambah() {
-            this.formMenu = { nama: '', kategori: this.categories.length > 0 ? this.categories[0].name : '', harga: '', deskripsi: '', hasStock: false, stok: '', imgPreview: null, file: null };
+            this.formMenu = { nama: '', kategori: this.categories.length > 0 ? this.categories[0].nama : '', harga: '', deskripsi: '', hasStock: false, stok: '', imgPreview: null, file: null };
             if (this.$refs.fotoTambah) this.$refs.fotoTambah.value = '';
             this.showModalTambah = true;
         },
