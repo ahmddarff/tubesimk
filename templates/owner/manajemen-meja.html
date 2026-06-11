@@ -141,6 +141,8 @@ document.addEventListener('alpine:init', () => {
         async simpanMeja() {
             if (!this.formTambah.nomor || !this.formTambah.kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
 
+            if (parseInt(this.formTambah.kapasitas) <= 0) return showToast('Kapasitas meja minimal 1 orang!', 'error');
+
             const fd = new FormData();
             fd.append('nomor', this.formTambah.nomor.trim().toUpperCase());
             fd.append('kapasitas', this.formTambah.kapasitas);
@@ -158,6 +160,8 @@ document.addEventListener('alpine:init', () => {
 
         async updateMeja() {
             if (!this.formEdit.nomor || !this.formEdit.kapasitas) return showToast('Nomor dan kapasitas wajib diisi!', 'error');
+
+            if (parseInt(this.formEdit.kapasitas) <= 0) return showToast('Kapasitas meja minimal 1 orang!', 'error');
 
             const fd = new FormData();
             fd.append('nomor', this.formEdit.nomor.trim().toUpperCase());

@@ -169,6 +169,16 @@ document.addEventListener('alpine:init', () => {
             // Membentuk objek FormData secara otomatis menangkap data form dan file gambar
             const formData = new FormData(event.target);
 
+            const nama = formData.get('name').trim();
+            const username = formData.get('username').trim();
+
+            if (!nama || !username) {
+                return showToast('Nama Lengkap dan Username wajib diisi!', 'error');
+            }
+            if (/\s/.test(username)) {
+                return showToast('Username tidak boleh mengandung spasi!', 'error');
+            }
+
             fetch("{{ url_for('kasir.pengaturan') }}", {
                 method: 'POST',
                 body: formData // Kirim data multipart/form-data langsung ke server

@@ -92,6 +92,7 @@
                                     
                                     <input type="number" 
                                         x-model.lazy="menu.stok" 
+                                        min="0"
                                         @change="updateStokAPI(menu)" 
                                         class="w-10 h-6 text-center text-xs font-black text-terralogBlue bg-transparent outline-none hide-arrows">
                                         
@@ -224,8 +225,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         async updateStokAPI(menu) {
-            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || menu.stok < 0) {
+            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || parseInt(menu.stok) < 0) {
                 menu.stok = 0;
+                return showToast('Stok tidak valid! Minimal stok adalah 0.', 'error');
             }
 
             try {

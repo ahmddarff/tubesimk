@@ -236,8 +236,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         async simpanStaff() {
+            // 1. Validasi tidak boleh kosong
             if (!this.formTambah.nama || !this.formTambah.username || !this.formTambah.password) {
                 return showToast('Semua kolom wajib diisi!', 'error');
+            }
+            
+            // 2. Validasi Username (Tidak boleh ada spasi)
+            if (/\s/.test(this.formTambah.username)) {
+                return showToast('Username tidak boleh mengandung spasi!', 'error');
+            }
+
+            // 3. Validasi panjang Password
+            if (this.formTambah.password.length < 6) {
+                return showToast('Password harus terdiri dari minimal 6 karakter!', 'error');
             }
 
             try {
@@ -275,9 +286,16 @@ document.addEventListener('alpine:init', () => {
         },
 
         async updateStaff() {
-            if (!this.formEdit.nama) {
+            // 1. Validasi nama tidak boleh kosong
+            if (!this.formEdit.nama.trim()) {
                 return showToast('Nama lengkap tidak boleh kosong!', 'error');
             }
+
+            // 2. Validasi password baru (jika diisi, harus minimal 6 karakter)
+            if (this.formEdit.password && this.formEdit.password.trim() !== "" && this.formEdit.password.length < 6) {
+                return showToast('Password baru harus minimal 6 karakter!', 'error');
+            }
+            
             try {
                 const res = await fetch(`/owner/api/edit-staff/${this.formEdit.id}`, {
                     method: 'POST',

@@ -37,7 +37,7 @@
                     <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Jumlah Tamu</label>
                     <div class="relative">
                         <i data-lucide="users" class="absolute left-4 top-3.5 w-4 h-4 text-gray-400"></i>
-                        <input type="number" x-model="newRes.tamu" placeholder="0" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                        <input type="number" x-model="newRes.tamu" min="1" placeholder="0" class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                     </div>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                 </div>
                 <div class="flex-1">
                     <label class="text-[10px] font-bold text-gray-400 uppercase mb-1.5 block tracking-wide">Durasi (Menit)</label>
-                    <input type="number" x-model="newRes.durasi" placeholder="90" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
+                    <input type="number" x-model="newRes.durasi" min="0" placeholder="90" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:bg-white focus:border-terralogBlue transition-all">
                 </div>
             </div>
 

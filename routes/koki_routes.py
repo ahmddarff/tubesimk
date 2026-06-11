@@ -274,7 +274,14 @@ def update_stok(menu_id):
         
     try:
         if stok_baru is not None and str(stok_baru).strip() != "":
-            menu.stock = int(stok_baru)
+            stok_val = int(stok_baru)
+            
+            if stok_val < 0:
+                return jsonify({"success": False, "message": "Stok tidak boleh bernilai negatif!"})
+                
+            menu.stock = stok_val
+            
+            # Auto-toggle status ketersediaan
             if menu.stock == 0:
                 menu.is_available = False
             elif menu.stock > 0:

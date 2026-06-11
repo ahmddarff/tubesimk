@@ -3,7 +3,7 @@ from utils import *
 from datetime import date, datetime, timedelta, timezone
 from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-from models import Category, Menu, OperationalHour, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable
+from models import Category, Menu, OperationalHour, Reservation, Order, OrderItem, Table, CafeSetting, ReservationTable, User
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -15,7 +15,7 @@ kasir_bp = Blueprint('kasir', __name__)
 # ==========================================
 @kasir_bp.context_processor
 def inject_cafe_setting():
-    # Ambil data pengaturan kafe baris pertama (biasanya hanya ada 1 baris pengaturan)
+    # Ambil data pengaturan kafe baris pertama
     cafe = CafeSetting.query.first()
     return dict(cafe_setting=cafe)
 
@@ -461,11 +461,27 @@ def riwayat_transaksi():
 @role_required('kasir')
 def pengaturan():
     if request.method == 'POST':
-        # Menggunakan request.form karena dikirim melalui FormData dari Fetch API
-        current_user.name = request.form.get('name')
-        current_user.username = request.form.get('username')
-        current_user.email = request.form.get('email')
-        current_user.phone = request.form.get('phone')
+        nama_baru = request.form.get('name', '').strip()
+        username_baru = request.form.get('username', '').strip()
+        email_baru = request.form.get('email', '').strip()
+        phone_baru = request.form.get('phone', '').strip()
+
+        # ✅ VALIDASI BACKEND BARU
+        if not nama_baru or not username_baru:
+            return jsonify({"success": False, "message": "Nama dan Username wajib diisi!"})
+            
+        if " " in username_baru:
+            return jsonify({"success": False, "message": "Username tidak boleh mengandung spasi!"})
+
+        # Cek apakah username sudah dipakai orang lain
+        if username_baru != current_user.username and User.query.filter_by(username=username_baru).first():
+            return jsonify({"success": False, "message": "Username tersebut sudah digunakan orang lain!"})
+
+        # Terapkan perubahan
+        current_user.name = nama_baru
+        current_user.username = username_baru
+        current_user.email = email_baru
+        current_user.phone = phone_baru
 
         # Konsisten menggunakan 'photo'
         if 'photo' in request.files:
@@ -495,12 +511,10 @@ def pengaturan():
 
         try:
             db.session.commit()
-            # KODE BARU: Mengembalikan JSON sukses tanpa flash & redirect
             return jsonify({"success": True, "message": "Profil berhasil diperbarui!"})
         except Exception as e:
             db.session.rollback()
-            # KODE BARU: Mengembalikan JSON gagal
-            return jsonify({"success": False, "message": "Gagal memperbarui profil. Username atau email mungkin sudah digunakan."})
+            return jsonify({"success": False, "message": "Gagal memperbarui profil. Email mungkin sudah digunakan."})
 
     return render_template('kasir/pengaturan.html', segment='pengaturan', role='kasir', user=current_user)
 
@@ -950,7 +964,14 @@ def add_reservation():
         res_date = datetime.strptime(data.get('tanggal'), '%Y-%m-%d').date()
         res_time = datetime.strptime(data.get('jam_mulai'), '%H:%M').time()
         duration = int(data.get('durasi', 90))
+        tamu_qty = int(data.get('tamu', 1))
         table_ids = data.get('table_ids', [])
+
+        if duration <= 0 or tamu_qty <= 0:
+            return jsonify({"success": False, "message": "Durasi dan jumlah tamu harus lebih dari 0!"})
+            
+        new_start = datetime.combine(res_date, res_time)
+        new_end = new_start + timedelta(minutes=duration)
         
         new_start = datetime.combine(res_date, res_time)
         new_end = new_start + timedelta(minutes=duration)
@@ -1027,7 +1048,7 @@ def add_reservation():
             reservation_number=generate_reservation_number(),
             customer_name=data.get('nama'),
             phone=data.get('telepon'),
-            guest_qty=int(data.get('tamu', 1)),
+            guest_qty=tamu_qty,
             duration=duration,
             reservation_date=res_date,
             reservation_time=res_time,
@@ -1070,16 +1091,18 @@ def update_reservation():
         res_date = datetime.strptime(data.get('tanggal'), '%Y-%m-%d').date()
         res_time = datetime.strptime(data.get('jam_mulai'), '%H:%M').time()
         duration = int(data.get('durasi', 90))
+        tamu_qty = int(data.get('tamu', 1))
         table_ids = data.get('table_ids', [])
+
+        if duration <= 0 or tamu_qty <= 0:
+            return jsonify({"success": False, "message": "Durasi dan jumlah tamu harus lebih dari 0!"})
         
-        # ✅ PERBAIKAN: Pastikan variabelnya bernama new_status
         new_status = data.get('status', 'pending')
         
         if new_status != 'cancelled':
             new_start = datetime.combine(res_date, res_time)
             new_end = new_start + timedelta(minutes=duration)
 
-            # ✅ TEMPELKAN BARIKADE 0 DI SINI JUGA
             hari_indo = {0: 'Senin', 1: 'Selasa', 2: 'Rabu', 3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'}
             nama_hari = hari_indo[res_date.weekday()]
             jadwal = OperationalHour.query.filter_by(day_of_week=nama_hari).first()
@@ -1117,7 +1140,7 @@ def update_reservation():
         
         reservation.customer_name = data.get('nama')
         reservation.phone = data.get('telepon')
-        reservation.guest_qty = int(data.get('tamu', 1))
+        reservation.guest_qty = tamu_qty
         reservation.duration = duration
         reservation.reservation_date = res_date
         reservation.reservation_time = res_time

@@ -409,6 +409,9 @@ document.addEventListener('alpine:init', () => {
         async simpanMenu() {
             if (!this.formMenu.nama || !this.formMenu.harga) return showToast('Nama dan Harga wajib diisi!', 'error');
             const fd = new FormData();
+            if (this.formMenu.hasStock && (this.formMenu.stok === '' || parseInt(this.formMenu.stok) < 0)) {
+                return showToast('Jumlah stok tidak valid (Minimal 0)!', 'error');
+            }
             fd.append('nama', this.formMenu.nama); fd.append('kategori', this.formMenu.kategori); fd.append('harga', this.formMenu.harga); fd.append('deskripsi', this.formMenu.deskripsi); fd.append('stok', this.formMenu.hasStock ? this.formMenu.stok : "");
             if (this.formMenu.file) fd.append('foto', this.formMenu.file);
             try {
@@ -422,6 +425,9 @@ document.addEventListener('alpine:init', () => {
         async updateMenu() {
             if (!this.editMenuForm.nama || !this.editMenuForm.harga) return showToast('Nama dan Harga wajib diisi!', 'error');
             const fd = new FormData();
+            if (this.editMenuForm.hasStock && (this.editMenuForm.stok === '' || parseInt(this.editMenuForm.stok) < 0)) {
+                return showToast('Jumlah stok tidak valid (Minimal 0)!', 'error');
+            }
             fd.append('nama', this.editMenuForm.nama); fd.append('kategori', this.editMenuForm.kategori); fd.append('harga', this.editMenuForm.harga); fd.append('deskripsi', this.editMenuForm.deskripsi); fd.append('status', this.editMenuForm.status); fd.append('stok', this.editMenuForm.hasStock ? this.editMenuForm.stok : "");
             if (this.editMenuForm.file) fd.append('foto', this.editMenuForm.file);
             try {
@@ -458,8 +464,9 @@ document.addEventListener('alpine:init', () => {
 
         async updateStokAPI(menu) {
             // Cegah angka negatif atau kosong saat diketik manual
-            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || menu.stok < 0) {
-                menu.stok = 0;
+            if (menu.stok === null || menu.stok === '' || isNaN(menu.stok) || parseInt(menu.stok) < 0) {
+                menu.stok = 0; // Auto-koreksi UI kembali ke 0
+                return showToast('Stok tidak valid! Minimal stok adalah 0.', 'error');
             }
 
             try {

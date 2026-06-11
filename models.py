@@ -35,8 +35,8 @@ class CafeSetting(db.Model):
     email                   = db.Column(db.String(100), nullable=True)
     address                 = db.Column(db.Text, nullable=True)
     is_open                 = db.Column(db.Boolean, default=True)
-    reservation_buffer_time = db.Column(db.Integer, default=90) # Dalam menit, waktu pengingat bahwa reservasi akan datang (misal: 90 menit sebelum waktu reservasi) atau waktu minimal untuk buat reservasi jika mejanya masih dipakai tamu walk in
-    table_clearance_time    = db.Column(db.Integer, default=15) # Dalam menit, waktu wajib kosongkan meja sebelum waktu reservasi menggunakan meja yang sama
+    reservation_buffer_time = db.Column(db.SmallInteger, default=90) 
+    table_clearance_time    = db.Column(db.SmallInteger, default=15) 
     
     updated_at              = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -49,6 +49,7 @@ class OperationalHour(db.Model):
     close_time  = db.Column(db.Time, nullable=False)
 
     updated_at  = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
 class Category(db.Model):
     __tablename__ = 'categories'
     id          = db.Column(db.Integer, primary_key=True)
@@ -69,7 +70,7 @@ class Menu(db.Model):
     description     = db.Column(db.Text, nullable=True)
     price           = db.Column(db.Integer, nullable=False)
     image_url       = db.Column(db.String(255), nullable=True)
-    stock           = db.Column(db.Integer, nullable=True) # Boleh NULL untuk makanan yang dimasak
+    stock           = db.Column(db.SmallInteger, nullable=True) 
     is_available    = db.Column(db.Boolean, default=True)
 
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
@@ -82,7 +83,7 @@ class Table(db.Model):
     __tablename__ = 'tables'
     id              = db.Column(db.Integer, primary_key=True)
     table_number    = db.Column(db.String(10), unique=True, nullable=False)
-    capacity        = db.Column(db.Integer, nullable=False)
+    capacity        = db.Column(db.SmallInteger, nullable=False)
     is_available    = db.Column(db.Boolean, default=True) # Fisik meja: True=Kosong, False=Dipakai
 
     created_at      = db.Column(db.DateTime, default=datetime.utcnow)
@@ -99,10 +100,11 @@ class Reservation(db.Model):
     user_id             = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name       = db.Column(db.String(100), nullable=True)
     phone               = db.Column(db.String(20), nullable=False)
-    guest_qty           = db.Column(db.Integer, nullable=False) # Jumlah tamu
-    duration            = db.Column(db.Integer, default=90)     # Durasi dalam menit
-    notes               = db.Column(db.Text, nullable=True) # Catatan khusus saat booking (Opsional)
-    cancellation_reason = db.Column(db.Text, nullable=True) # Alasan jika dibatalkan (Opsional)
+    guest_qty           = db.Column(db.SmallInteger, nullable=False) 
+    duration            = db.Column(db.SmallInteger, default=90)     
+    
+    notes               = db.Column(db.Text, nullable=True) 
+    cancellation_reason = db.Column(db.Text, nullable=True) 
     reservation_date    = db.Column(db.Date, nullable=False)
     reservation_time    = db.Column(db.Time, nullable=False)
     status              = db.Column(db.Enum('pending', 'confirmed', 'completed', 'cancelled', name='reservation_status'), default='pending')
@@ -126,7 +128,7 @@ class ReservationTable(db.Model):
     id                      = db.Column(db.Integer, primary_key=True)
     reservation_id          = db.Column(db.Integer, db.ForeignKey('reservations.id'), nullable=False)
     table_id                = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True)
-    table_number_snapshot   = db.Column(db.String(20), nullable=False) # Snapshot nomor meja saat dibooking
+    table_number_snapshot   = db.Column(db.String(50), nullable=False) # Diperbesar sedikit ke 50 jika ada gabungan meja
 
     created_at              = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at              = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -138,15 +140,16 @@ class Order(db.Model):
     user_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     cashier_id      = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     customer_name   = db.Column(db.String(100), nullable=True)
-    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) # Nullable untuk Take Away atau pesanan selesai untuk Dine In
-    table_number_snapshot = db.Column(db.String(20), nullable=True) # Snapshot nomor meja saat order dibuat (untuk histori)
+    table_id        = db.Column(db.Integer, db.ForeignKey('tables.id', ondelete='SET NULL'), nullable=True) 
+    
+    table_number_snapshot = db.Column(db.String(50), nullable=True) # Diperbesar sedikit ke 50 jika pesan 2 meja gabung
     order_type      = db.Column(db.Enum('dine_in', 'take_away', name='order_type'), nullable=False)
     order_status    = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='order_status'), default='pending')
     payment_method  = db.Column(db.Enum('cash', 'qris', name='payment_method'), nullable=True)
     payment_status  = db.Column(db.Enum('unpaid', 'paid', 'cancelled', name='payment_status'), default='unpaid')
     cancellation_reason = db.Column(db.Text, nullable=True)
     total_amount    = db.Column(db.Integer, nullable=False, default=0)
-    received_amount = db.Column(db.Integer, nullable=True) # ✅ TAMBAHAN: Catat uang tunai fisik
+    received_amount = db.Column(db.Integer, nullable=True)            
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -171,8 +174,9 @@ class OrderItem(db.Model):
     id              = db.Column(db.Integer, primary_key=True)
     order_id        = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
     menu_id         = db.Column(db.Integer, db.ForeignKey('menus.id'), nullable=False)
-    qty             = db.Column(db.Integer, nullable=False)
-    price_at_order  = db.Column(db.Integer, nullable=False) # Snapshot harga dari menu
+    qty             = db.Column(db.SmallInteger, nullable=False)
+    
+    price_at_order  = db.Column(db.Integer, nullable=False)
     notes           = db.Column(db.String(255), nullable=True)
     item_status     = db.Column(db.Enum('pending', 'preparing', 'ready', 'served', name='item_status'), default='pending')
     koki_id         = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -189,7 +193,7 @@ class Review(db.Model):
     __tablename__ = 'reviews'
     id              = db.Column(db.Integer, primary_key=True)
     order_item_id   = db.Column(db.Integer, db.ForeignKey('order_items.id'), nullable=False, unique=True)
-    rating          = db.Column(db.Integer, nullable=False)
+    rating          = db.Column(db.SmallInteger, nullable=False)
     comment         = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

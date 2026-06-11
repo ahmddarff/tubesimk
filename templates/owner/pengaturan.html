@@ -288,6 +288,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         simpanProfilCafe() {
+            if (!this.cafeNama.trim()) return showToast('Nama Cafe tidak boleh kosong!', 'error');
+            if (this.cafeBufferTime < 0 || this.cafeClearanceTime < 0) return showToast('Waktu (menit) tidak boleh negatif!', 'error');
+
             const formData = new FormData();
             formData.append('nama', this.cafeNama);
             formData.append('telp', this.cafeTelp);
@@ -309,6 +312,9 @@ document.addEventListener('alpine:init', () => {
         },
 
         simpanAkunSaya() {
+            if (!this.akunNama.trim() || !this.akunUsername.trim()) return showToast('Nama dan Username wajib diisi!', 'error');
+            if (/\s/.test(this.akunUsername)) return showToast('Username tidak boleh mengandung spasi!', 'error');
+            
             const formData = new FormData();
             formData.append('nama', this.akunNama);
             formData.append('username', this.akunUsername);

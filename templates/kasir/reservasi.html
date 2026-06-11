@@ -263,9 +263,9 @@ document.addEventListener('alpine:init', () => {
         async saveReservation() {
             if (!this.newRes.nama || !this.newRes.tanggal || !this.newRes.jamMulai || 
                 !this.newRes.telepon || this.newRes.table_ids.length === 0 || 
-                !this.newRes.tamu || this.newRes.tamu <= 0) {
+                !this.newRes.tamu || this.newRes.tamu <= 0 || !this.newRes.durasi || this.newRes.durasi <= 0) {
                 
-                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu minimal 1!", "error");
+                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu & durasi minimal 1!", "error");
                 return;
             }
 
@@ -338,9 +338,9 @@ document.addEventListener('alpine:init', () => {
         async updateRes() {
             if (!this.formRes.nama || !this.formRes.tanggal || !this.formRes.jamMulai || 
                 !this.formRes.telepon || this.formRes.table_ids.length === 0 || 
-                !this.formRes.tamu || this.formRes.tamu <= 0) {
+                !this.formRes.tamu || this.formRes.tamu <= 0 || !this.formRes.durasi || this.formRes.durasi <= 0) {
                 
-                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu minimal 1!", "error");
+                showToast("Mohon lengkapi semua data wajib, pilihan meja, dan pastikan jumlah tamu & durasi minimal 1!", "error");
                 return;
             }
 

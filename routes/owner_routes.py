@@ -387,8 +387,11 @@ def tambah_menu():
         harga = request.form.get('harga')
         stok_raw = request.form.get('stok')
         deskripsi = request.form.get('deskripsi')
-
         stok = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
+
+        if stok is not None and stok < 0:
+                return jsonify({"success": False, "message": "Stok tidak boleh bernilai negatif!"})
+
         category = Category.query.filter_by(name=kategori_nama).first()
         if not category:
             return jsonify({"success": False, "message": "Kategori tidak ditemukan."})
@@ -448,7 +451,12 @@ def edit_menu(menu_id):
         menu.is_available = True if status_str == 'true' else False
         
         stok_raw = request.form.get('stok')
-        menu.stock = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
+        stok_val = int(stok_raw) if (stok_raw and stok_raw.strip() != "") else None
+        
+        if stok_val is not None and stok_val < 0:
+            return jsonify({"success": False, "message": "Stok tidak boleh bernilai negatif!"})
+            
+        menu.stock = stok_val
 
         kategori_nama = request.form.get('kategori')
         category = Category.query.filter_by(name=kategori_nama).first()
@@ -481,7 +489,12 @@ def update_stok_cepat(menu_id):
         if not menu:
             return jsonify({"success": False, "message": "Menu tidak ditemukan."})
             
-        menu.stock = int(data.get('stok'))
+        stok_baru = int(data.get('stok'))
+
+        if stok_baru < 0:
+            return jsonify({"success": False, "message": "Stok tidak boleh bernilai negatif!"})
+            
+        menu.stock = stok_baru
         
         if menu.stock == 0:
             menu.is_available = False
@@ -526,6 +539,9 @@ def tambah_meja():
 
     if not nomor or not kapasitas:
         return jsonify({"success": False, "message": "Nomor dan kapasitas wajib diisi!"})
+
+    if int(kapasitas) <= 0:
+        return jsonify({"success": False, "message": "Kapasitas meja minimal 1 orang!"})
     
     if Table.query.filter_by(table_number=nomor).first():
         return jsonify({"success": False, "message": "Nomor meja ini sudah terdaftar."})
@@ -551,6 +567,12 @@ def edit_meja(id):
 
     nomor_baru = request.form.get('nomor')
     kapasitas_baru = request.form.get('kapasitas')
+
+    if not nomor_baru or not kapasitas_baru:
+        return jsonify({"success": False, "message": "Nomor dan kapasitas wajib diisi!"})
+
+    if int(kapasitas_baru) <= 0:
+        return jsonify({"success": False, "message": "Kapasitas meja minimal 1 orang!"})
     
     if nomor_baru != table.table_number and Table.query.filter_by(table_number=nomor_baru).first():
         return jsonify({"success": False, "message": "Nomor meja tersebut sudah digunakan."})
@@ -590,6 +612,15 @@ def tambah_staff():
     username = data.get("username") or nama.lower().replace(" ", "")
     password = data.get("password") or "123456" 
     jabatan = data.get("jabatan", "kasir").lower() # ✅ Ambil pilihan jabatan dari Frontend
+    
+    if not nama or not username or not password:
+        return jsonify({"success": False, "message": "Data tidak lengkap!"})
+        
+    if " " in username:
+        return jsonify({"success": False, "message": "Username tidak boleh mengandung spasi!"})
+        
+    if len(password) < 6:
+        return jsonify({"success": False, "message": "Password minimal 6 karakter!"})
     
     if User.query.filter_by(username=username).first():
         return jsonify({"success": False, "message": "Username staff sudah terdaftar!"})
@@ -633,13 +664,15 @@ def edit_staff(id):
     nama_baru = data.get("nama")
     jabatan_baru = data.get("jabatan", "kasir").lower()
     is_active_status = data.get("isActive", True) # Menangkap status boolean checkbox
-    password_baru = data.get("password")
+    password_baru = data.get("password", "")
     
     staff.name = nama_baru
     staff.role = jabatan_baru
     staff.is_active = is_active_status # Mengupdate kolom keaktifan di database
 
     if password_baru and password_baru.strip() != "":
+        if len(password_baru) < 6:
+            return jsonify({"success": False, "message": "Password baru minimal 6 karakter!"})
         staff.password = generate_password_hash(password_baru)
     
     try:
@@ -737,6 +770,18 @@ def update_profil_cafe():
     telp = request.form.get("telp")
     alamat = request.form.get("alamat")
     email = request.form.get("email")
+
+    if not nama:
+        return jsonify({"success": False, "message": "Nama Cafe tidak boleh kosong!"})
+        
+    try:
+        buffer_time = int(request.form.get('reservation_buffer_time', 90))
+        clearance_time = int(request.form.get('table_clearance_time', 15))
+    except ValueError:
+        return jsonify({"success": False, "message": "Format waktu tidak valid!"})
+
+    if buffer_time < 0 or clearance_time < 0:
+        return jsonify({"success": False, "message": "Waktu (menit) tidak boleh negatif!"})
     
     cafe_info = CafeSetting.query.first()
     if cafe_info:
@@ -774,10 +819,25 @@ def update_profil_cafe():
 def update_akun():
     user = db.session.get(User, current_user.id)
     if user:
-        user.name = request.form.get("nama") or user.name
-        user.username = request.form.get("username") or user.username
-        user.email = request.form.get("email") or user.email
-        user.phone = request.form.get("no_hp") or user.phone
+        nama_baru = request.form.get("nama", "").strip()
+        username_baru = request.form.get("username", "").strip()
+        email_baru = request.form.get("email", "").strip()
+        no_hp_baru = request.form.get("no_hp", "").strip()
+        
+        if not nama_baru or not username_baru:
+            return jsonify({"success": False, "message": "Nama dan Username wajib diisi!"})
+            
+        if " " in username_baru:
+            return jsonify({"success": False, "message": "Username tidak boleh mengandung spasi!"})
+            
+        # Cek apakah username sudah dipakai orang lain
+        if username_baru != user.username and User.query.filter_by(username=username_baru).first():
+            return jsonify({"success": False, "message": "Username tersebut sudah digunakan!"})
+            
+        user.name = nama_baru
+        user.username = username_baru
+        user.email = email_baru
+        user.phone = no_hp_baru
         
         if 'photo' in request.files:
             file = request.files['photo']
@@ -800,7 +860,7 @@ def update_akun():
             return jsonify({"success": True, "message": "Akun berhasil diperbarui!"})
         except:
             db.session.rollback()
-            return jsonify({"success": False, "message": "Gagal memperbarui database."})
+            return jsonify({"success": False, "message": "Gagal memperbarui database. Pastikan Email unik."})
     return jsonify({"success": False, "message": "Pengguna tidak ditemukan."})
 
 @owner_bp.route('/api/update-password', methods=['POST'])
