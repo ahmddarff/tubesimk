@@ -9,7 +9,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '.env'))
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'terralog-secret-key-1-2-3'
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 # ─────────────────────────────────────────────────────────────────
 # KONFIGURASI FLASK-MAIL
 # ─────────────────────────────────────────────────────────────────
@@ -23,15 +23,27 @@ app.config['MAIL_DEFAULT_SENDER'] = ('Terralog Admin', 'noreply@terralog.com')
 
 mail.init_app(app)
 
+# uncomment blok ini jika di jalankan di localhost
+# @app.errorhandler(OperationalError)
+# def handle_db_error(e):
+#     # Logika: Jika error mengandung indikasi gagal koneksi ke MySQL
+#     return """
+#     <div style="text-align: center; padding: 50px; font-family: sans-serif;">
+#         <h1 style="color: #e74c3c;">Database Belum Aktif!</h1>
+#         <p>Sepertinya <strong>Laragon/XAMPP</strong> belum dinyalakan atau MySQL mati.</p>
+#         <p>Pastikan modul MySQL di control panel sudah berwarna hijau (Running).</p>
+#         <button onclick="location.reload()">Refresh Halaman</button>
+#     </div>
+#     """, 503
+
 @app.errorhandler(OperationalError)
 def handle_db_error(e):
-    # Logika: Jika error mengandung indikasi gagal koneksi ke MySQL
     return """
     <div style="text-align: center; padding: 50px; font-family: sans-serif;">
-        <h1 style="color: #e74c3c;">Database Belum Aktif!</h1>
-        <p>Sepertinya <strong>Laragon/XAMPP</strong> belum dinyalakan atau MySQL mati.</p>
-        <p>Pastikan modul MySQL di control panel sudah berwarna hijau (Running).</p>
-        <button onclick="location.reload()">Refresh Halaman</button>
+        <h1 style="color: #e74c3c;">Gagal Terhubung ke Database!</h1>
+        <p>Sistem tidak dapat terhubung ke server database saat ini.</p>
+        <p>Silakan periksa konfigurasi server atau coba beberapa saat lagi.</p>
+        <button onclick="location.reload()">Coba Lagi</button>
     </div>
     """, 503
 
@@ -47,12 +59,16 @@ def method_not_allowed(e):
 # ==========================================
 # KONFIGURASI DATABASE
 # ==========================================
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_DATABASE")
-APP_USER = os.getenv("DB_APP_USERNAME")
-APP_PASS = os.getenv("DB_APP_PASSWORD")
+db_uri = os.getenv("DATABASE_URL")
 
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{APP_USER}:{APP_PASS}@{DB_HOST}/{DB_NAME}'
+if not db_uri:
+    DB_HOST = os.getenv("DB_HOST")
+    DB_NAME = os.getenv("DB_DATABASE")
+    APP_USER = os.getenv("DB_APP_USERNAME")
+    APP_PASS = os.getenv("DB_APP_PASSWORD")
+    db_uri = f'mysql+pymysql://{APP_USER}:{APP_PASS}@{DB_HOST}/{DB_NAME}'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 
@@ -85,8 +101,6 @@ app.register_blueprint(kasir_bp, url_prefix='/kasir')
 app.register_blueprint(customer_bp, url_prefix='/customer')
 app.register_blueprint(owner_bp, url_prefix='/owner')
 app.register_blueprint(koki_bp, url_prefix='/koki')
-
-print(app.url_map)
 
 # ==========================================
 # ROUTING UTAMA & MOCK DATA

@@ -27,6 +27,7 @@ pip install flask_login
 pip install openpyxl
 pip install tzdata
 pip install flask_mail
+pip install cryptocraphy
 ```
 
 ### 3. Copy File Environment
